@@ -1,19 +1,38 @@
 const mysql = require('mysql2/promise');
-const bcrypt = require('bcryptjs');
 require('dotenv').config();
 
-async function seedDatabase() {
+async function columnExists(connection, tableName, columnName) {
+  const safeTable = tableName.replaceAll('`', '``');
+  const [rows] = await connection.query(`SHOW COLUMNS FROM \`${safeTable}\` LIKE ?`, [columnName]);
+  return rows.length > 0;
+}
+
+async function addColumnIfMissing(connection, tableName, columnName, definition) {
+  if (!(await columnExists(connection, tableName, columnName))) {
+    await connection.execute(`ALTER TABLE ${tableName} ADD COLUMN ${columnName} ${definition}`);
+  }
+}
+
+async function migrate() {
+  const connection = await mysql.createConnection({
+    host: process.env.DB_HOST,
+    user: process.env.DB_USER,
+    password: process.env.DB_PASSWORD,
+    multipleStatements: false,
+  });
+
   try {
-    const connection = await mysql.createConnection({
-      host: process.env.DB_HOST,
-      user: process.env.DB_USER,
-      password: process.env.DB_PASSWORD,
-    });
     const dbName = (process.env.DB_NAME || 'radiology_db').replaceAll('`', '``');
     await connection.query(`CREATE DATABASE IF NOT EXISTS \`${dbName}\``);
     await connection.query(`USE \`${dbName}\``);
 
-    // สร้าง staff table
+    await connection.execute(`
+      CREATE TABLE IF NOT EXISTS schema_migrations (
+        migration_id VARCHAR(100) PRIMARY KEY,
+        applied_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+
     await connection.execute(`
       CREATE TABLE IF NOT EXISTS staff (
         staff_id INT PRIMARY KEY AUTO_INCREMENT,
@@ -27,22 +46,9 @@ async function seedDatabase() {
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       )
     `);
+    await addColumnIfMissing(connection, 'staff', 'department', 'VARCHAR(100) NULL');
+    await addColumnIfMissing(connection, 'staff', 'phone', 'VARCHAR(20) NULL');
 
-    const [staffColumns] = await connection.execute(`
-      SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS
-      WHERE TABLE_SCHEMA = DATABASE()
-        AND TABLE_NAME = 'staff'
-        AND COLUMN_NAME IN ('department', 'phone')
-    `);
-    const existingStaffColumns = new Set(staffColumns.map((column) => column.COLUMN_NAME));
-    if (!existingStaffColumns.has('department')) {
-      await connection.execute('ALTER TABLE staff ADD COLUMN department VARCHAR(100) NULL');
-    }
-    if (!existingStaffColumns.has('phone')) {
-      await connection.execute('ALTER TABLE staff ADD COLUMN phone VARCHAR(20) NULL');
-    }
-
-    // สร้าง patients table
     await connection.execute(`
       CREATE TABLE IF NOT EXISTS patients (
         patient_id INT PRIMARY KEY AUTO_INCREMENT,
@@ -66,6 +72,7 @@ async function seedDatabase() {
         price DECIMAL(10, 2) DEFAULT 0
       )
     `);
+    await addColumnIfMissing(connection, 'exam_types', 'price', 'DECIMAL(10, 2) DEFAULT 0');
 
     await connection.execute(`
       CREATE TABLE IF NOT EXISTS \`order\` (
@@ -93,15 +100,7 @@ async function seedDatabase() {
         FOREIGN KEY (order_id) REFERENCES \`order\`(order_id)
       )
     `);
-    const [queueColumns] = await connection.execute(`
-      SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS
-      WHERE TABLE_SCHEMA = DATABASE()
-        AND TABLE_NAME = 'queue'
-        AND COLUMN_NAME = 'called_at'
-    `);
-    if (!queueColumns.length) {
-      await connection.execute('ALTER TABLE queue ADD COLUMN called_at DATETIME NULL');
-    }
+    await addColumnIfMissing(connection, 'queue', 'called_at', 'DATETIME NULL');
 
     await connection.execute(`
       CREATE TABLE IF NOT EXISTS payment (
@@ -143,40 +142,17 @@ async function seedDatabase() {
       )
     `);
 
-    const [examCountRows] = await connection.execute('SELECT COUNT(*) AS total FROM exam_types');
-    if (Number(examCountRows[0].total) === 0) {
-      await connection.execute(
-        `INSERT INTO exam_types (exam_name, description, price) VALUES
-          ('X-Ray Chest', 'Chest radiography', 150000),
-          ('CT Abdomen', 'Computed tomography abdomen', 450000),
-          ('MRI Brain', 'Magnetic resonance imaging brain', 650000),
-          ('Ultrasound', 'Ultrasound examination', 200000)`
-      );
-    }
-
-    // เพิ่ม test staff user
-    const hashedPassword = await bcrypt.hash('admin123', 10);
-    
-    try {
-      await connection.execute(
-        `INSERT INTO staff (username, password, staff_name, role, position) VALUES (?, ?, ?, ?, ?)`,
-        ['admin', hashedPassword, 'Admin User', 'ADMIN', 'System Administrator']
-      );
-      console.log('✅ Staff user created: admin / admin123');
-    } catch (err) {
-      if (err.code === 'ER_DUP_ENTRY') {
-        console.log('ℹ️  Staff user already exists');
-      } else {
-        throw err;
-      }
-    }
-
+    await connection.execute(
+      'INSERT IGNORE INTO schema_migrations (migration_id) VALUES (?)',
+      ['001_core_schema']
+    );
+    console.log('Database migration completed successfully.');
+  } finally {
     await connection.end();
-    console.log('✅ Database seeded successfully!');
-  } catch (err) {
-    console.error('❌ Error:', err.message);
-    process.exit(1);
   }
 }
 
-seedDatabase();
+migrate().catch((err) => {
+  console.error('Migration failed:', err.code || err.message || err);
+  process.exit(1);
+});

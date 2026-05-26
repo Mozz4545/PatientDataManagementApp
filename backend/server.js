@@ -15,6 +15,7 @@ app.use('/api/orders',   require('./src/routes/orders'));
 app.use('/api/queues',   require('./src/routes/queues'));
 app.use('/api/results',  require('./src/routes/results'));
 app.use('/api/payments', require('./src/routes/payments'));
+app.use('/api/exam-types', require('./src/routes/examTypes'));
 
 
 app.get('/health', (req, res) => {

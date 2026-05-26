@@ -1,116 +1,84 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
-import Sidebar from "../../components/Sidebar";
 import { useQuery } from "@tanstack/react-query";
-import api, { setAuthToken } from "../../lib/api";
+import AppShell from "@/components/AppShell";
+import { ActionButton, MetricCard, OrdersTable, PageHero, Panel } from "@/components/dashboard-ui";
+import api from "@/lib/api";
+import type { ApiResponse, Order, Payment, Queue, Result } from "@/lib/types";
 
 export default function DashboardPage() {
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => setMounted(true), []);
-
-  useEffect(() => {
-    if (!mounted) return;
-    const token = localStorage.getItem("radiology_token");
-    if (token) setAuthToken(token);
-  }, [mounted]);
-
   const ordersQuery = useQuery({
     queryKey: ["orders"],
-    queryFn: async () => (await api.get("/orders")).data,
-    enabled: mounted,
+    queryFn: async () => (await api.get<ApiResponse<Order[]>>("/orders")).data.data,
+    retry: false,
   });
 
   const queuesQuery = useQuery({
-    queryKey: ["queues"],
-    queryFn: async () => (await api.get("/queues")).data,
-    enabled: mounted,
+    queryKey: ["queues", "dashboard"],
+    queryFn: async () => (await api.get<ApiResponse<Queue[]>>("/queues")).data.data,
+    retry: false,
   });
 
-  const orders = ordersQuery.data?.data ?? [];
-  const queues = queuesQuery.data?.data ?? [];
+  const paymentsQuery = useQuery({
+    queryKey: ["payments", "dashboard"],
+    queryFn: async () => (await api.get<ApiResponse<Payment[]>>("/payments")).data.data,
+    retry: false,
+  });
 
-  const pendingCount = orders.filter((o: any) => o.status === "PENDING").length;
-  const inProgressCount = orders.filter((o: any) => o.status === "IN_PROGRESS").length;
-  const completedCount = orders.filter((o: any) => o.status === "COMPLETED").length;
+  const resultsQuery = useQuery({
+    queryKey: ["results", "dashboard"],
+    queryFn: async () => (await api.get<ApiResponse<Result[]>>("/results")).data.data,
+    retry: false,
+  });
 
-  const totalPatients = ordersQuery.data?.data?.length || 0;
+  const orders = ordersQuery.data ?? [];
+  const queues = queuesQuery.data ?? [];
+  const payments = paymentsQuery.data ?? [];
+  const results = resultsQuery.data ?? [];
+  const today = new Date().toISOString().slice(0, 10);
+
+  const paidOrderIds = new Set(payments.map((payment) => payment.order_id));
+  const resultOrderIds = new Set(results.map((result) => result.order_id));
+  const openOrders = orders.filter((order) => order.status !== "ຍົກເລີກແລ້ວ" && order.status !== "CANCELLED");
+  const todayOrders = openOrders.filter((order) => order.order_date?.slice(0, 10) === today).length;
+  const waitingQueues = queues.filter((queue) => queue.status === "WAITING" || queue.status === "ກຳລັງລໍຖ້າ").length;
+  const pendingResults = openOrders.filter((order) => !resultOrderIds.has(order.order_id)).length;
+  const unpaid = openOrders.filter((order) => !paidOrderIds.has(order.order_id)).length;
+
+  const handleRefresh = () => {
+    ordersQuery.refetch();
+    queuesQuery.refetch();
+    paymentsQuery.refetch();
+    resultsQuery.refetch();
+  };
 
   return (
-    <div className="min-h-screen flex bg-slate-50">
-      <Sidebar />
-      <div className="flex-1">
-        <header className="bg-slate-900 text-white">
-          <div className="mx-auto max-w-7xl px-6 py-4">
-            <div className="flex items-center justify-between">
-              <h1 className="text-xl font-semibold">ລະບົບຈັດການຄົນເຈັບ - ພະແນກລັງສີ</h1>
-              <div className="flex items-center gap-4">
-                <button className="rounded-md bg-emerald-300 px-3 py-1 text-slate-900">ສັ່ງໃບສຳທວດ</button>
-                <div className="text-sm text-slate-200">Staff Member • STAFF</div>
-              </div>
-            </div>
-          </div>
-        </header>
+    <AppShell>
+      <PageHero title="ໜ້າຫຼັກ" subtitle="ພາບລວມວຽກປະຈຳວັນຂອງພະແນກລັງສີ">
+        <ActionButton href="/orders/new" tone="green">
+          ສ້າງໃບສັ່ງກວດ
+        </ActionButton>
+        <ActionButton onClick={handleRefresh}>Refresh</ActionButton>
+      </PageHero>
 
-        <main className="mx-auto max-w-7xl px-6 py-10">
-          <h2 className="text-3xl font-semibold text-slate-900">ໜ້າທໍາ</h2>
-          <p className="text-slate-600">Hospital Radiology Operations Overview (ພາສາລາວ)</p>
+      <div className="px-4 py-4 sm:px-6 md:px-8 lg:px-10">
+        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+          <MetricCard label="ຄິວລໍຖ້າ" value={waitingQueues} color="#1e66ff" />
+          <MetricCard label="ໃບສັ່ງມື້ນີ້" value={todayOrders} color="#9b18ff" />
+          <MetricCard label="ລໍຖ້າບັນທຶກຜົນ" value={pendingResults} color="#f45108" />
+          <MetricCard label="ຄ້າງຊຳລະ" value={unpaid} color="#079b49" />
+        </div>
 
-          <div className="mt-8 grid grid-cols-4 gap-6">
-            <div className="rounded-xl bg-white p-6 shadow">
-              <div className="text-sm text-slate-500">ຈຳນວນຄົນເຈັບ</div>
-              <div className="mt-4 text-3xl font-bold text-blue-600">{totalPatients}</div>
-            </div>
-            <div className="rounded-xl bg-white p-6 shadow">
-              <div className="text-sm text-slate-500">ຄົນກຳລັງຢູ່</div>
-              <div className="mt-4 text-3xl font-bold text-orange-500">{inProgressCount}</div>
-            </div>
-            <div className="rounded-xl bg-white p-6 shadow">
-              <div className="text-sm text-slate-500">ໃບສັ່ງກວດ</div>
-              <div className="mt-4 text-3xl font-bold text-violet-500">{orders.length}</div>
-            </div>
-            <div className="rounded-xl bg-white p-6 shadow">
-              <div className="text-sm text-slate-500">ການກວດສຳເລັດ</div>
-              <div className="mt-4 text-3xl font-bold text-emerald-600">{completedCount}</div>
-            </div>
-          </div>
-
-          <div className="mt-10 rounded-xl bg-white p-6 shadow">
-            <div className="mb-4 flex items-center justify-between">
-              <h3 className="text-lg font-semibold">ໃບສັ່ງກວດ</h3>
-              <div className="flex items-center gap-2">
-                <button onClick={() => { ordersQuery.refetch(); queuesQuery.refetch(); }} className="rounded-md bg-slate-100 px-3 py-1 text-sm">Refresh</button>
-              </div>
-            </div>
-
-            <div className="overflow-x-auto">
-              <table className="w-full table-auto">
-                <thead>
-                  <tr className="text-sm text-slate-600">
-                    <th className="p-3 text-left">Order ID</th>
-                    <th className="p-3 text-left">Patient</th>
-                    <th className="p-3 text-left">Exam Type</th>
-                    <th className="p-3 text-left">Status</th>
-                    <th className="p-3 text-left">Date</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {orders.slice(0, 10).map((o: any) => (
-                    <tr key={o.order_id} className="border-t">
-                      <td className="p-3 text-sm">{o.order_id}</td>
-                      <td className="p-3 text-sm">{o.first_name} {o.last_name}</td>
-                      <td className="p-3 text-sm">{o.exam_name}</td>
-                      <td className={`p-3 text-sm ${o.status === 'COMPLETED' ? 'text-green-600' : o.status === 'IN_PROGRESS' ? 'text-blue-600' : 'text-yellow-600'}`}>{o.status}</td>
-                      <td className="p-3 text-sm">{o.order_date}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </main>
+        <div className="mt-5 lg:mt-8">
+          <Panel title="ໃບສັ່ງກວດຫຼ້າສຸດ">
+            {ordersQuery.isLoading ? (
+              <div className="py-12 text-center text-[#767285]">ກຳລັງໂຫຼດ...</div>
+            ) : (
+              <OrdersTable orders={orders.slice(0, 6)} />
+            )}
+          </Panel>
+        </div>
       </div>
-    </div>
+    </AppShell>
   );
 }

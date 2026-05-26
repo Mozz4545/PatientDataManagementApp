@@ -1,12 +1,15 @@
 const express = require('express');
 const router = express.Router();
-const { getStaff, getStaffById, createStaff, updateStaff, resetPassword } = require('../controllers/staffController');
+const { getStaff, getStaffOptions, getStaffById, createStaff, updateStaff, resetPassword } = require('../controllers/staffController');
 const authGuard = require('../middleware/authGuard');
 const roleGuard = require('../middleware/roleGuard');
 
-// ทุกคนดูได้
-router.get('/',    authGuard, getStaff);
-router.get('/:id', authGuard, getStaffById);
+// ใช้สำหรับ dropdown ตอนสร้างใบสั่งตรวจ
+router.get('/options', authGuard, getStaffOptions);
+
+// ADMIN เท่านั้นสำหรับหน้าจัดการพนักงาน
+router.get('/',    authGuard, roleGuard(['ADMIN']), getStaff);
+router.get('/:id', authGuard, roleGuard(['ADMIN']), getStaffById);
 
 // ADMIN เท่านั้น
 router.post('/',              authGuard, roleGuard(['ADMIN']), createStaff);

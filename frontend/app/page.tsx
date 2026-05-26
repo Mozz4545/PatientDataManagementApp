@@ -7,8 +7,8 @@ export default function Home() {
   const router = useRouter();
 
   useEffect(() => {
-    // redirect root to the login route
-    router.replace("/login");
+    const token = localStorage.getItem("radiology_token");
+    router.replace(token ? "/dashboard" : "/login");
   }, [router]);
 
   return null;

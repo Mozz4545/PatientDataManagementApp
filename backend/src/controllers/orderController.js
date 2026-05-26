@@ -5,7 +5,7 @@ const getOrders = async (req, res) => {
   try {
     const { status, date } = req.query;
     let query = `
-      SELECT o.*, p.first_name, p.last_name, e.exam_name, s.staff_name
+      SELECT o.*, p.first_name, p.last_name, e.exam_name, e.price AS exam_price, s.staff_name
       FROM \`order\` o
       JOIN patients p ON o.patient_id = p.patient_id
       JOIN exam_types e ON o.exam_type_id = e.exam_type_id
@@ -30,7 +30,7 @@ const getOrders = async (req, res) => {
 const getOrderById = async (req, res) => {
   try {
     const [rows] = await pool.execute(
-      `SELECT o.*, p.first_name, p.last_name, e.exam_name, s.staff_name
+      `SELECT o.*, p.first_name, p.last_name, e.exam_name, e.price AS exam_price, s.staff_name
        FROM \`order\` o
        JOIN patients p ON o.patient_id = p.patient_id
        JOIN exam_types e ON o.exam_type_id = e.exam_type_id
