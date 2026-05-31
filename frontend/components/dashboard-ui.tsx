@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { displayOrderStatus, isCancelledStatus, statusKey, statusLabel } from "@/lib/status";
 import type { Order, Queue } from "@/lib/types";
 
 export const examOptions = [
@@ -33,10 +34,12 @@ export function patientName(item: { first_name?: string; last_name?: string }) {
 }
 
 export function statusTone(status?: string) {
-  const normalized = status?.toUpperCase();
+  const normalized = statusKey(status);
   if (normalized === "COMPLETED" || normalized === "DONE" || normalized === "ຈ່າຍແລ້ວ") {
     return "bg-[#bafbd2] text-[#137547]";
   }
+  if (normalized === "WAITING_PAYMENT") return "bg-[#fff7a5] text-[#a77b00]";
+  if (normalized === "PENDING" || normalized === "PENDING_RESULT") return "bg-[#fff7a5] text-[#a77b00]";
   if (normalized === "ບັນທຶກແລ້ວ") return "bg-[#bafbd2] text-[#137547]";
   if (normalized === "ຍັງບໍ່ໄດ້ຈ່າຍ") return "bg-[#fff7a5] text-[#a77b00]";
   if (normalized === "ລໍຖ້າບັນທຶກ") return "bg-[#fff7a5] text-[#a77b00]";
@@ -136,7 +139,7 @@ export function MetricCard({
 export function StatusPill({ status }: { status?: string }) {
   return (
     <span className={`inline-flex min-w-[72px] justify-center rounded-full px-2.5 py-0.5 text-[11px] font-semibold ${statusTone(status)}`}>
-      {status || "PENDING"}
+      {statusLabel(status)}
     </span>
   );
 }
@@ -195,7 +198,7 @@ export function OrdersTable({
               <tr
                 key={order.order_id}
                 className={`border-t border-[#d7d7d7] ${
-                  highlightFirst && index === 0 ? "bg-[#d5ffd8]" : order.status === "CANCELLED" ? "bg-[#ffd4d6]" : ""
+                  highlightFirst && index === 0 ? "bg-[#d5ffd8]" : isCancelledStatus(order.status) ? "bg-[#ffd4d6]" : ""
                 }`}
               >
                 <td className="px-5 py-3">
@@ -205,10 +208,10 @@ export function OrdersTable({
                 <td className="px-5 py-3">{order.exam_name || examOptions.find((item) => item.id === order.exam_type_id)?.name || "-"}</td>
                 <td className="px-5 py-3">{formatDateTime(order.order_date)}</td>
                 <td className="px-5 py-3">
-                  <StatusPill status={order.status} />
+                  <StatusPill status={displayOrderStatus(order)} />
                 </td>
                 <td className="px-5 py-3 text-right">
-                  {onCancel && order.status !== "CANCELLED" && order.status !== "COMPLETED" && (
+                  {onCancel && !isCancelledStatus(order.status) && statusKey(order.status) !== "COMPLETED" && (
                     <button
                       type="button"
                       onClick={() => onCancel(order)}
@@ -244,7 +247,7 @@ export function QueuesTable({
           <tr>
             <th className="px-5 py-3">ຄິວ #</th>
             <th className="px-5 py-3">ຊື່ ແລະ ນາມສະກຸນ</th>
-            <th className="px-5 py-3">Exam Type</th>
+            <th className="px-5 py-3">ປະເພດການກວດ</th>
             <th className="px-5 py-3">ວັນທີ ແລະ ເວລາ</th>
             <th className="px-5 py-3">ສະຖານະ</th>
             {onCall && <th className="px-5 py-3">ເອີ້ນ</th>}
@@ -290,7 +293,7 @@ export function QueuesTable({
 export function SearchBox({
   value,
   onChange,
-  placeholder = "ID or Name",
+  placeholder = "ລະຫັດ ຫຼື ຊື່",
 }: {
   value: string;
   onChange: (value: string) => void;

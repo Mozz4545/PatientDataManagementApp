@@ -111,10 +111,20 @@ async function seedDatabase() {
         amount DECIMAL(10, 2) NOT NULL,
         payment_date DATETIME NOT NULL,
         payment_type VARCHAR(100) NOT NULL,
+        UNIQUE KEY uq_payment_order (order_id),
         FOREIGN KEY (order_id) REFERENCES \`order\`(order_id),
         FOREIGN KEY (staff_id) REFERENCES staff(staff_id)
       )
     `);
+    const [paymentIndexes] = await connection.execute(`
+      SELECT INDEX_NAME FROM INFORMATION_SCHEMA.STATISTICS
+      WHERE TABLE_SCHEMA = DATABASE()
+        AND TABLE_NAME = 'payment'
+        AND INDEX_NAME = 'uq_payment_order'
+    `);
+    if (!paymentIndexes.length) {
+      await connection.execute('ALTER TABLE payment ADD UNIQUE KEY uq_payment_order (order_id)');
+    }
 
     await connection.execute(`
       CREATE TABLE IF NOT EXISTS result (
@@ -122,26 +132,21 @@ async function seedDatabase() {
         order_id INT NOT NULL,
         staff_id INT NOT NULL,
         result_detail TEXT NOT NULL,
+        result_image_url VARCHAR(255) NULL,
         result_date DATETIME NOT NULL,
         FOREIGN KEY (order_id) REFERENCES \`order\`(order_id),
         FOREIGN KEY (staff_id) REFERENCES staff(staff_id)
       )
     `);
-
-    await connection.execute(`
-      CREATE TABLE IF NOT EXISTS password_reset_otps (
-        otp_id INT PRIMARY KEY AUTO_INCREMENT,
-        staff_id INT NOT NULL,
-        otp_hash VARCHAR(255) NOT NULL,
-        expires_at DATETIME NOT NULL,
-        used_at DATETIME NULL,
-        attempts INT DEFAULT 0,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        INDEX idx_password_reset_staff (staff_id),
-        INDEX idx_password_reset_expires (expires_at),
-        FOREIGN KEY (staff_id) REFERENCES staff(staff_id)
-      )
+    const [resultImageColumns] = await connection.execute(`
+      SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS
+      WHERE TABLE_SCHEMA = DATABASE()
+        AND TABLE_NAME = 'result'
+        AND COLUMN_NAME = 'result_image_url'
     `);
+    if (!resultImageColumns.length) {
+      await connection.execute('ALTER TABLE result ADD COLUMN result_image_url VARCHAR(255) NULL');
+    }
 
     const [examCountRows] = await connection.execute('SELECT COUNT(*) AS total FROM exam_types');
     if (Number(examCountRows[0].total) === 0) {

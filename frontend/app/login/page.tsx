@@ -10,7 +10,7 @@ import type { AxiosError } from "axios";
 import api, { setAuthToken } from "@/lib/api";
 
 const loginSchema = z.object({
-  username: z.string().min(1, "ກະລຸນາປ້ອນ USER ID"),
+  username: z.string().min(1, "ກະລຸນາປ້ອນລະຫັດຜູ້ໃຊ້"),
   password: z.string().min(1, "ກະລຸນາປ້ອນລະຫັດຜ່ານ"),
 });
 
@@ -69,11 +69,11 @@ export default function LoginPage() {
             className="rounded-2xl border border-[#d9d9d9] bg-white px-5 py-6 shadow-sm sm:px-8 sm:py-8"
           >
             <label className="block text-sm font-semibold text-black">
-              User ID <span className="text-red-600">*</span>
+              ລະຫັດຜູ້ໃຊ້ <span className="text-red-600">*</span>
               <input
                 type="text"
-                placeholder="ກະລຸນາປ້ອນ USER ID"
-                className="mt-2 h-10 w-full rounded-lg border border-[#d9d9d9] px-3 text-sm shadow-sm outline-none placeholder:text-[#d9d9d9] focus:border-[#123879]"
+                placeholder="ກະລຸນາປ້ອນລະຫັດຜູ້ໃຊ້"
+                className="mt-2 h-10 w-full rounded-lg border border-[#d9d9d9] px-3 text-sm shadow-sm outline-none placeholder:text-[#b9b9b9] focus:border-[#123879]"
                 {...register("username")}
               />
             </label>
@@ -84,17 +84,11 @@ export default function LoginPage() {
               <input
                 type="password"
                 placeholder="ກະລຸນາປ້ອນລະຫັດຜ່ານ"
-                className="mt-2 h-10 w-full rounded-lg border border-[#d9d9d9] px-3 text-sm shadow-sm outline-none placeholder:text-[#d9d9d9] focus:border-[#123879]"
+                className="mt-2 h-10 w-full rounded-lg border border-[#d9d9d9] px-3 text-sm shadow-sm outline-none placeholder:text-[#b9b9b9] focus:border-[#123879]"
                 {...register("password")}
               />
             </label>
             {errors.password && <p className="mt-2 text-sm text-red-600">{errors.password.message}</p>}
-
-            <div className="mt-3 text-right text-xs font-semibold">
-              <Link href="/forgot-password" className="text-[#123879] hover:underline">
-                ລືມລະຫັດຜ່ານ
-              </Link>
-            </div>
 
             {formError && <div className="mt-5 rounded-xl bg-red-50 px-4 py-3 text-red-700">{formError}</div>}
 

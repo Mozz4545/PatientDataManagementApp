@@ -87,9 +87,13 @@ export default function ExamTypesPage() {
 
       <div className="grid gap-5 px-4 py-4 sm:px-6 md:px-8 lg:grid-cols-[360px_1fr] lg:px-10">
         <Panel title={editing ? "ແກ້ໄຂປະເພດການກວດ" : "ເພີ່ມປະເພດການກວດ"}>
-          {!isAdmin && !userQuery.isLoading ? (
+          {userQuery.isLoading ? (
+            <div className="rounded-xl border border-[#d9d9d9] bg-[#f7f8fb] p-4 font-semibold text-[#767285]">
+              ກຳລັງກວດສິດຜູ້ໃຊ້...
+            </div>
+          ) : !isAdmin ? (
             <div className="rounded-xl border border-red-200 bg-red-50 p-4 font-semibold text-red-700">
-              ສະເພາະ ADMIN ເທົ່ານັ້ນທີ່ຈັດການປະເພດການກວດໄດ້
+              ສະເພາະຜູ້ດູແລລະບົບເທົ່ານັ້ນທີ່ຈັດການປະເພດການກວດໄດ້
             </div>
           ) : (
             <form onSubmit={handleSubmit(onSubmit)}>
@@ -139,27 +143,47 @@ export default function ExamTypesPage() {
                 </tr>
               </thead>
               <tbody className="text-xs text-[#767285]">
-                {(examTypesQuery.data ?? []).map((exam) => (
-                  <tr key={exam.exam_type_id} className="border-t border-[#d7d7d7]">
-                    <td className="px-5 py-3">{exam.exam_type_id}</td>
-                    <td className="px-5 py-3">{exam.exam_name}</td>
-                    <td className="px-5 py-3">{exam.description || "-"}</td>
-                    <td className="px-5 py-3">{Number(exam.price || 0).toLocaleString("lo-LA")} ກີບ</td>
-                    <td className="px-5 py-3">
-                      {isAdmin ? (
-                        <button
-                          type="button"
-                          onClick={() => setEditing(exam)}
-                          className="rounded-full bg-[#bafbd2] px-4 py-1 text-[11px] font-bold text-[#137547]"
-                        >
-                          ແກ້ໄຂ
-                        </button>
-                      ) : (
-                        <span>ADMIN only</span>
-                      )}
+                {examTypesQuery.isLoading ? (
+                  <tr>
+                    <td className="px-5 py-6 text-center" colSpan={5}>
+                      ກຳລັງໂຫຼດ...
                     </td>
                   </tr>
-                ))}
+                ) : examTypesQuery.isError ? (
+                  <tr>
+                    <td className="px-5 py-6 text-center text-red-600" colSpan={5}>
+                      ບໍ່ສາມາດໂຫຼດລາຍການໄດ້ ກະລຸນາເຂົ້າລະບົບໃໝ່ ຫຼື ກົດໂຫຼດໜ້າອີກຄັ້ງ
+                    </td>
+                  </tr>
+                ) : (examTypesQuery.data ?? []).length === 0 ? (
+                  <tr>
+                    <td className="px-5 py-6 text-center" colSpan={5}>
+                      ບໍ່ມີປະເພດການກວດ
+                    </td>
+                  </tr>
+                ) : (
+                  (examTypesQuery.data ?? []).map((exam) => (
+                    <tr key={exam.exam_type_id} className="border-t border-[#d7d7d7]">
+                      <td className="px-5 py-3">{exam.exam_type_id}</td>
+                      <td className="px-5 py-3">{exam.exam_name}</td>
+                      <td className="px-5 py-3">{exam.description || "-"}</td>
+                      <td className="px-5 py-3">{Number(exam.price || 0).toLocaleString("lo-LA")} ກີບ</td>
+                      <td className="px-5 py-3">
+                        {isAdmin ? (
+                          <button
+                            type="button"
+                            onClick={() => setEditing(exam)}
+                            className="rounded-full bg-[#bafbd2] px-4 py-1 text-[11px] font-bold text-[#137547]"
+                          >
+                            ແກ້ໄຂ
+                          </button>
+                        ) : (
+                          <span>ສະເພາະຜູ້ດູແລ</span>
+                        )}
+                      </td>
+                    </tr>
+                  ))
+                )}
               </tbody>
             </table>
           </div>

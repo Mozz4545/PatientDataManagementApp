@@ -5,11 +5,9 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import AppShell from "@/components/AppShell";
 import { ActionButton, PageHero, Panel, QueuesTable, SmallStat } from "@/components/dashboard-ui";
 import api from "@/lib/api";
+import { isCallingQueueStatus, isInProgressStatus, isWaitingQueueStatus } from "@/lib/status";
 import type { ApiResponse, Queue } from "@/lib/types";
 
-const WAITING_STATUS = "ກຳລັງລໍຖ້າ";
-const CALLING_STATUS = "ກຳລັງເອີ້ນ";
-const IN_PROGRESS_STATUS = "ກຳລັງກວດ";
 const COMPLETED_STATUS = "ສຳເລັດ";
 
 export default function QueuesPage() {
@@ -53,7 +51,7 @@ export default function QueuesPage() {
         <ActionButton tone="violet" onClick={() => window.open("/queues/display", "queue-display", "width=1200,height=760")}>
           ເປີດຈໍສະແດງ
         </ActionButton>
-        <ActionButton onClick={() => queuesQuery.refetch()}>Refresh</ActionButton>
+        <ActionButton onClick={() => queuesQuery.refetch()}>ໂຫຼດໃໝ່</ActionButton>
       </PageHero>
 
       <div className="px-4 py-4 sm:px-6 md:px-8 lg:px-10">
@@ -73,7 +71,17 @@ export default function QueuesPage() {
 
         <div className="mt-5 lg:mt-6">
           <Panel title="ສະຖານະຄິວລວມ" dot="#f8df00">
-            <QueuesTable queues={queues.filter((queue) => !isActiveQueue(queue.status))} accent="light" />
+            {queuesQuery.isLoading ? (
+              <div className="rounded-xl bg-[#f6f6f6] px-5 py-6 text-center text-sm font-bold text-[#767285]">
+                ກຳລັງໂຫຼດ...
+              </div>
+            ) : queuesQuery.isError ? (
+              <div className="rounded-xl bg-red-50 px-5 py-6 text-center text-sm font-bold text-red-700">
+                ບໍ່ສາມາດໂຫຼດສະຖານະຄິວໄດ້
+              </div>
+            ) : (
+              <QueuesTable queues={queues} accent="light" />
+            )}
           </Panel>
         </div>
       </div>
@@ -103,9 +111,9 @@ export default function QueuesPage() {
 }
 
 function isWaitingQueue(status?: string) {
-  return status === WAITING_STATUS || status === "WAITING";
+  return isWaitingQueueStatus(status);
 }
 
 function isActiveQueue(status?: string) {
-  return isWaitingQueue(status) || status === CALLING_STATUS || status === IN_PROGRESS_STATUS;
+  return isWaitingQueue(status) || isCallingQueueStatus(status) || isInProgressStatus(status);
 }

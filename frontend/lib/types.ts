@@ -40,12 +40,17 @@ export type Patient = {
 
 export type Order = {
   order_id: number;
+  document_no?: string | null;
+  billing_no?: string | null;
   patient_id: number;
   exam_type_id: number;
   staff_id: number;
   order_date: string;
   note?: string | null;
   status: string;
+  workflow_status?: string | null;
+  result_id?: number | null;
+  payment_id?: number | null;
   first_name?: string;
   last_name?: string;
   exam_name?: string;
@@ -84,22 +89,32 @@ export type Payment = {
   amount: number | string;
   payment_date: string;
   payment_type?: string;
+  receipt_no?: string | null;
+  status?: "PAID" | "VOID" | "REFUNDED" | string;
+  adjustment_reason?: string | null;
+  adjusted_by?: number | null;
+  adjusted_at?: string | null;
   first_name?: string;
   last_name?: string;
   staff_name?: string;
   exam_name?: string;
+  exam_price?: number | string | null;
   order_status?: string;
 };
 
 export type Result = {
   result_id: number;
+  report_no?: string | null;
   order_id: number;
+  patient_id?: number;
   staff_id: number;
   result_detail: string;
+  result_image_url?: string | null;
   result_date: string;
   staff_name?: string;
   first_name?: string;
   last_name?: string;
+  patient_phone?: string | null;
   exam_name?: string;
   order_date?: string;
   order_status?: string;

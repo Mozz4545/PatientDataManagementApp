@@ -1,21 +1,26 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useForm, type FieldPath } from "react-hook-form";
+import { useForm, useWatch, type FieldPath } from "react-hook-form";
 import { z } from "zod";
 import AppShell, { useCurrentUser } from "@/components/AppShell";
 import { ActionButton, formatDateTime, PageHero, SearchBox, StatusPill, patientName } from "@/components/dashboard-ui";
 import api from "@/lib/api";
-import { escapeHtml, printDocument } from "@/lib/print";
-import type { ApiResponse, Order, Payment } from "@/lib/types";
+import { escapeHtml, printDocument, printLogoHtml } from "@/lib/print";
+import { displayOrderStatus, isCancelledStatus, isReadyToPayStatus } from "@/lib/status";
+import type { ApiResponse, Order, Payment, Staff } from "@/lib/types";
 
 const paymentSchema = z.object({
-  amount: z.coerce.number().min(1, "ກະລຸນາປ້ອນຈຳນວນເງິນ"),
+  staff_id: z.coerce.number().min(1, "ກະລຸນາເລືອກຜູ້ຮັບເງິນ"),
   payment_type: z.string().min(1, "ກະລຸນາເລືອກຊ່ອງທາງການຊຳລະ"),
 });
 
 type PaymentValues = z.infer<typeof paymentSchema>;
+const adjustmentSchema = z.object({
+  reason: z.string().min(3, "ກະລຸນາລະບຸເຫດຜົນ"),
+});
+type AdjustmentValues = z.infer<typeof adjustmentSchema>;
 
 const paymentTypes = ["ເງິນສົດ", "ໂອນເງິນ", "ບັດ"];
 
@@ -26,7 +31,9 @@ export default function PaymentsPage() {
   const [search, setSearch] = useState("");
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [selectedReceipt, setSelectedReceipt] = useState<Payment | null>(null);
+  const [selectedAdjustment, setSelectedAdjustment] = useState<{ payment: Payment; action: "void" | "refund" } | null>(null);
   const [formError, setFormError] = useState<string | null>(null);
+  const isAdmin = userQuery.data?.role === "ADMIN";
 
   const ordersQuery = useQuery({
     queryKey: ["orders", "payments"],
@@ -40,41 +47,64 @@ export default function PaymentsPage() {
     retry: false,
   });
 
+  const staffOptionsQuery = useQuery({
+    queryKey: ["staff-options", "payments"],
+    queryFn: async () => (await api.get<ApiResponse<Staff[]>>("/staff/options")).data.data,
+    retry: false,
+  });
+
   const payments = useMemo(() => paymentsQuery.data ?? [], [paymentsQuery.data]);
-  const paidOrderIds = useMemo(() => new Set(payments.map((payment) => payment.order_id)), [payments]);
+  const activePayments = useMemo(() => payments.filter((payment) => paymentStatus(payment) === "PAID"), [payments]);
+  const paidOrderIds = useMemo(() => new Set(activePayments.map((payment) => payment.order_id)), [activePayments]);
   const orders = useMemo(() => ordersQuery.data ?? [], [ordersQuery.data]);
+  const staffOptions = useMemo(() => staffOptionsQuery.data ?? [], [staffOptionsQuery.data]);
 
   const unpaidOrders = useMemo(
-    () => orders.filter((order) => !paidOrderIds.has(order.order_id) && order.status !== "ຍົກເລີກແລ້ວ" && order.status !== "CANCELLED"),
+    () => orders.filter((order) => !paidOrderIds.has(order.order_id) && !isCancelledStatus(order.status)),
     [orders, paidOrderIds]
   );
 
   const filteredUnpaid = useMemo(() => filterOrders(unpaidOrders, search), [unpaidOrders, search]);
   const filteredPayments = useMemo(() => filterPayments(payments, search), [payments, search]);
-  const totalIncome = payments.reduce((sum, payment) => sum + Number(payment.amount || 0), 0);
+  const totalIncome = activePayments.reduce((sum, payment) => sum + Number(payment.amount || 0), 0);
 
   const {
     register,
     handleSubmit,
     reset,
+    control,
     setError,
     setValue,
     formState: { errors, isSubmitting },
   } = useForm<PaymentValues>({
     defaultValues: {
-      amount: 0,
+      staff_id: 0,
       payment_type: paymentTypes[0],
     },
   });
+  const selectedStaffId = Number(useWatch({ control, name: "staff_id" }) || 0);
+  const selectedStaff = useMemo(
+    () => staffOptions.find((staff) => staff.staff_id === selectedStaffId) || null,
+    [selectedStaffId, staffOptions]
+  );
+  const adjustmentForm = useForm<AdjustmentValues>({
+    defaultValues: { reason: "" },
+  });
+
+  useEffect(() => {
+    if (!staffOptions.length) return;
+    if (selectedStaffId > 0) return;
+    const currentUserStaffId = Number(userQuery.data?.staff_id || userQuery.data?.id || 0);
+    const defaultStaff = staffOptions.find((staff) => staff.staff_id === currentUserStaffId) || staffOptions[0];
+    setValue("staff_id", defaultStaff.staff_id, { shouldValidate: true });
+  }, [selectedStaffId, setValue, staffOptions, userQuery.data?.id, userQuery.data?.staff_id]);
 
   const createPaymentMutation = useMutation({
     mutationFn: async (values: PaymentValues) => {
-      const staffId = userQuery.data?.staff_id || userQuery.data?.id;
-      if (!selectedOrder || !staffId) throw new Error("missing-data");
+      if (!selectedOrder) throw new Error("missing-data");
       return api.post("/payments", {
         order_id: selectedOrder.order_id,
-        staff_id: staffId,
-        amount: values.amount,
+        staff_id: values.staff_id,
         payment_date: new Date().toISOString().slice(0, 19).replace("T", " "),
         payment_type: values.payment_type,
       });
@@ -84,11 +114,30 @@ export default function PaymentsPage() {
       queryClient.invalidateQueries({ queryKey: ["orders"] });
       setSelectedOrder(null);
       setFormError(null);
-      reset({ amount: 0, payment_type: paymentTypes[0] });
+      reset({ staff_id: selectedStaffId, payment_type: paymentTypes[0] });
       setTab("paid");
     },
     onError: (error: unknown) => {
       setFormError(getErrorMessage(error) || "ບໍ່ສາມາດບັນທຶກການຊຳລະໄດ້");
+    },
+  });
+
+  const adjustPaymentMutation = useMutation({
+    mutationFn: async (values: AdjustmentValues) => {
+      if (!selectedAdjustment) throw new Error("missing-payment");
+      return api.patch(`/payments/${selectedAdjustment.payment.payment_id}/${selectedAdjustment.action}`, {
+        reason: values.reason,
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["payments"] });
+      queryClient.invalidateQueries({ queryKey: ["orders"] });
+      setSelectedAdjustment(null);
+      adjustmentForm.reset({ reason: "" });
+      setFormError(null);
+    },
+    onError: (error: unknown) => {
+      setFormError(getErrorMessage(error) || "ບໍ່ສາມາດປັບສະຖານະການຊຳລະໄດ້");
     },
   });
 
@@ -110,14 +159,14 @@ export default function PaymentsPage() {
     <AppShell>
       <PageHero title="ການຊຳລະເງິນ" subtitle="ຈັດການການຈ່າຍເງິນຂອງໃບສັ່ງກວດ">
         <SearchBox value={search} onChange={setSearch} placeholder="ID ຫຼື ຊື່" />
-        <ActionButton onClick={() => (tab === "unpaid" ? ordersQuery.refetch() : paymentsQuery.refetch())}>Refresh</ActionButton>
+        <ActionButton onClick={() => (tab === "unpaid" ? ordersQuery.refetch() : paymentsQuery.refetch())}>ໂຫຼດໃໝ່</ActionButton>
         <ActionButton href="/dashboard">ກັບຄືນ</ActionButton>
       </PageHero>
 
       <div className="px-4 py-4 sm:px-6 md:px-8 lg:px-10">
         <div className="grid gap-4 sm:grid-cols-3">
           <SummaryCard label="ຍັງບໍ່ໄດ້ຈ່າຍ" value={unpaidOrders.length} color="#f59f00" />
-          <SummaryCard label="ຈ່າຍແລ້ວ" value={payments.length} color="#12c746" />
+          <SummaryCard label="ຈ່າຍແລ້ວ" value={activePayments.length} color="#12c746" />
           <SummaryCard label="ລາຍຮັບລວມ" value={totalIncome.toLocaleString("lo-LA")} color="#123879" suffix="ກີບ" />
         </div>
 
@@ -137,12 +186,21 @@ export default function PaymentsPage() {
                 orders={filteredUnpaid}
                 onNotice={printPaymentNotice}
                 onPay={(order) => {
+                  if (!isReadyToPayStatus(displayOrderStatus(order))) return;
                   setSelectedOrder(order);
-                  setValue("amount", Number(order.exam_price || 0));
                 }}
               />
             ) : (
-              <PaidPaymentsTable payments={filteredPayments} onReceipt={setSelectedReceipt} />
+              <PaidPaymentsTable
+                payments={filteredPayments}
+                isAdmin={isAdmin}
+                onReceipt={setSelectedReceipt}
+                onAdjust={(payment, action) => {
+                  setSelectedAdjustment({ payment, action });
+                  adjustmentForm.reset({ reason: "" });
+                  setFormError(null);
+                }}
+              />
             )}
           </div>
         </section>
@@ -157,11 +215,13 @@ export default function PaymentsPage() {
               <div>ຄົນເຈັບ: {patientName(selectedOrder)}</div>
               <div>ປະເພດການກວດ: {selectedOrder.exam_name || "-"}</div>
               <div>ລາຄາຕາມປະເພດການກວດ: {Number(selectedOrder.exam_price || 0).toLocaleString("lo-LA")} ກີບ</div>
-              <div>ຜູ້ຮັບເງິນ: {userQuery.data?.staff_name || userQuery.data?.name || "-"}</div>
+              <div>ຜູ້ຮັບເງິນ: {selectedStaff?.staff_name || "-"}</div>
             </div>
 
-            <Field label="ຈຳນວນເງິນ" required error={errors.amount?.message}>
-              <input className="field" type="number" min={1} placeholder="0" {...register("amount")} />
+            <Field label="ຈຳນວນເງິນ" required>
+              <div className="field flex items-center bg-[#f6f6f6] font-bold text-[#123879]">
+                {Number(selectedOrder.exam_price || 0).toLocaleString("lo-LA")} ກີບ
+              </div>
             </Field>
 
             <Field label="ຊ່ອງທາງການຊຳລະ" required error={errors.payment_type?.message}>
@@ -169,6 +229,17 @@ export default function PaymentsPage() {
                 {paymentTypes.map((type) => (
                   <option key={type} value={type}>
                     {type}
+                  </option>
+                ))}
+              </select>
+            </Field>
+
+            <Field label="ຜູ້ຮັບເງິນ" required error={errors.staff_id?.message}>
+              <select className="field" {...register("staff_id")}>
+                <option value={0}>ເລືອກຜູ້ຮັບເງິນ</option>
+                {staffOptions.map((staff) => (
+                  <option key={staff.staff_id} value={staff.staff_id}>
+                    {formatStaffOption(staff)}
                   </option>
                 ))}
               </select>
@@ -200,7 +271,7 @@ export default function PaymentsPage() {
               <p className="mt-1 text-sm font-semibold">ພະແນກລັງສີ - ໂຮງໝໍ 103</p>
             </div>
             <div className="mt-4 grid gap-2 text-sm font-semibold">
-              <div className="flex justify-between"><span>ເລກທີ:</span><span>#{String(selectedReceipt.payment_id).padStart(5, "0")}</span></div>
+              <div className="flex justify-between"><span>ເລກທີ:</span><span>{receiptNumber(selectedReceipt)}</span></div>
               <div className="flex justify-between"><span>ໃບສັ່ງກວດ:</span><span>#{String(selectedReceipt.order_id).padStart(4, "0")}</span></div>
               <div className="flex justify-between"><span>ວັນທີ:</span><span>{formatDateTime(selectedReceipt.payment_date)}</span></div>
               <div className="flex justify-between"><span>ຄົນເຈັບ:</span><span>{patientName(selectedReceipt)}</span></div>
@@ -218,13 +289,59 @@ export default function PaymentsPage() {
               </ActionButton>
               <button
                 type="button"
-                onClick={() => window.print()}
+                onClick={() => printReceipt(selectedReceipt)}
                 className="inline-flex min-h-10 items-center justify-center rounded-lg bg-[#addbf4] px-5 text-base font-bold text-black shadow-sm"
               >
                 ພິມໃບຮັບເງິນ
               </button>
             </div>
           </div>
+        </div>
+      )}
+
+      {selectedAdjustment && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 px-4">
+          <form
+            onSubmit={adjustmentForm.handleSubmit((values) => {
+              const parsed = adjustmentSchema.safeParse(values);
+              if (!parsed.success) {
+                parsed.error.issues.forEach((issue) => {
+                  const field = issue.path[0] as FieldPath<AdjustmentValues> | undefined;
+                  if (field) adjustmentForm.setError(field, { message: issue.message });
+                });
+                setFormError(parsed.error.issues[0]?.message || "ຂໍ້ມູນບໍ່ຖືກຕ້ອງ");
+                return;
+              }
+              setFormError(null);
+              adjustPaymentMutation.mutate(parsed.data);
+            })}
+            className="w-full max-w-[520px] rounded-2xl bg-white p-5 shadow-lg"
+          >
+            <h3 className="text-xl font-bold text-[#120d34]">
+              {selectedAdjustment.action === "void" ? "Void ການຊຳລະ" : "Refund ການຊຳລະ"}
+            </h3>
+            <div className="mt-3 rounded-xl bg-[#f6f6f6] p-3 text-sm font-semibold">
+              <div>ໃບສັ່ງກວດ: #{String(selectedAdjustment.payment.order_id).padStart(4, "0")}</div>
+              <div>ຄົນເຈັບ: {patientName(selectedAdjustment.payment)}</div>
+              <div>ຈຳນວນເງິນ: {Number(selectedAdjustment.payment.amount || 0).toLocaleString("lo-LA")} ກີບ</div>
+            </div>
+            <Field label="ເຫດຜົນ" required error={adjustmentForm.formState.errors.reason?.message}>
+              <textarea className="field min-h-[96px] resize-none py-2" {...adjustmentForm.register("reason")} />
+            </Field>
+            {formError && <div className="mt-3 rounded-lg bg-red-50 p-3 text-red-700">{formError}</div>}
+            <div className="mt-5 flex flex-col gap-3 sm:flex-row sm:justify-end">
+              <ActionButton tone="cream" onClick={() => setSelectedAdjustment(null)}>
+                ຍົກເລີກ
+              </ActionButton>
+              <button
+                type="submit"
+                disabled={adjustPaymentMutation.isPending}
+                className="inline-flex min-h-10 items-center justify-center rounded-lg bg-[#efabab] px-5 text-base font-bold text-black shadow-sm"
+              >
+                {adjustPaymentMutation.isPending ? "ກຳລັງບັນທຶກ..." : "ຢືນຢັນ"}
+              </button>
+            </div>
+          </form>
         </div>
       )}
 
@@ -306,7 +423,7 @@ function UnpaidOrdersTable({
               <td className="px-5 py-3">{formatDateTime(order.order_date)}</td>
               <td className="px-5 py-3">{Number(order.exam_price || 0).toLocaleString("lo-LA")} ກີບ</td>
               <td className="px-5 py-3">
-                <StatusPill status="ຍັງບໍ່ໄດ້ຈ່າຍ" />
+                <StatusPill status={displayOrderStatus(order)} />
               </td>
               <td className="px-5 py-3">
                 <button
@@ -321,9 +438,14 @@ function UnpaidOrdersTable({
                 <button
                   type="button"
                   onClick={() => onPay(order)}
-                  className="rounded-full bg-[#99fba6] px-4 py-1 text-[11px] font-bold text-[#123879] shadow-sm"
+                  disabled={!isReadyToPayStatus(displayOrderStatus(order))}
+                  className={`rounded-full px-4 py-1 text-[11px] font-bold shadow-sm ${
+                    isReadyToPayStatus(displayOrderStatus(order))
+                      ? "bg-[#99fba6] text-[#123879]"
+                      : "bg-[#eeeeee] text-[#9d98aa]"
+                  }`}
                 >
-                  ຈ່າຍເງິນ
+                  {isReadyToPayStatus(displayOrderStatus(order)) ? "ຈ່າຍເງິນ" : "ລໍຖ້າຜົນກວດ"}
                 </button>
               </td>
             </tr>
@@ -334,7 +456,17 @@ function UnpaidOrdersTable({
   );
 }
 
-function PaidPaymentsTable({ payments, onReceipt }: { payments: Payment[]; onReceipt: (payment: Payment) => void }) {
+function PaidPaymentsTable({
+  payments,
+  isAdmin,
+  onReceipt,
+  onAdjust,
+}: {
+  payments: Payment[];
+  isAdmin: boolean;
+  onReceipt: (payment: Payment) => void;
+  onAdjust: (payment: Payment, action: "void" | "refund") => void;
+}) {
   return (
     <table className="w-full min-w-[900px] border-collapse text-left">
       <thead className="bg-[#f2f2f2] text-xs font-bold">
@@ -348,19 +480,20 @@ function PaidPaymentsTable({ payments, onReceipt }: { payments: Payment[]; onRec
           <th className="px-5 py-3">ຜູ້ຮັບເງິນ</th>
           <th className="px-5 py-3">ສະຖານະ</th>
           <th className="px-5 py-3">ໃບຮັບເງິນ</th>
+          <th className="px-5 py-3">ຈັດການ</th>
         </tr>
       </thead>
       <tbody className="text-xs text-[#767285]">
         {payments.length === 0 ? (
           <tr>
-            <td className="px-5 py-6 text-center" colSpan={9}>
+            <td className="px-5 py-6 text-center" colSpan={10}>
               ຍັງບໍ່ມີການຊຳລະເງິນ
             </td>
           </tr>
         ) : (
           payments.map((payment) => (
             <tr key={payment.payment_id} className="border-t border-[#d7d7d7]">
-              <td className="px-5 py-3">#{String(payment.order_id).padStart(4, "0")}</td>
+              <td className="px-5 py-3">{receiptNumber(payment)}</td>
               <td className="px-5 py-3">{formatDateTime(payment.payment_date)}</td>
               <td className="px-5 py-3">{patientName(payment)}</td>
               <td className="px-5 py-3">{payment.exam_name || "-"}</td>
@@ -368,16 +501,39 @@ function PaidPaymentsTable({ payments, onReceipt }: { payments: Payment[]; onRec
               <td className="px-5 py-3">{payment.payment_type || "-"}</td>
               <td className="px-5 py-3">{payment.staff_name || "-"}</td>
               <td className="px-5 py-3">
-                <StatusPill status="ຈ່າຍແລ້ວ" />
+                <PaymentStatusPill payment={payment} />
               </td>
               <td className="px-5 py-3">
                 <button
                   type="button"
                   onClick={() => onReceipt(payment)}
+                  disabled={paymentStatus(payment) !== "PAID"}
                   className="rounded-full bg-[#addbf4] px-4 py-1 text-[11px] font-bold text-[#123879]"
                 >
                   ໃບຮັບເງິນ
                 </button>
+              </td>
+              <td className="px-5 py-3">
+                {isAdmin && paymentStatus(payment) === "PAID" ? (
+                  <div className="flex flex-wrap gap-2">
+                    <button
+                      type="button"
+                      onClick={() => onAdjust(payment, "void")}
+                      className="rounded-full bg-[#f4e3b0] px-3 py-1 text-[11px] font-bold text-black"
+                    >
+                      Void
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => onAdjust(payment, "refund")}
+                      className="rounded-full bg-[#efabab] px-3 py-1 text-[11px] font-bold text-black"
+                    >
+                      Refund
+                    </button>
+                  </div>
+                ) : (
+                  <span>{payment.adjustment_reason || "-"}</span>
+                )}
               </td>
             </tr>
           ))
@@ -397,6 +553,21 @@ function Field({ label, required, error, children }: { label: string; required?:
   );
 }
 
+function paymentStatus(payment: Payment) {
+  return String(payment.status || "PAID").toUpperCase();
+}
+
+function PaymentStatusPill({ payment }: { payment: Payment }) {
+  const status = paymentStatus(payment);
+  if (status === "VOID") {
+    return <span className="inline-flex min-w-[72px] justify-center rounded-full bg-[#f4e3b0] px-2.5 py-0.5 text-[11px] font-semibold text-black">Void</span>;
+  }
+  if (status === "REFUNDED") {
+    return <span className="inline-flex min-w-[72px] justify-center rounded-full bg-[#efabab] px-2.5 py-0.5 text-[11px] font-semibold text-black">Refund</span>;
+  }
+  return <StatusPill status="ຈ່າຍແລ້ວ" />;
+}
+
 function filterOrders(orders: Order[], search: string) {
   const text = search.trim().toLowerCase();
   if (!text) return orders;
@@ -407,37 +578,48 @@ function filterPayments(payments: Payment[], search: string) {
   const text = search.trim().toLowerCase();
   if (!text) return payments;
   return payments.filter((payment) =>
-    `${payment.order_id} ${patientName(payment)} ${payment.exam_name || ""} ${payment.payment_type || ""} ${payment.staff_name || ""}`
+    `${payment.receipt_no || ""} ${payment.order_id} ${patientName(payment)} ${payment.exam_name || ""} ${payment.payment_type || ""} ${payment.staff_name || ""}`
       .toLowerCase()
       .includes(text)
   );
 }
 
+function formatStaffOption(staff: Staff) {
+  const id = `STF-${String(staff.staff_id).padStart(4, "0")}`;
+  return `${id} ${staff.staff_name}${staff.position ? ` - ${staff.position}` : ""}`;
+}
+
 function printPaymentNotice(order: Order) {
   const amount = Number(order.exam_price || 0);
   const orderNo = `#${String(order.order_id).padStart(4, "0")}`;
+  const noticeNo = `BILL-${new Date(order.order_date).getFullYear() || new Date().getFullYear()}-${String(order.order_id).padStart(5, "0")}`;
   const patientId = `HN-${String(order.patient_id).padStart(6, "0")}`;
+  const issuedAt = new Date().toLocaleString("lo-LA");
 
   printDocument(
     `ໃບບິນແຈ້ງຊຳລະ ${orderNo}`,
     `<main class="document">
       <section class="header">
         <div class="brand">
-          <div class="logo">XR</div>
+          ${printLogoHtml()}
           <div>
             <p class="hospital">ພະແນກລັງສີ - ໂຮງໝໍ 103</p>
             <div class="muted">Radiology Patient Management System</div>
           </div>
         </div>
-        <div class="muted">ອອກເອກະສານ: ${escapeHtml(new Date().toLocaleString("lo-LA"))}</div>
+        <div class="muted">ອອກເອກະສານ: ${escapeHtml(issuedAt)}</div>
       </section>
 
       <h1 class="title">ໃບບິນແຈ້ງຊຳລະ</h1>
+      <section class="doc-meta">
+        <span class="doc-no">ເລກເອກະສານ: ${escapeHtml(noticeNo)}</span>
+        <span>ສະຖານະ: ລໍຖ້າຊຳລະ</span>
+      </section>
 
       <section class="grid">
         <div class="row"><span class="label">ເລກໃບສັ່ງກວດ</span><span class="value">${escapeHtml(orderNo)}</span></div>
         <div class="row"><span class="label">ວັນທີສັ່ງກວດ</span><span class="value">${escapeHtml(formatDateTime(order.order_date))}</span></div>
-        <div class="row"><span class="label">Patient ID</span><span class="value">${escapeHtml(patientId)}</span></div>
+        <div class="row"><span class="label">ລະຫັດຄົນເຈັບ</span><span class="value">${escapeHtml(patientId)}</span></div>
         <div class="row"><span class="label">ຊື່ຄົນເຈັບ</span><span class="value">${escapeHtml(patientName(order))}</span></div>
         <div class="row"><span class="label">ປະເພດການກວດ</span><span class="value">${escapeHtml(order.exam_name || "-")}</span></div>
         <div class="row"><span class="label">ສະຖານະ</span><span class="value">ຍັງບໍ່ໄດ້ຈ່າຍ</span></div>
@@ -455,18 +637,84 @@ function printPaymentNotice(order: Order) {
           <tbody>
             <tr>
               <td>${escapeHtml(order.exam_name || "ຄ່າກວດລັງສີ")}</td>
-              <td>${escapeHtml(amount.toLocaleString("lo-LA"))} ກີບ</td>
+              <td style="text-align:right">${escapeHtml(amount.toLocaleString("lo-LA"))} ກີບ</td>
             </tr>
           </tbody>
         </table>
       </section>
 
       <div class="amount">ຍອດຕ້ອງຊຳລະ: ${escapeHtml(amount.toLocaleString("lo-LA"))} ກີບ</div>
+      <div class="notice">ໝາຍເຫດ: ເອກະສານນີ້ເປັນໃບແຈ້ງຊຳລະ ບໍ່ແມ່ນໃບຮັບເງິນ. ໃບຮັບເງິນຈະອອກໃຫ້ຫຼັງຈາກຊຳລະເງິນສຳເລັດ.</div>
 
       <section class="signatures">
         <div class="signature-line">ຜູ້ອອກໃບບິນ</div>
         <div class="signature-line">ຜູ້ຊຳລະເງິນ</div>
       </section>
+      <div class="footer">ພະແນກລັງສີ - ໂຮງໝໍ 103 | ກະລຸນານຳໃບແຈ້ງຊຳລະນີ້ມາສະແດງເມື່ອຊຳລະເງິນ</div>
+    </main>`
+  );
+}
+
+function printReceipt(payment: Payment) {
+  const amount = Number(payment.amount || 0);
+  const receiptNo = receiptNumber(payment);
+  const orderNo = `#${String(payment.order_id).padStart(4, "0")}`;
+  const issuedAt = new Date().toLocaleString("lo-LA");
+
+  printDocument(
+    `ໃບຮັບເງິນ ${receiptNo}`,
+    `<main class="document">
+      <section class="header">
+        <div class="brand">
+          ${printLogoHtml()}
+          <div>
+            <p class="hospital">ພະແນກລັງສີ - ໂຮງໝໍ 103</p>
+            <div class="muted">Radiology Patient Management System</div>
+          </div>
+        </div>
+        <div class="muted">ອອກເອກະສານ: ${escapeHtml(issuedAt)}</div>
+      </section>
+
+      <h1 class="title">ໃບຮັບເງິນ</h1>
+      <section class="doc-meta">
+        <span class="doc-no">ເລກໃບຮັບເງິນ: ${escapeHtml(receiptNo)}</span>
+        <span>ສະຖານະ: ຈ່າຍແລ້ວ</span>
+      </section>
+
+      <section class="grid">
+        <div class="row"><span class="label">ໃບສັ່ງກວດ</span><span class="value">${escapeHtml(orderNo)}</span></div>
+        <div class="row"><span class="label">ວັນທີຈ່າຍ</span><span class="value">${escapeHtml(formatDateTime(payment.payment_date))}</span></div>
+        <div class="row"><span class="label">ຄົນເຈັບ</span><span class="value">${escapeHtml(patientName(payment))}</span></div>
+        <div class="row"><span class="label">ປະເພດການກວດ</span><span class="value">${escapeHtml(payment.exam_name || "-")}</span></div>
+        <div class="row"><span class="label">ຊ່ອງທາງຊຳລະ</span><span class="value">${escapeHtml(payment.payment_type || "-")}</span></div>
+        <div class="row"><span class="label">ຜູ້ຮັບເງິນ</span><span class="value">${escapeHtml(payment.staff_name || "-")}</span></div>
+      </section>
+
+      <section class="section">
+        <div class="section-title">ລາຍການຮັບເງິນ</div>
+        <table>
+          <thead>
+            <tr>
+              <th>ລາຍການ</th>
+              <th>ຈຳນວນເງິນ</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>${escapeHtml(payment.exam_name || "ຄ່າກວດລັງສີ")}</td>
+              <td style="text-align:right">${escapeHtml(amount.toLocaleString("lo-LA"))} ກີບ</td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+
+      <div class="amount">ລວມຮັບເງິນ: ${escapeHtml(amount.toLocaleString("lo-LA"))} ກີບ</div>
+
+      <section class="signatures">
+        <div class="signature-line">ຜູ້ຮັບເງິນ</div>
+        <div class="signature-line">ຜູ້ຊຳລະເງິນ</div>
+      </section>
+      <div class="footer">ໃບຮັບເງິນນີ້ອອກຈາກລະບົບຈັດການຂໍ້ມູນພະແນກລັງສີ ໂຮງໝໍ 103</div>
     </main>`
   );
 }
@@ -477,4 +725,8 @@ function getErrorMessage(error: unknown) {
     return response?.data?.message;
   }
   return undefined;
+}
+
+function receiptNumber(payment: Payment) {
+  return payment.receipt_no || `RCPT-${new Date(payment.payment_date).getFullYear() || new Date().getFullYear()}-${String(payment.payment_id).padStart(5, "0")}`;
 }

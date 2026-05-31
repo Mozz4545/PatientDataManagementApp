@@ -4,21 +4,25 @@ import { useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useRouter } from "next/navigation";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import api, { setAuthToken } from "@/lib/api";
+import { statusLabel } from "@/lib/status";
 import type { ApiResponse, User } from "@/lib/types";
 import Sidebar from "./Sidebar";
 
 export function useCurrentUser() {
+  const hasToken = typeof window !== "undefined" && Boolean(localStorage.getItem("radiology_token"));
   return useQuery({
     queryKey: ["auth", "me"],
     queryFn: async () => (await api.get<ApiResponse<User>>("/auth/me")).data.data,
+    enabled: hasToken,
     retry: false,
   });
 }
 
 export default function AppShell({ children }: { children: React.ReactNode }) {
   const router = useRouter();
+  const queryClient = useQueryClient();
   const pathname = usePathname();
   const userQuery = useCurrentUser();
   const user = userQuery.data;
@@ -27,6 +31,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
     localStorage.removeItem("radiology_token");
     localStorage.removeItem("radiology_user");
     setAuthToken(undefined);
+    queryClient.clear();
     router.replace("/login");
   };
 
@@ -42,10 +47,12 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     if (userQuery.isError) {
       localStorage.removeItem("radiology_token");
+      localStorage.removeItem("radiology_user");
       setAuthToken(undefined);
+      queryClient.clear();
       router.replace("/login");
     }
-  }, [router, userQuery.isError]);
+  }, [queryClient, router, userQuery.isError]);
 
   return (
     <div className="min-h-screen bg-white text-[#120d34]">
@@ -56,8 +63,8 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
         </h1>
         <div className="hidden items-center gap-3 md:flex">
           <div className="text-right">
-            <div className="text-sm font-medium">{user?.staff_name || user?.name || "Staff Member"}</div>
-            <div className="text-[11px] tracking-wide">{user?.role || "STAFF"}</div>
+            <div className="text-sm font-medium">{user?.staff_name || user?.name || "ພະນັກງານ"}</div>
+            <div className="text-[11px] tracking-wide">{statusLabel(user?.role)}</div>
           </div>
           <div className="h-10 w-10 rounded-full bg-[#dedede]" />
           <button

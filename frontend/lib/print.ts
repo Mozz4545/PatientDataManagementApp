@@ -11,6 +11,11 @@ export function lineBreaks(value: unknown) {
   return escapeHtml(value).replace(/\r?\n/g, "<br />");
 }
 
+export function printLogoHtml() {
+  const origin = typeof window !== "undefined" ? window.location.origin : "";
+  return `<img class="logo" src="${escapeHtml(`${origin}/radiology_logo_minimal.svg`)}" alt="Radiology logo" />`;
+}
+
 export function printDocument(title: string, bodyHtml: string) {
   const printWindow = window.open("", "_blank", "width=900,height=700");
   if (!printWindow) return;
@@ -48,15 +53,9 @@ export function printDocument(title: string, bodyHtml: string) {
         gap: 12px;
       }
       .logo {
-        display: grid;
         width: 52px;
         height: 52px;
-        place-items: center;
-        border-radius: 14px;
-        background: #123879;
-        color: #ffffff;
-        font-size: 24px;
-        font-weight: 800;
+        object-fit: contain;
       }
       .hospital {
         margin: 0;
@@ -75,6 +74,52 @@ export function printDocument(title: string, bodyHtml: string) {
         color: #123879;
         font-size: 26px;
         font-weight: 800;
+      }
+      .doc-meta {
+        display: flex;
+        justify-content: space-between;
+        gap: 16px;
+        margin: 14px 0 0;
+        color: #767285;
+        font-size: 12px;
+        font-weight: 700;
+      }
+      .doc-no {
+        display: inline-flex;
+        border: 1px solid #123879;
+        border-radius: 999px;
+        padding: 6px 12px;
+        color: #123879;
+        font-weight: 900;
+      }
+      .report-summary {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 10px;
+        margin: 18px 0 20px;
+      }
+      .report-card {
+        border: 1px solid #d9d9d9;
+        border-radius: 10px;
+        background: #f8fbff;
+        padding: 12px;
+      }
+      .report-card-label {
+        color: #767285;
+        font-size: 11px;
+        font-weight: 800;
+      }
+      .report-card-value {
+        margin-top: 4px;
+        color: #123879;
+        font-size: 20px;
+        font-weight: 900;
+      }
+      .report-note {
+        margin: 10px 0 0;
+        color: #767285;
+        font-size: 12px;
+        font-weight: 700;
       }
       .grid {
         display: grid;
@@ -113,6 +158,15 @@ export function printDocument(title: string, bodyHtml: string) {
         line-height: 1.7;
         white-space: normal;
       }
+      .result-image {
+        display: block;
+        max-width: 100%;
+        max-height: 520px;
+        margin-top: 10px;
+        border: 1px solid #d9d9d9;
+        border-radius: 10px;
+        object-fit: contain;
+      }
       table {
         width: 100%;
         border-collapse: collapse;
@@ -127,6 +181,18 @@ export function printDocument(title: string, bodyHtml: string) {
         color: #123879;
         font-weight: 800;
       }
+      tbody tr:nth-child(even) td {
+        background: #fbfcff;
+      }
+      .text-right {
+        text-align: right;
+      }
+      .text-center {
+        text-align: center;
+      }
+      .nowrap {
+        white-space: nowrap;
+      }
       .amount {
         margin-top: 18px;
         border-radius: 12px;
@@ -136,6 +202,17 @@ export function printDocument(title: string, bodyHtml: string) {
         color: #137547;
         font-size: 28px;
         font-weight: 900;
+      }
+      .notice {
+        margin-top: 18px;
+        border: 1px solid #f4e3b0;
+        border-radius: 10px;
+        background: #fff9e8;
+        padding: 12px 14px;
+        color: #7a5a00;
+        font-size: 12px;
+        font-weight: 700;
+        line-height: 1.6;
       }
       .signatures {
         display: grid;
@@ -148,6 +225,15 @@ export function printDocument(title: string, bodyHtml: string) {
         border-top: 1px solid #120d34;
         padding-top: 8px;
         font-weight: 700;
+      }
+      .footer {
+        margin-top: 28px;
+        border-top: 1px solid #e6e6e6;
+        padding-top: 10px;
+        color: #767285;
+        font-size: 11px;
+        font-weight: 600;
+        text-align: center;
       }
       @media print {
         body { print-color-adjust: exact; -webkit-print-color-adjust: exact; }

@@ -1,17 +1,21 @@
+const fs = require('fs');
+const path = require('path');
 const pool = require('../db/connection');
 
-const getResults = async (req, res) => {
+const resultSelect = `
+  SELECT r.*, s.staff_name, o.patient_id, o.order_date, o.status AS order_status,
+         p.first_name, p.last_name, p.phone AS patient_phone, e.exam_name
+  FROM result r
+  JOIN staff s ON r.staff_id = s.staff_id
+  JOIN \`order\` o ON r.order_id = o.order_id
+  JOIN patients p ON o.patient_id = p.patient_id
+  JOIN exam_types e ON o.exam_type_id = e.exam_type_id
+`;
+
+const getResults = async (_req, res) => {
   try {
-    const [rows] = await pool.execute(
-      `SELECT r.*, s.staff_name, o.order_date, o.status AS order_status,
-              p.first_name, p.last_name, e.exam_name
-       FROM result r
-       JOIN staff s ON r.staff_id = s.staff_id
-       JOIN \`order\` o ON r.order_id = o.order_id
-       JOIN patients p ON o.patient_id = p.patient_id
-       JOIN exam_types e ON o.exam_type_id = e.exam_type_id
-       ORDER BY r.result_date DESC`
-    );
+    await ensureResultSchema();
+    const [rows] = await pool.execute(`${resultSelect} ORDER BY r.result_date DESC`);
     res.json({ success: true, data: rows });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
@@ -20,10 +24,9 @@ const getResults = async (req, res) => {
 
 const getResultByOrder = async (req, res) => {
   try {
+    await ensureResultSchema();
     const [rows] = await pool.execute(
-      `SELECT r.*, s.staff_name FROM result r
-       JOIN staff s ON r.staff_id = s.staff_id
-       WHERE r.order_id = ?`,
+      `${resultSelect} WHERE r.order_id = ? LIMIT 1`,
       [req.params.orderId]
     );
     res.json({ success: true, data: rows[0] || null });
@@ -34,37 +37,155 @@ const getResultByOrder = async (req, res) => {
 
 const createResult = async (req, res) => {
   try {
-    const { order_id, staff_id, result_detail, result_date } = req.body;
-    if (!order_id || !staff_id || !result_detail) {
-      return res.status(400).json({ success: false, message: 'order_id, staff_id and result_detail are required' });
+    await ensureResultSchema();
+    const { order_id, result_detail, result_date } = req.body;
+    const staffId = req.user?.id;
+    const resultImageUrl = req.file ? `/uploads/results/${req.file.filename}` : null;
+
+    if (!order_id || !staffId || !result_detail) {
+      cleanupRequestFile(req.file);
+      return res.status(400).json({ success: false, message: 'ກະລຸນາລະບຸໃບສັ່ງກວດ ແລະ ລາຍລະອຽດຜົນກວດ' });
     }
+
+    const [orders] = await pool.execute('SELECT status FROM `order` WHERE order_id = ? LIMIT 1', [order_id]);
+    if (!orders.length) {
+      cleanupRequestFile(req.file);
+      return res.status(404).json({ success: false, message: 'ບໍ່ພົບໃບສັ່ງກວດນີ້' });
+    }
+    if (orders[0].status === 'CANCELLED') {
+      cleanupRequestFile(req.file);
+      return res.status(400).json({ success: false, message: 'ໃບສັ່ງກວດທີ່ຍົກເລີກແລ້ວບໍ່ສາມາດບັນທຶກຜົນໄດ້' });
+    }
+
     const [existing] = await pool.execute('SELECT result_id FROM result WHERE order_id = ? LIMIT 1', [order_id]);
     if (existing.length) {
-      return res.status(409).json({ success: false, message: 'Result already exists for this order' });
+      cleanupRequestFile(req.file);
+      return res.status(409).json({ success: false, message: 'ໃບສັ່ງກວດນີ້ມີຜົນກວດແລ້ວ' });
     }
+
     const [result] = await pool.execute(
-      'INSERT INTO result (order_id, staff_id, result_detail, result_date) VALUES (?, ?, ?, ?)',
-      [order_id, staff_id, result_detail, result_date || new Date()]
+      'INSERT INTO result (order_id, staff_id, result_detail, result_image_url, result_date) VALUES (?, ?, ?, ?, ?)',
+      [order_id, staffId, result_detail, resultImageUrl, result_date || new Date()]
     );
+    const reportNo = buildReportNo(result.insertId, result_date);
+    await pool.execute('UPDATE result SET report_no=? WHERE result_id=?', [reportNo, result.insertId]);
     await pool.execute('UPDATE `order` SET status=? WHERE order_id=? AND status <> ?', ['COMPLETED', order_id, 'DONE']);
-    res.status(201).json({ success: true, data: { result_id: result.insertId } });
+    res.status(201).json({
+      success: true,
+      data: { result_id: result.insertId, report_no: reportNo, result_image_url: resultImageUrl },
+    });
   } catch (err) {
+    cleanupRequestFile(req.file);
     res.status(500).json({ success: false, message: err.message });
   }
 };
 
 const updateResult = async (req, res) => {
   try {
-    const { result_detail } = req.body;
-    const [result] = await pool.execute(
-      'UPDATE result SET result_detail=? WHERE result_id=?',
-      [result_detail, req.params.id]
+    await ensureResultSchema();
+    const { result_detail, remove_result_image } = req.body;
+    const resultImageUrl = req.file ? `/uploads/results/${req.file.filename}` : undefined;
+
+    const [rows] = await pool.execute(
+      `SELECT r.*, pay.payment_id, COALESCE(pay.status, 'PAID') AS payment_status
+       FROM result r
+       LEFT JOIN payment pay ON pay.order_id = r.order_id AND COALESCE(pay.status, 'PAID') = 'PAID'
+       WHERE r.result_id = ?
+       LIMIT 1`,
+      [req.params.id]
     );
-    if (result.affectedRows === 0) return res.status(404).json({ success: false, message: 'Result not found' });
-    res.json({ success: true, message: 'Updated successfully' });
+    if (!rows.length) {
+      cleanupRequestFile(req.file);
+      return res.status(404).json({ success: false, message: 'ບໍ່ພົບຜົນກວດນີ້' });
+    }
+
+    const oldResult = rows[0];
+    if (oldResult.payment_id && req.user?.role !== 'ADMIN') {
+      cleanupRequestFile(req.file);
+      return res.status(403).json({ success: false, message: 'ຜົນກວດທີ່ຊຳລະແລ້ວ ສະເພາະຜູ້ດູແລລະບົບເທົ່ານັ້ນທີ່ແກ້ໄຂໄດ້' });
+    }
+
+    const shouldRemoveImage = remove_result_image === 'true' || remove_result_image === true;
+    const nextImageUrl = resultImageUrl || (shouldRemoveImage ? null : oldResult.result_image_url);
+
+    const [result] = await pool.execute(
+      'UPDATE result SET result_detail=?, result_image_url=? WHERE result_id=?',
+      [result_detail, nextImageUrl, req.params.id]
+    );
+    if (result.affectedRows === 0) {
+      cleanupRequestFile(req.file);
+      return res.status(404).json({ success: false, message: 'ບໍ່ພົບຜົນກວດນີ້' });
+    }
+
+    if ((resultImageUrl || shouldRemoveImage) && oldResult.result_image_url) {
+      deleteUploadedResultImage(oldResult.result_image_url);
+    }
+
+    res.json({
+      success: true,
+      message: 'ອັບເດດສຳເລັດ',
+      data: { result_image_url: nextImageUrl },
+    });
   } catch (err) {
+    cleanupRequestFile(req.file);
     res.status(500).json({ success: false, message: err.message });
   }
 };
 
 module.exports = { getResults, getResultByOrder, createResult, updateResult };
+
+async function ensureResultSchema() {
+  await addColumnIfMissing('result', 'report_no', 'VARCHAR(40) NULL');
+  await addColumnIfMissing('result', 'result_image_url', 'VARCHAR(255) NULL');
+  await pool.execute(`
+    UPDATE result
+    SET report_no = CONCAT('XR-', DATE_FORMAT(result_date, '%Y%m%d'), '-', LPAD(result_id, 5, '0'))
+    WHERE report_no IS NULL OR report_no = ''
+  `);
+}
+
+async function addColumnIfMissing(tableName, columnName, definition) {
+  const [rows] = await pool.execute(
+    `SELECT COLUMN_NAME
+     FROM INFORMATION_SCHEMA.COLUMNS
+     WHERE TABLE_SCHEMA = DATABASE()
+       AND TABLE_NAME = ?
+       AND COLUMN_NAME = ?
+     LIMIT 1`,
+    [tableName, columnName]
+  );
+  if (!rows.length) {
+    const safeTable = tableName.replaceAll('`', '``');
+    const safeColumn = columnName.replaceAll('`', '``');
+    await pool.execute(`ALTER TABLE \`${safeTable}\` ADD COLUMN \`${safeColumn}\` ${definition}`);
+  }
+}
+
+function deleteUploadedResultImage(imageUrl) {
+  if (!imageUrl || !imageUrl.startsWith('/uploads/results/')) return;
+  const filename = path.basename(imageUrl);
+  const filePath = path.join(__dirname, '../../uploads/results', filename);
+  fs.unlink(filePath, (err) => {
+    if (err && err.code !== 'ENOENT') {
+      console.error('Delete result image failed:', err.message);
+    }
+  });
+}
+
+function cleanupRequestFile(file) {
+  if (!file?.path) return;
+  fs.unlink(file.path, (err) => {
+    if (err && err.code !== 'ENOENT') {
+      console.error('Cleanup result image failed:', err.message);
+    }
+  });
+}
+
+function buildReportNo(resultId, resultDate) {
+  const date = resultDate ? new Date(resultDate) : new Date();
+  const safeDate = Number.isNaN(date.getTime()) ? new Date() : date;
+  const y = safeDate.getFullYear();
+  const m = String(safeDate.getMonth() + 1).padStart(2, '0');
+  const d = String(safeDate.getDate()).padStart(2, '0');
+  return `XR-${y}${m}${d}-${String(resultId).padStart(5, '0')}`;
+}

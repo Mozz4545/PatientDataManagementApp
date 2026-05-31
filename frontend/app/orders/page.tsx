@@ -11,6 +11,7 @@ import {
   SmallStat,
 } from "@/components/dashboard-ui";
 import api from "@/lib/api";
+import { isCancelledStatus, isCompletedStatus, isInProgressStatus, statusKey } from "@/lib/status";
 import type { ApiResponse, Order } from "@/lib/types";
 
 export default function OrdersPage() {
@@ -35,10 +36,10 @@ export default function OrdersPage() {
   });
 
   const orders = ordersQuery.data ?? [];
-  const pending = orders.filter((order) => order.status === "PENDING").length;
-  const inProgress = orders.filter((order) => order.status === "ກຳລັງກວດ").length;
-  const completed = orders.filter((order) => order.status === "ສຳເລັດແລ້ວ" || order.status === "DONE").length;
-  const cancelled = orders.filter((order) => order.status === "ຍົກເລີກແລ້ວ").length;
+  const pending = orders.filter((order) => statusKey(order.status) === "PENDING").length;
+  const inProgress = orders.filter((order) => isInProgressStatus(order.status)).length;
+  const completed = orders.filter((order) => isCompletedStatus(order.status)).length;
+  const cancelled = orders.filter((order) => isCancelledStatus(order.status)).length;
 
   return (
     <AppShell>
@@ -46,7 +47,7 @@ export default function OrdersPage() {
         <ActionButton href="/orders/new" tone="green">
           ສ້າງໃບສັ່ງກວດ
         </ActionButton>
-        <ActionButton onClick={() => ordersQuery.refetch()}>Refresh</ActionButton>
+        <ActionButton onClick={() => ordersQuery.refetch()}>ໂຫຼດໃໝ່</ActionButton>
       </PageHero>
 
       <div className="px-4 py-4 sm:px-6 md:px-8 lg:px-10">

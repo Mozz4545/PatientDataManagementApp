@@ -15,6 +15,7 @@ const orderFormSchema = z.object({
   last_name: z.string().optional(),
   age: z.coerce.number().optional(),
   gender: z.enum(["M", "F", "Other"]),
+  date_of_birth: z.string().optional(),
   address: z.string().optional(),
   phone: z.string().optional(),
   emergency_phone: z.string().optional(),
@@ -78,6 +79,7 @@ export default function NewOrderPage() {
       last_name: "",
       age: 1,
       gender: "F",
+      date_of_birth: "",
       address: "",
       phone: "",
       emergency_phone: "",
@@ -111,6 +113,7 @@ export default function NewOrderPage() {
       last_name: patient.last_name || "",
       age: patient.age || 1,
       gender: patient.gender === "M" || patient.gender === "Other" ? patient.gender : "F",
+      date_of_birth: patient.date_of_birth?.slice(0, 10) || "",
       address: patient.address || "",
       phone: patient.phone || "",
       emergency_phone: patient.emergency_phone || "",
@@ -125,6 +128,7 @@ export default function NewOrderPage() {
       last_name: "",
       age: 1,
       gender: "F",
+      date_of_birth: "",
       address: "",
       phone: "",
       emergency_phone: "",
@@ -142,7 +146,7 @@ export default function NewOrderPage() {
           age: values.age,
           gender: values.gender,
           phone: values.phone,
-          date_of_birth: null,
+          date_of_birth: values.date_of_birth || null,
           address: values.address,
           emergency_phone: values.emergency_phone,
         });
@@ -203,8 +207,7 @@ export default function NewOrderPage() {
         requireField("last_name", parsed.data.last_name, "ກະລຸນາປ້ອນນາມສະກຸນ") &&
         requireField("age", parsed.data.age, "ກະລຸນາປ້ອນອາຍຸ") &&
         requireField("address", parsed.data.address, "ກະລຸນາປ້ອນທີ່ຢູ່") &&
-        requireField("phone", parsed.data.phone, "ກະລຸນາປ້ອນເບີໂທ") &&
-        requireField("emergency_phone", parsed.data.emergency_phone, "ກະລຸນາປ້ອນເບີສຸກເສີນ");
+        requireField("phone", parsed.data.phone, "ກະລຸນາປ້ອນເບີໂທ");
 
       if (!valid) {
         setFormError("ກະລຸນາປ້ອນຂໍ້ມູນຄົນເຈັບໃຫ້ຄົບ ຫຼື ເລືອກຄົນເຈັບເກົ່າຈາກການຄົ້ນຫາ");
@@ -230,9 +233,9 @@ export default function NewOrderPage() {
           <section className="mb-5 rounded-xl border border-[#d9d9d9] bg-[#f7f8fb] p-4">
             <div className="mb-3 text-sm font-bold text-[#120d34]">ຄົ້ນຫາຄົນເຈັບເກົ່າ</div>
             <p className="mb-3 text-xs font-semibold text-[#767285]">
-              ຖ້າເປັນຄົນເຈັບໃໝ່ ລະບົບຈະສ້າງ Patient ID ໃຫ້ອັດຕະໂນມັດ ແລະ ບໍ່ຊ້ຳກັບຄົນອື່ນໃນຖານຂໍ້ມູນ
+              ຖ້າເປັນຄົນເຈັບໃໝ່ ລະບົບຈະສ້າງລະຫັດຄົນເຈັບໃຫ້ອັດຕະໂນມັດ ແລະ ບໍ່ຊ້ຳກັບຄົນອື່ນໃນຖານຂໍ້ມູນ
             </p>
-            <SearchBox value={patientSearch} onChange={setPatientSearch} placeholder="Patient ID ຫຼື ຊື່ຄົນເຈັບ" />
+            <SearchBox value={patientSearch} onChange={setPatientSearch} placeholder="ລະຫັດຄົນເຈັບ ຫຼື ຊື່ຄົນເຈັບ" />
             {selectedPatient && (
               <div className="mt-3 flex flex-col gap-2 rounded-lg bg-[#eaffef] p-3 text-sm font-semibold text-[#137547] sm:flex-row sm:items-center sm:justify-between">
                 <span>
@@ -287,6 +290,10 @@ export default function NewOrderPage() {
           </div>
 
           <div className="grid gap-0 sm:grid-cols-2 sm:gap-x-5">
+            <Field label="ວັນເກີດ" error={errors.date_of_birth?.message}>
+              <input className="field" readOnly={!!selectedPatient} type="date" {...register("date_of_birth")} />
+            </Field>
+
             <Field label="ທີ່ຢູ່ປັດຈຸບັນ" required={!selectedPatient} error={errors.address?.message}>
               <input className="field" readOnly={!!selectedPatient} placeholder="ບ້ານ, ເມືອງ, ແຂວງ" {...register("address")} />
             </Field>
@@ -311,7 +318,7 @@ export default function NewOrderPage() {
                 <input
                   className="field pr-10"
                   value={staffPickerOpen ? staffSearch : formatStaffOption(selectedStaff)}
-                  placeholder="ຄົ້ນຫາ Staff ID ຫຼື ຊື່ພະນັກງານ"
+                  placeholder="ຄົ້ນຫາລະຫັດພະນັກງານ ຫຼື ຊື່ພະນັກງານ"
                   onBlur={() => {
                     window.setTimeout(() => {
                       setStaffPickerOpen(false);
@@ -355,7 +362,7 @@ export default function NewOrderPage() {
               </div>
             </Field>
 
-            <Field label="ເບີຕິດຕໍ່ສຸກເສີນ" required={!selectedPatient} error={errors.emergency_phone?.message}>
+            <Field label="ເບີຕິດຕໍ່ສຸກເສີນ" error={errors.emergency_phone?.message}>
               <input className="field" readOnly={!!selectedPatient} placeholder="020 55594595" {...register("emergency_phone")} />
             </Field>
           </div>

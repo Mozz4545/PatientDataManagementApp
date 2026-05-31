@@ -4,6 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import AppShell from "@/components/AppShell";
 import { ActionButton, MetricCard, OrdersTable, PageHero, Panel } from "@/components/dashboard-ui";
 import api from "@/lib/api";
+import { displayOrderStatus, isOpenStatus, isReadyToPayStatus, isWaitingQueueStatus } from "@/lib/status";
 import type { ApiResponse, Order, Payment, Queue, Result } from "@/lib/types";
 
 export default function DashboardPage() {
@@ -39,11 +40,11 @@ export default function DashboardPage() {
 
   const paidOrderIds = new Set(payments.map((payment) => payment.order_id));
   const resultOrderIds = new Set(results.map((result) => result.order_id));
-  const openOrders = orders.filter((order) => order.status !== "ຍົກເລີກແລ້ວ" && order.status !== "CANCELLED");
+  const openOrders = orders.filter((order) => isOpenStatus(order.status));
   const todayOrders = openOrders.filter((order) => order.order_date?.slice(0, 10) === today).length;
-  const waitingQueues = queues.filter((queue) => queue.status === "WAITING" || queue.status === "ກຳລັງລໍຖ້າ").length;
+  const waitingQueues = queues.filter((queue) => isWaitingQueueStatus(queue.status)).length;
   const pendingResults = openOrders.filter((order) => !resultOrderIds.has(order.order_id)).length;
-  const unpaid = openOrders.filter((order) => !paidOrderIds.has(order.order_id)).length;
+  const unpaid = openOrders.filter((order) => !paidOrderIds.has(order.order_id) && isReadyToPayStatus(displayOrderStatus(order))).length;
 
   const handleRefresh = () => {
     ordersQuery.refetch();
@@ -58,7 +59,7 @@ export default function DashboardPage() {
         <ActionButton href="/orders/new" tone="green">
           ສ້າງໃບສັ່ງກວດ
         </ActionButton>
-        <ActionButton onClick={handleRefresh}>Refresh</ActionButton>
+        <ActionButton onClick={handleRefresh}>ໂຫຼດໃໝ່</ActionButton>
       </PageHero>
 
       <div className="px-4 py-4 sm:px-6 md:px-8 lg:px-10">
@@ -73,6 +74,8 @@ export default function DashboardPage() {
           <Panel title="ໃບສັ່ງກວດຫຼ້າສຸດ">
             {ordersQuery.isLoading ? (
               <div className="py-12 text-center text-[#767285]">ກຳລັງໂຫຼດ...</div>
+            ) : ordersQuery.isError ? (
+              <div className="py-12 text-center font-semibold text-red-600">ບໍ່ສາມາດໂຫຼດໃບສັ່ງກວດໄດ້</div>
             ) : (
               <OrdersTable orders={orders.slice(0, 6)} />
             )}

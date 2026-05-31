@@ -47,8 +47,8 @@ export default function StaffFormPage({ staffId }: { staffId?: number }) {
     retry: false,
   });
 
-  const title = isEdit ? "ແກ້ໄຂຂໍ້ມູນ Staff" : "ເພີ່ມພະນັກງານໃໝ່";
-  const subtitle = isEdit ? "ADMIN ແຕ້ນທີ່ສາມາດແກ້ໄຂຂໍ້ມູນພນັກງານໄດ້" : "ບັນທຶກຂໍ້ມູນພນັກງານໃໝ່ລວງຖານຂໍ້ມູນ";
+  const title = isEdit ? "ແກ້ໄຂຂໍ້ມູນພະນັກງານ" : "ເພີ່ມພະນັກງານໃໝ່";
+  const subtitle = isEdit ? "ສະເພາະຜູ້ດູແລລະບົບເທົ່ານັ້ນທີ່ສາມາດແກ້ໄຂຂໍ້ມູນພະນັກງານໄດ້" : "ບັນທຶກຂໍ້ມູນພະນັກງານໃໝ່ລົງຖານຂໍ້ມູນ";
 
   const {
     register,
@@ -153,7 +153,7 @@ export default function StaffFormPage({ staffId }: { staffId?: number }) {
       <div className="px-4 py-5 sm:px-6 lg:px-10">
         {!isAdmin && !userQuery.isLoading ? (
           <div className="rounded-xl border border-red-200 bg-red-50 p-4 font-semibold text-red-700">
-            เฉพาะ ADMIN เท่านั้นที่สามารถเพิ่มหรือแก้ไขข้อมูล Staff ได้
+            ສະເພາະຜູ້ດູແລລະບົບເທົ່ານັ້ນທີ່ສາມາດເພີ່ມ ຫຼື ແກ້ໄຂຂໍ້ມູນພະນັກງານໄດ້
           </div>
         ) : (
           <form onSubmit={handleSubmit(onSubmit)} className="w-full max-w-[760px] rounded-2xl border border-[#d9d9d9] bg-white p-4 shadow-sm sm:p-5">
@@ -162,18 +162,18 @@ export default function StaffFormPage({ staffId }: { staffId?: number }) {
                 <input className="field" placeholder="ກະລຸນາປ້ອນຊື່ ແລະ ນາມສະກຸນ" {...register("staff_name")} />
               </Field>
 
-              <Field label="Username" required error={errors.username?.message}>
-                <input className="field" placeholder="ກະລຸນາປ້ອນ username" {...register("username")} />
+              <Field label="ຊື່ເຂົ້າລະບົບ" required error={errors.username?.message}>
+                <input className="field" placeholder="ກະລຸນາປ້ອນຊື່ເຂົ້າລະບົບ" {...register("username")} />
               </Field>
 
               <Field label={isEdit ? "ລະຫັດຜ່ານ" : "รหัสผ่าน"} required={!isEdit} error={errors.password?.message}>
                 <input className="field" type="password" placeholder={isEdit ? "ກະລຸນາປ້ອນລະຫັດຜ່ານ" : "ຢ່າງນ້ອຍ 6 ຕົວອັກສອນ"} {...register("password")} />
               </Field>
 
-              <Field label="Role" required error={errors.role?.message}>
+              <Field label="ສິດນຳໃຊ້" required error={errors.role?.message}>
                 <select className="field" {...register("role")}>
-                  <option value="STAFF">STAFF</option>
-                  <option value="ADMIN">ADMIN</option>
+                  <option value="STAFF">ພະນັກງານ</option>
+                  <option value="ADMIN">ຜູ້ດູແລລະບົບ</option>
                 </select>
               </Field>
 
