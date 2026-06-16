@@ -51,11 +51,15 @@ async function migrate() {
         position VARCHAR(100),
         department VARCHAR(100),
         phone VARCHAR(20),
+        is_active TINYINT(1) NOT NULL DEFAULT 1,
+        deleted_at DATETIME NULL,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       )
     `);
     await addColumnIfMissing(connection, 'staff', 'department', 'VARCHAR(100) NULL');
     await addColumnIfMissing(connection, 'staff', 'phone', 'VARCHAR(20) NULL');
+    await addColumnIfMissing(connection, 'staff', 'is_active', 'TINYINT(1) NOT NULL DEFAULT 1');
+    await addColumnIfMissing(connection, 'staff', 'deleted_at', 'DATETIME NULL');
 
     await connection.execute(`
       CREATE TABLE IF NOT EXISTS patients (
@@ -77,10 +81,14 @@ async function migrate() {
         exam_type_id INT PRIMARY KEY AUTO_INCREMENT,
         exam_name VARCHAR(255) NOT NULL,
         description TEXT,
-        price DECIMAL(10, 2) DEFAULT 0
+        price DECIMAL(10, 2) DEFAULT 0,
+        is_active TINYINT(1) NOT NULL DEFAULT 1,
+        deleted_at DATETIME NULL
       )
     `);
     await addColumnIfMissing(connection, 'exam_types', 'price', 'DECIMAL(10, 2) DEFAULT 0');
+    await addColumnIfMissing(connection, 'exam_types', 'is_active', 'TINYINT(1) NOT NULL DEFAULT 1');
+    await addColumnIfMissing(connection, 'exam_types', 'deleted_at', 'DATETIME NULL');
 
     await connection.execute(`
       CREATE TABLE IF NOT EXISTS \`order\` (
@@ -125,6 +133,8 @@ async function migrate() {
       )
     `);
     await addColumnIfMissing(connection, 'queue', 'called_at', 'DATETIME NULL');
+    await addIndexIfMissing(connection, 'queue', 'uq_queue_order', 'UNIQUE KEY uq_queue_order (order_id)');
+    await addIndexIfMissing(connection, 'queue', 'uq_queue_date_no', 'UNIQUE KEY uq_queue_date_no (queue_date, queue_no)');
 
     await connection.execute(`
       CREATE TABLE IF NOT EXISTS payment (

@@ -151,7 +151,7 @@ export default function StaffFormPage({ staffId }: { staffId?: number }) {
       </PageHero>
 
       <div className="px-4 py-5 sm:px-6 lg:px-10">
-        {!isAdmin && !userQuery.isLoading ? (
+        {!isAdmin && userQuery.isAuthReady && !userQuery.isLoading ? (
           <div className="rounded-xl border border-red-200 bg-red-50 p-4 font-semibold text-red-700">
             ສະເພາະຜູ້ດູແລລະບົບເທົ່ານັ້ນທີ່ສາມາດເພີ່ມ ຫຼື ແກ້ໄຂຂໍ້ມູນພະນັກງານໄດ້
           </div>

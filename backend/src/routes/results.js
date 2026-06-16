@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { getResults, getResultByOrder, createResult, updateResult } = require('../controllers/resultController');
+const { getResults, getResultByOrder, getResultImage, createResult, updateResult } = require('../controllers/resultController');
 const authGuard = require('../middleware/authGuard');
 const resultImageUpload = require('../middleware/resultImageUpload');
 
@@ -18,6 +18,7 @@ const uploadResultImage = (req, res, next) => {
 
 router.get('/', getResults);
 router.get('/order/:orderId', getResultByOrder);
+router.get('/:id/image', getResultImage);
 router.post('/',              uploadResultImage, createResult);
 router.put('/:id',            uploadResultImage, updateResult);
 

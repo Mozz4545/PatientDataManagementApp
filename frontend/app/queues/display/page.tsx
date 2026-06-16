@@ -23,6 +23,8 @@ export default function QueueDisplayPage() {
 
   const current = displayQuery.data?.current ?? null;
   const recent = useMemo(() => (displayQuery.data?.recent ?? []).filter((queue) => queue.queue_id !== current?.queue_id), [current?.queue_id, displayQuery.data?.recent]);
+  const currentTime = formatDisplayTime(now);
+  const currentDate = formatDisplayDate(now);
 
   return (
     <main className="min-h-screen bg-[#071a3f] text-white">
@@ -33,8 +35,8 @@ export default function QueueDisplayPage() {
             <p className="mt-1 text-sm font-semibold text-white/70">ໂຮງໝໍ 103</p>
           </div>
           <div className="text-left sm:text-right">
-            <div className="text-xl font-bold">{now.toLocaleTimeString("lo-LA", { hour12: false })}</div>
-            <div className="text-sm font-semibold text-white/70">{now.toLocaleDateString("lo-LA")}</div>
+            <div className="text-xl font-bold tabular-nums">{currentTime}</div>
+            <div className="text-sm font-semibold text-white/70">{currentDate}</div>
           </div>
         </header>
 
@@ -88,4 +90,63 @@ export default function QueueDisplayPage() {
       </section>
     </main>
   );
+}
+
+const LAO_WEEKDAYS: Record<string, string> = {
+  Sun: "ວັນອາທິດ",
+  Mon: "ວັນຈັນ",
+  Tue: "ວັນອັງຄານ",
+  Wed: "ວັນພຸດ",
+  Thu: "ວັນພະຫັດ",
+  Fri: "ວັນສຸກ",
+  Sat: "ວັນເສົາ",
+};
+
+const LAO_MONTHS = [
+  "",
+  "ມັງກອນ",
+  "ກຸມພາ",
+  "ມີນາ",
+  "ເມສາ",
+  "ພຶດສະພາ",
+  "ມິຖຸນາ",
+  "ກໍລະກົດ",
+  "ສິງຫາ",
+  "ກັນຍາ",
+  "ຕຸລາ",
+  "ພະຈິກ",
+  "ທັນວາ",
+];
+
+function getLaosDateParts(date: Date) {
+  const parts = new Intl.DateTimeFormat("en-US", {
+    timeZone: "Asia/Vientiane",
+    weekday: "short",
+    year: "numeric",
+    month: "numeric",
+    day: "numeric",
+  }).formatToParts(date);
+
+  const value = (type: Intl.DateTimeFormatPartTypes) => parts.find((part) => part.type === type)?.value || "";
+  return {
+    weekday: value("weekday"),
+    day: Number(value("day")),
+    month: Number(value("month")),
+    year: Number(value("year")),
+  };
+}
+
+function formatDisplayDate(date: Date) {
+  const parts = getLaosDateParts(date);
+  return `${LAO_WEEKDAYS[parts.weekday] || ""} ${parts.day} ${LAO_MONTHS[parts.month] || ""} ${parts.year}`;
+}
+
+function formatDisplayTime(date: Date) {
+  return new Intl.DateTimeFormat("en-GB", {
+    timeZone: "Asia/Vientiane",
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+    hour12: false,
+  }).format(date);
 }

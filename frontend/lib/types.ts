@@ -22,6 +22,8 @@ export type Staff = {
   phone?: string | null;
   username: string;
   role: "ADMIN" | "STAFF" | string;
+  is_active?: number | boolean;
+  deleted_at?: string | null;
   created_at?: string;
 };
 
@@ -63,6 +65,8 @@ export type ExamType = {
   exam_name: string;
   description?: string | null;
   price: number | string;
+  is_active?: number | boolean;
+  deleted_at?: string | null;
 };
 
 export type Queue = {

@@ -11,7 +11,7 @@ import {
   SmallStat,
 } from "@/components/dashboard-ui";
 import api from "@/lib/api";
-import { isCancelledStatus, isCompletedStatus, isInProgressStatus, statusKey } from "@/lib/status";
+import { displayOrderStatus, isCancelledStatus, isCompletedStatus, isInProgressStatus, isReadyToPayStatus, statusKey } from "@/lib/status";
 import type { ApiResponse, Order } from "@/lib/types";
 
 export default function OrdersPage() {
@@ -26,7 +26,7 @@ export default function OrdersPage() {
   });
 
   const cancelMutation = useMutation({
-    mutationFn: (orderId: number) => api.patch(`/orders/${orderId}/status`, { status: "ຍົກເລີກແລ້ວ" }),
+    mutationFn: (orderId: number) => api.patch(`/orders/${orderId}/status`, { status: "CANCELLED" }),
     onSuccess: () => {
       setConfirmOrder(null);
       setSuccessMessage("ໃບສັ່ງກວດ ຖືກຍົກເລີກແລ້ວ!!!");
@@ -36,10 +36,11 @@ export default function OrdersPage() {
   });
 
   const orders = ordersQuery.data ?? [];
-  const pending = orders.filter((order) => statusKey(order.status) === "PENDING").length;
-  const inProgress = orders.filter((order) => isInProgressStatus(order.status)).length;
-  const completed = orders.filter((order) => isCompletedStatus(order.status)).length;
-  const cancelled = orders.filter((order) => isCancelledStatus(order.status)).length;
+  const pending = orders.filter((order) => statusKey(displayOrderStatus(order)) === "PENDING").length;
+  const waitingResult = orders.filter((order) => isInProgressStatus(displayOrderStatus(order))).length;
+  const waitingPayment = orders.filter((order) => isReadyToPayStatus(displayOrderStatus(order))).length;
+  const completed = orders.filter((order) => isCompletedStatus(displayOrderStatus(order))).length;
+  const cancelled = orders.filter((order) => isCancelledStatus(displayOrderStatus(order))).length;
 
   return (
     <AppShell>
@@ -52,10 +53,11 @@ export default function OrdersPage() {
 
       <div className="px-4 py-4 sm:px-6 md:px-8 lg:px-10">
         <div className="rounded-2xl bg-[#fff9e8] p-4 shadow-sm">
-          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
+          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-6">
             <SmallStat label="ໃບສັ່ງກວດທັງໝົດ" value={orders.length} color="#1e66ff" />
-            <SmallStat label="ສ້າງແລ້ວ" value={pending} color="#f59f00" />
-            <SmallStat label="ກຳລັງກວດ" value={inProgress} color="#8e22ff" />
+            <SmallStat label="ລໍຖ້າກວດ" value={pending} color="#f59f00" />
+            <SmallStat label="ລໍຖ້າບັນທຶກຜົນກວດ" value={waitingResult} color="#8e22ff" />
+            <SmallStat label="ຄ້າງຊຳລະ" value={waitingPayment} color="#a77b00" />
             <SmallStat label="ສຳເລັດ" value={completed} color="#13d936" />
             <SmallStat label="ຍົກເລີກ" value={cancelled} color="#f00" />
           </div>

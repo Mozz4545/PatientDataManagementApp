@@ -6,8 +6,9 @@ import { useForm, type FieldPath } from "react-hook-form";
 import { z } from "zod";
 import AppShell, { useCurrentUser } from "@/components/AppShell";
 import { ActionButton, PageHero, Panel, SearchBox, StatusPill, formatDate, patientName } from "@/components/dashboard-ui";
-import api, { API_ORIGIN } from "@/lib/api";
+import api from "@/lib/api";
 import { escapeHtml, lineBreaks, printDocument, printLogoHtml } from "@/lib/print";
+import { getResultImageDataUrl, getResultImageObjectUrl } from "@/lib/result-images";
 import { isCancelledStatus } from "@/lib/status";
 import { showToast } from "@/lib/toast";
 import type { ApiResponse, Order, Result } from "@/lib/types";
@@ -27,6 +28,8 @@ export default function ResultsPage() {
   const [resultImage, setResultImage] = useState<File | null>(null);
   const [removeResultImage, setRemoveResultImage] = useState(false);
   const [fullScreenImageUrl, setFullScreenImageUrl] = useState<string | null>(null);
+  const [fullScreenImageOwned, setFullScreenImageOwned] = useState(false);
+  const [savedImageObjectUrl, setSavedImageObjectUrl] = useState("");
   const [formError, setFormError] = useState<string | null>(null);
 
   const ordersQuery = useQuery({
@@ -65,14 +68,34 @@ export default function ResultsPage() {
   } = useForm<ResultValues>({ defaultValues: { result_detail: "" } });
 
   const previewImageUrl = useMemo(() => (resultImage ? URL.createObjectURL(resultImage) : ""), [resultImage]);
-  const savedImageUrl = selectedResult?.result_image_url ? buildAssetUrl(selectedResult.result_image_url) : "";
-  const visibleImageUrl = previewImageUrl || (removeResultImage ? "" : savedImageUrl);
+  const visibleImageUrl = previewImageUrl || (removeResultImage ? "" : savedImageObjectUrl);
 
   useEffect(() => {
     return () => {
       if (previewImageUrl) URL.revokeObjectURL(previewImageUrl);
     };
   }, [previewImageUrl]);
+
+  useEffect(() => {
+    let active = true;
+    let objectUrl = "";
+
+    if (!selectedResult?.result_image_url) return;
+
+    getResultImageObjectUrl(selectedResult.result_id)
+      .then((url) => {
+        objectUrl = url;
+        if (active) setSavedImageObjectUrl(url);
+      })
+      .catch(() => {
+        if (active) setSavedImageObjectUrl("");
+      });
+
+    return () => {
+      active = false;
+      if (objectUrl) URL.revokeObjectURL(objectUrl);
+    };
+  }, [selectedResult?.result_id, selectedResult?.result_image_url]);
 
   const saveMutation = useMutation({
     mutationFn: async (values: ResultValues) => {
@@ -91,7 +114,6 @@ export default function ResultsPage() {
 
       if (!selectedOrder) throw new Error("missing-order");
       formData.append("order_id", String(selectedOrder.order_id));
-      formData.append("result_date", new Date().toISOString().slice(0, 19).replace("T", " "));
       return api.post("/results", formData, {
         headers: { "Content-Type": "multipart/form-data" },
       });
@@ -110,6 +132,7 @@ export default function ResultsPage() {
     setSelectedResult(result || null);
     setResultImage(null);
     setRemoveResultImage(false);
+    setSavedImageObjectUrl("");
     reset({ result_detail: result?.result_detail || "" });
     setFormError(null);
   };
@@ -119,6 +142,7 @@ export default function ResultsPage() {
     setSelectedResult(null);
     setResultImage(null);
     setRemoveResultImage(false);
+    setSavedImageObjectUrl("");
     reset({ result_detail: "" });
     setFormError(null);
   };
@@ -139,6 +163,30 @@ export default function ResultsPage() {
     setFormError(null);
     setRemoveResultImage(false);
     setResultImage(file);
+  };
+
+  const openSavedResultImage = async (result?: Result) => {
+    if (!result?.result_id || !result.result_image_url) return;
+    try {
+      const imageUrl = await getResultImageObjectUrl(result.result_id);
+      setFullScreenImageUrl(imageUrl);
+      setFullScreenImageOwned(true);
+    } catch {
+      showToast("error", "ບໍ່ສາມາດເປີດຮູບຜົນກວດໄດ້");
+    }
+  };
+
+  const openLocalImage = (imageUrl: string) => {
+    setFullScreenImageUrl(imageUrl);
+    setFullScreenImageOwned(false);
+  };
+
+  const closeFullScreenImage = () => {
+    if (fullScreenImageOwned && fullScreenImageUrl?.startsWith("blob:")) {
+      URL.revokeObjectURL(fullScreenImageUrl);
+    }
+    setFullScreenImageUrl(null);
+    setFullScreenImageOwned(false);
   };
 
   const onSubmit = (values: ResultValues) => {
@@ -221,7 +269,7 @@ export default function ResultsPage() {
                           {hasImage && (
                             <button
                               type="button"
-                              onClick={() => setFullScreenImageUrl(buildAssetUrl(result?.result_image_url))}
+                              onClick={() => openSavedResultImage(result)}
                               className="mt-1 text-[11px] font-bold text-[#123879] underline"
                             >
                               ເບິ່ງຮູບ
@@ -236,7 +284,7 @@ export default function ResultsPage() {
                             {result && (
                               <button
                                 type="button"
-                                onClick={() => printResultDocument(order, result)}
+                                onClick={() => void printResultDocument(order, result)}
                                 className="rounded-full bg-[#addbf4] px-4 py-1 text-[11px] font-bold text-[#123879]"
                               >
                                 ເອກະສານ
@@ -328,7 +376,7 @@ export default function ResultsPage() {
                       )}
                     </div>
                   </div>
-                  <button type="button" onClick={() => setFullScreenImageUrl(visibleImageUrl)} className="w-full rounded-lg border border-[#d9d9d9] bg-white p-2">
+                  <button type="button" onClick={() => openLocalImage(visibleImageUrl)} className="w-full rounded-lg border border-[#d9d9d9] bg-white p-2">
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img src={visibleImageUrl} alt="ຮູບຜົນກວດ" className="h-56 w-full object-contain" />
                   </button>
@@ -358,7 +406,7 @@ export default function ResultsPage() {
         <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/80 p-4">
           <button
             type="button"
-            onClick={() => setFullScreenImageUrl(null)}
+            onClick={closeFullScreenImage}
             className="absolute right-4 top-4 rounded-lg bg-[#efabab] px-4 py-2 text-sm font-bold text-black shadow-sm"
           >
             ປິດ
@@ -375,12 +423,12 @@ export default function ResultsPage() {
   );
 }
 
-function printResultDocument(order: Order, result: Result) {
+async function printResultDocument(order: Order, result: Result) {
   const orderNo = order.document_no || `#${String(order.order_id).padStart(4, "0")}`;
   const resultNo = result.report_no || `R${String(result.result_id).padStart(5, "0")}`;
   const patientId = `HN-${String(order.patient_id).padStart(6, "0")}`;
   const issuedAt = new Date().toLocaleString("lo-LA");
-  const imageUrl = buildAssetUrl(result.result_image_url);
+  const imageUrl = result.result_image_url ? await getResultImageDataUrl(result.result_id) : "";
 
   printDocument(
     `ລາຍງານຜົນກວດ ${resultNo}`,
@@ -433,12 +481,6 @@ function printResultDocument(order: Order, result: Result) {
       <div class="footer">ພະແນກລັງສີ - ໂຮງໝໍ 103 | ເອກະສານນີ້ອອກຈາກລະບົບຈັດການຂໍ້ມູນຄົນເຈັບ</div>
     </main>`
   );
-}
-
-function buildAssetUrl(path?: string | null) {
-  if (!path) return "";
-  if (/^https?:\/\//i.test(path)) return path;
-  return `${API_ORIGIN}${path.startsWith("/") ? "" : "/"}${path}`;
 }
 
 function getErrorMessage(error: unknown) {

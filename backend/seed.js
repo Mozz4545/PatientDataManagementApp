@@ -13,7 +13,7 @@ async function seedDatabase() {
     await connection.query(`CREATE DATABASE IF NOT EXISTS \`${dbName}\``);
     await connection.query(`USE \`${dbName}\``);
 
-    // สร้าง staff table
+    
     await connection.execute(`
       CREATE TABLE IF NOT EXISTS staff (
         staff_id INT PRIMARY KEY AUTO_INCREMENT,
@@ -24,6 +24,8 @@ async function seedDatabase() {
         position VARCHAR(100),
         department VARCHAR(100),
         phone VARCHAR(20),
+        is_active TINYINT(1) NOT NULL DEFAULT 1,
+        deleted_at DATETIME NULL,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       )
     `);
@@ -32,7 +34,7 @@ async function seedDatabase() {
       SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS
       WHERE TABLE_SCHEMA = DATABASE()
         AND TABLE_NAME = 'staff'
-        AND COLUMN_NAME IN ('department', 'phone')
+        AND COLUMN_NAME IN ('department', 'phone', 'is_active', 'deleted_at')
     `);
     const existingStaffColumns = new Set(staffColumns.map((column) => column.COLUMN_NAME));
     if (!existingStaffColumns.has('department')) {
@@ -40,6 +42,12 @@ async function seedDatabase() {
     }
     if (!existingStaffColumns.has('phone')) {
       await connection.execute('ALTER TABLE staff ADD COLUMN phone VARCHAR(20) NULL');
+    }
+    if (!existingStaffColumns.has('is_active')) {
+      await connection.execute('ALTER TABLE staff ADD COLUMN is_active TINYINT(1) NOT NULL DEFAULT 1');
+    }
+    if (!existingStaffColumns.has('deleted_at')) {
+      await connection.execute('ALTER TABLE staff ADD COLUMN deleted_at DATETIME NULL');
     }
 
     // สร้าง patients table
@@ -63,9 +71,25 @@ async function seedDatabase() {
         exam_type_id INT PRIMARY KEY AUTO_INCREMENT,
         exam_name VARCHAR(255) NOT NULL,
         description TEXT,
-        price DECIMAL(10, 2) DEFAULT 0
+        price DECIMAL(10, 2) DEFAULT 0,
+        is_active TINYINT(1) NOT NULL DEFAULT 1,
+        deleted_at DATETIME NULL
       )
     `);
+
+    const [examTypeColumns] = await connection.execute(`
+      SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS
+      WHERE TABLE_SCHEMA = DATABASE()
+        AND TABLE_NAME = 'exam_types'
+        AND COLUMN_NAME IN ('is_active', 'deleted_at')
+    `);
+    const existingExamTypeColumns = new Set(examTypeColumns.map((column) => column.COLUMN_NAME));
+    if (!existingExamTypeColumns.has('is_active')) {
+      await connection.execute('ALTER TABLE exam_types ADD COLUMN is_active TINYINT(1) NOT NULL DEFAULT 1');
+    }
+    if (!existingExamTypeColumns.has('deleted_at')) {
+      await connection.execute('ALTER TABLE exam_types ADD COLUMN deleted_at DATETIME NULL');
+    }
 
     await connection.execute(`
       CREATE TABLE IF NOT EXISTS \`order\` (
@@ -101,6 +125,19 @@ async function seedDatabase() {
     `);
     if (!queueColumns.length) {
       await connection.execute('ALTER TABLE queue ADD COLUMN called_at DATETIME NULL');
+    }
+    const [queueIndexes] = await connection.execute(`
+      SELECT INDEX_NAME FROM INFORMATION_SCHEMA.STATISTICS
+      WHERE TABLE_SCHEMA = DATABASE()
+        AND TABLE_NAME = 'queue'
+        AND INDEX_NAME IN ('uq_queue_order', 'uq_queue_date_no')
+    `);
+    const existingQueueIndexes = new Set(queueIndexes.map((index) => index.INDEX_NAME));
+    if (!existingQueueIndexes.has('uq_queue_order')) {
+      await connection.execute('ALTER TABLE queue ADD UNIQUE KEY uq_queue_order (order_id)');
+    }
+    if (!existingQueueIndexes.has('uq_queue_date_no')) {
+      await connection.execute('ALTER TABLE queue ADD UNIQUE KEY uq_queue_date_no (queue_date, queue_no)');
     }
 
     await connection.execute(`

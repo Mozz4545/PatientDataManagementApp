@@ -1,6 +1,6 @@
 const pool = require('../db/connection');
+const { WAITING_STATUS, createQueueForOrder } = require('../services/queueService');
 
-const WAITING_STATUS = 'ກຳລັງລໍຖ້າ';
 const CALLING_STATUS = 'ກຳລັງເອີ້ນ';
 const IN_PROGRESS_STATUS = 'ກຳລັງກວດ';
 
@@ -42,22 +42,33 @@ const getQueues = async (req, res) => {
 };
 
 const createQueue = async (req, res) => {
+  const connection = await pool.getConnection();
   try {
     await ensureQueueColumns();
+    await connection.beginTransaction();
     const { order_id, queue_date } = req.body;
-    const [countRows] = await pool.execute(
-      'SELECT COUNT(*) as count FROM queue WHERE queue_date = ?',
-      [queue_date]
-    );
-    const queue_no = countRows[0].count + 1;
 
-    const [result] = await pool.execute(
-      'INSERT INTO queue (order_id, queue_no, queue_date, status) VALUES (?, ?, ?, ?)',
-      [order_id, queue_no, queue_date, WAITING_STATUS]
+    const [orders] = await connection.execute(
+      'SELECT order_id, status FROM `order` WHERE order_id = ? LIMIT 1',
+      [order_id]
     );
-    res.status(201).json({ success: true, data: { queue_id: result.insertId, queue_no } });
+    if (!orders.length) {
+      await connection.rollback();
+      return res.status(404).json({ success: false, message: 'ບໍ່ພົບໃບສັ່ງກວດນີ້' });
+    }
+    if (orders[0].status === 'CANCELLED') {
+      await connection.rollback();
+      return res.status(400).json({ success: false, message: 'ໃບສັ່ງກວດທີ່ຍົກເລີກແລ້ວບໍ່ສາມາດສ້າງຄິວໄດ້' });
+    }
+
+    const queue = await createQueueForOrder(connection, order_id, queue_date);
+    await connection.commit();
+    res.status(201).json({ success: true, data: queue });
   } catch (err) {
+    await connection.rollback();
     res.status(500).json({ success: false, message: err.message });
+  } finally {
+    connection.release();
   }
 };
 
@@ -92,6 +103,10 @@ const callQueue = async (req, res) => {
       [IN_PROGRESS_STATUS, queue.queue_date, CALLING_STATUS, queue.queue_id]
     );
     await pool.execute('UPDATE queue SET status=?, called_at=NOW() WHERE queue_id=?', [CALLING_STATUS, queue.queue_id]);
+    await pool.execute(
+      'UPDATE `order` SET status=? WHERE order_id=? AND status NOT IN (?, ?)',
+      ['IN_PROGRESS', queue.order_id, 'COMPLETED', 'DONE']
+    );
 
     const calledQueue = await getQueueById(queue.queue_id);
     res.json({ success: true, data: calledQueue });
@@ -120,6 +135,10 @@ const callNextQueue = async (req, res) => {
       [IN_PROGRESS_STATUS, queue.queue_date, CALLING_STATUS, queue.queue_id]
     );
     await pool.execute('UPDATE queue SET status=?, called_at=NOW() WHERE queue_id=?', [CALLING_STATUS, queue.queue_id]);
+    await pool.execute(
+      'UPDATE `order` SET status=? WHERE order_id=? AND status NOT IN (?, ?)',
+      ['IN_PROGRESS', queue.order_id, 'COMPLETED', 'DONE']
+    );
 
     const calledQueue = await getQueueById(queue.queue_id);
     res.json({ success: true, data: calledQueue });

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useRouter } from "next/navigation";
@@ -11,13 +11,27 @@ import type { ApiResponse, User } from "@/lib/types";
 import Sidebar from "./Sidebar";
 
 export function useCurrentUser() {
-  const hasToken = typeof window !== "undefined" && Boolean(localStorage.getItem("radiology_token"));
-  return useQuery({
+  const [authReady, setAuthReady] = useState(false);
+  const [hasToken, setHasToken] = useState(false);
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => {
+      const token = localStorage.getItem("radiology_token");
+      setAuthToken(token || undefined);
+      setHasToken(Boolean(token));
+      setAuthReady(true);
+    }, 0);
+    return () => window.clearTimeout(timer);
+  }, []);
+
+  const query = useQuery({
     queryKey: ["auth", "me"],
     queryFn: async () => (await api.get<ApiResponse<User>>("/auth/me")).data.data,
-    enabled: hasToken,
+    enabled: authReady && hasToken,
     retry: false,
   });
+
+  return { ...query, isAuthReady: authReady, hasToken };
 }
 
 export default function AppShell({ children }: { children: React.ReactNode }) {

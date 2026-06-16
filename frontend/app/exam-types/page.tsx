@@ -7,6 +7,7 @@ import { z } from "zod";
 import AppShell, { useCurrentUser } from "@/components/AppShell";
 import { ActionButton, PageHero, Panel } from "@/components/dashboard-ui";
 import api from "@/lib/api";
+import { showToast } from "@/lib/toast";
 import type { ApiResponse, ExamType } from "@/lib/types";
 
 const examTypeSchema = z.object({
@@ -22,6 +23,7 @@ export default function ExamTypesPage() {
   const userQuery = useCurrentUser();
   const isAdmin = userQuery.data?.role === "ADMIN";
   const [editing, setEditing] = useState<ExamType | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<ExamType | null>(null);
   const [formError, setFormError] = useState<string | null>(null);
 
   const examTypesQuery = useQuery({
@@ -65,6 +67,19 @@ export default function ExamTypesPage() {
     onError: (error: unknown) => setFormError(getErrorMessage(error) || "ບໍ່ສາມາດບັນທຶກປະເພດການກວດໄດ້"),
   });
 
+  const deleteMutation = useMutation({
+    mutationFn: async (examTypeId: number) => (await api.delete<ApiResponse<unknown>>(`/exam-types/${examTypeId}`)).data,
+    onSuccess: () => {
+      showToast("success", "ລົບປະເພດການກວດອອກຈາກລາຍຊື່ສຳເລັດ");
+      setDeleteTarget(null);
+      if (editing?.exam_type_id === deleteTarget?.exam_type_id) {
+        setEditing(null);
+        reset({ exam_name: "", description: "", price: 0 });
+      }
+      queryClient.invalidateQueries({ queryKey: ["exam-types"] });
+    },
+  });
+
   const onSubmit = (values: ExamTypeValues) => {
     const parsed = examTypeSchema.safeParse(values);
     if (!parsed.success) {
@@ -87,7 +102,7 @@ export default function ExamTypesPage() {
 
       <div className="grid gap-5 px-4 py-4 sm:px-6 md:px-8 lg:grid-cols-[360px_1fr] lg:px-10">
         <Panel title={editing ? "ແກ້ໄຂປະເພດການກວດ" : "ເພີ່ມປະເພດການກວດ"}>
-          {userQuery.isLoading ? (
+          {!userQuery.isAuthReady || userQuery.isLoading ? (
             <div className="rounded-xl border border-[#d9d9d9] bg-[#f7f8fb] p-4 font-semibold text-[#767285]">
               ກຳລັງກວດສິດຜູ້ໃຊ້...
             </div>
@@ -170,13 +185,22 @@ export default function ExamTypesPage() {
                       <td className="px-5 py-3">{Number(exam.price || 0).toLocaleString("lo-LA")} ກີບ</td>
                       <td className="px-5 py-3">
                         {isAdmin ? (
-                          <button
-                            type="button"
-                            onClick={() => setEditing(exam)}
-                            className="rounded-full bg-[#bafbd2] px-4 py-1 text-[11px] font-bold text-[#137547]"
-                          >
-                            ແກ້ໄຂ
-                          </button>
+                          <div className="flex flex-wrap gap-2">
+                            <button
+                              type="button"
+                              onClick={() => setEditing(exam)}
+                              className="rounded-full bg-[#bafbd2] px-4 py-1 text-[11px] font-bold text-[#137547]"
+                            >
+                              ແກ້ໄຂ
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => setDeleteTarget(exam)}
+                              className="rounded-full bg-[#ef4444] px-4 py-1 text-[11px] font-bold text-white shadow-sm hover:bg-[#dc2626]"
+                            >
+                              ລົບ
+                            </button>
+                          </div>
                         ) : (
                           <span>ສະເພາະຜູ້ດູແລ</span>
                         )}
@@ -189,6 +213,39 @@ export default function ExamTypesPage() {
           </div>
         </Panel>
       </div>
+
+      {deleteTarget && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4">
+          <div className="w-full max-w-[520px] rounded-2xl bg-white p-6 shadow-xl">
+            <h3 className="text-2xl font-bold text-[#120d34]">ຢືນຢັນການລົບປະເພດການກວດ</h3>
+            <div className="mt-4 rounded-xl bg-[#f7f8fb] p-4 text-sm font-bold leading-7 text-[#120d34]">
+              <div>ID: {deleteTarget.exam_type_id}</div>
+              <div>ຊື່: {deleteTarget.exam_name}</div>
+              <div>ລາຄາ: {Number(deleteTarget.price || 0).toLocaleString("lo-LA")} ກີບ</div>
+            </div>
+            <p className="mt-4 text-sm font-semibold leading-7 text-[#767285]">
+              ລະບົບຈະຊ່ອນປະເພດການກວດນີ້ອອກຈາກລາຍຊື່ ແລະ ບໍ່ໃຫ້ນຳໄປສ້າງໃບສັ່ງກວດໃໝ່, ແຕ່ປະຫວັດໃບສັ່ງກວດເກົ່າຈະຍັງຢູ່ຄືເກົ່າ.
+            </p>
+            <div className="mt-6 flex flex-wrap justify-end gap-3">
+              <button
+                type="button"
+                onClick={() => setDeleteTarget(null)}
+                className="rounded-xl bg-[#f4e3b0] px-6 py-3 text-sm font-bold text-black shadow-sm"
+              >
+                ຍົກເລີກ
+              </button>
+              <button
+                type="button"
+                onClick={() => deleteMutation.mutate(deleteTarget.exam_type_id)}
+                disabled={deleteMutation.isPending}
+                className="rounded-xl bg-[#ef4444] px-6 py-3 text-sm font-bold text-white shadow-sm hover:bg-[#dc2626] disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                {deleteMutation.isPending ? "ກຳລັງລົບ..." : "ລົບ"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       <style jsx>{`
         .field {

@@ -2,25 +2,43 @@
 
 import Link from "next/link";
 import { useMemo, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import AppShell, { useCurrentUser } from "@/components/AppShell";
 import { ActionButton, formatDateTime, PageHero, SearchBox, StatusPill, patientName } from "@/components/dashboard-ui";
 import api from "@/lib/api";
 import { escapeHtml, printDocument, printLogoHtml } from "@/lib/print";
+import { getResultImageObjectUrl } from "@/lib/result-images";
 import { displayOrderStatus, isReadyToPayStatus, statusLabel } from "@/lib/status";
+import { showToast } from "@/lib/toast";
 import type { ApiResponse, Order, Patient, Payment, Result, Staff } from "@/lib/types";
 
 export default function ReportsPage() {
+  const queryClient = useQueryClient();
   const [tab, setTab] = useState<"patients" | "payments" | "staff" | "results">("patients");
   const [search, setSearch] = useState("");
   const [dateFrom, setDateFrom] = useState("");
   const [dateTo, setDateTo] = useState("");
   const today = new Date().toISOString().slice(0, 10);
   const [incomePeriod, setIncomePeriod] = useState<"all" | "day" | "month">("all");
+  const [incomeMethod, setIncomeMethod] = useState<IncomeMethod>("all");
   const [incomeDate, setIncomeDate] = useState(today);
   const [incomeMonth, setIncomeMonth] = useState(today.slice(0, 7));
+  const [previewImageUrl, setPreviewImageUrl] = useState<string | null>(null);
+  const [previewImageOwned, setPreviewImageOwned] = useState(false);
+  const [deleteStaffTarget, setDeleteStaffTarget] = useState<Staff | null>(null);
   const userQuery = useCurrentUser();
   const isAdmin = userQuery.data?.role === "ADMIN";
+  const currentStaffId = Number(userQuery.data?.staff_id || userQuery.data?.id || 0);
+
+  const deleteStaffMutation = useMutation({
+    mutationFn: async (staffId: number) => (await api.delete<ApiResponse<unknown>>(`/staff/${staffId}`)).data,
+    onSuccess: () => {
+      showToast("success", "ລົບພະນັກງານອອກຈາກລາຍຊື່ສຳເລັດ");
+      setDeleteStaffTarget(null);
+      queryClient.invalidateQueries({ queryKey: ["staff"] });
+      queryClient.invalidateQueries({ queryKey: ["staff-options"] });
+    },
+  });
 
   const patientsQuery = useQuery({
     queryKey: ["patients", search],
@@ -82,14 +100,15 @@ export default function ReportsPage() {
       const paymentDate = payment.payment_date?.slice(0, 10) || "";
       const matchesDateFrom = !range.from || paymentDate >= range.from;
       const matchesDateTo = !range.to || paymentDate <= range.to;
+      const matchesMethod = incomeMethod === "all" || normalizePaymentMethod(payment.payment_type) === incomeMethod;
       const matchesSearch =
         !text ||
         `${payment.receipt_no || ""} ${payment.order_id} ${patientName(payment)} ${payment.exam_name || ""} ${payment.payment_type || ""} ${payment.staff_name || ""}`
           .toLowerCase()
           .includes(text);
-      return matchesDateFrom && matchesDateTo && matchesSearch;
+      return matchesDateFrom && matchesDateTo && matchesMethod && matchesSearch;
     });
-  }, [payments, search, incomePeriod, incomeDate, incomeMonth]);
+  }, [payments, search, incomePeriod, incomeDate, incomeMonth, incomeMethod]);
 
   const filteredResults = useMemo(() => {
     const text = search.trim().toLowerCase();
@@ -112,18 +131,37 @@ export default function ReportsPage() {
     () => groupPaymentsByPeriod(filteredPayments, incomePeriod === "month" ? "month" : "day"),
     [filteredPayments, incomePeriod]
   );
-  const incomePeriodLabel =
+  const baseIncomePeriodLabel =
     incomePeriod === "all"
       ? "ລາຍຮັບທັງໝົດ"
       : incomePeriod === "day"
       ? `ລາຍວັນ ${incomeDate || "-"}`
       : `ລາຍເດືອນ ${incomeMonth || "-"}`;
+  const incomePeriodLabel = `${baseIncomePeriodLabel} / ${incomeMethodLabel(incomeMethod)}`;
 
   const handleSearch = () => {
     if (tab === "patients") patientsQuery.refetch();
     if (tab === "payments") paymentsQuery.refetch();
     if (tab === "staff") staffQuery.refetch();
     if (tab === "results") resultsQuery.refetch();
+  };
+
+  const openResultImage = async (result: Result) => {
+    try {
+      const imageUrl = await getResultImageObjectUrl(result.result_id);
+      setPreviewImageUrl(imageUrl);
+      setPreviewImageOwned(true);
+    } catch {
+      showToast("error", "ບໍ່ສາມາດເປີດຮູບຜົນກວດໄດ້");
+    }
+  };
+
+  const closePreviewImage = () => {
+    if (previewImageOwned && previewImageUrl?.startsWith("blob:")) {
+      URL.revokeObjectURL(previewImageUrl);
+    }
+    setPreviewImageUrl(null);
+    setPreviewImageOwned(false);
   };
 
   const handlePrint = () => {
@@ -293,7 +331,7 @@ export default function ReportsPage() {
     }
   };
 
-  if (userQuery.isLoading) {
+  if (!userQuery.isAuthReady || userQuery.isLoading) {
     return (
       <AppShell>
         <div className="px-4 py-8 text-center font-semibold text-[#767285]">ກຳລັງໂຫຼດ...</div>
@@ -379,6 +417,22 @@ export default function ReportsPage() {
                   >
                     ລາຍເດືອນ
                   </button>
+                </div>
+                <div className="flex rounded-lg border border-[#d9d9d9] bg-[#f7f8fb] p-1 shadow-sm">
+                  {([
+                    ["all", "ທັງໝົດ"],
+                    ["cash", "ເງິນສົດ"],
+                    ["transfer", "ເງິນໂອນ"],
+                  ] as const).map(([method, label]) => (
+                    <button
+                      key={method}
+                      type="button"
+                      onClick={() => setIncomeMethod(method)}
+                      className={`h-9 rounded-md px-4 text-sm font-bold ${incomeMethod === method ? "bg-[#137547] text-white" : "text-[#767285]"}`}
+                    >
+                      {label}
+                    </button>
+                  ))}
                 </div>
                 {incomePeriod === "all" ? null : incomePeriod === "day" ? (
                   <label className="text-xs font-bold text-[#767285]">
@@ -466,7 +520,14 @@ export default function ReportsPage() {
 
           <div className="overflow-x-auto rounded-xl border border-[#d9d9d9] bg-white p-0 shadow-sm">
             {tab === "patients" && <PatientsReport patients={patients} />}
-            {tab === "staff" && <StaffReport staff={filteredStaff} canEdit={isAdmin} />}
+            {tab === "staff" && (
+              <StaffReport
+                staff={filteredStaff}
+                canEdit={isAdmin}
+                currentStaffId={currentStaffId}
+                onDelete={setDeleteStaffTarget}
+              />
+            )}
             {tab === "payments" && (
               <PaymentsReport
                 payments={filteredPayments}
@@ -475,10 +536,61 @@ export default function ReportsPage() {
                 groupMode={incomePeriod === "month" ? "month" : "day"}
               />
             )}
-            {tab === "results" && <ResultsReport results={filteredResults} />}
+            {tab === "results" && <ResultsReport results={filteredResults} onViewImage={openResultImage} />}
           </div>
         </section>
       </div>
+
+      {previewImageUrl && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/80 p-4">
+          <button
+            type="button"
+            onClick={closePreviewImage}
+            className="absolute right-4 top-4 rounded-lg bg-[#efabab] px-4 py-2 text-sm font-bold text-black shadow-sm"
+          >
+            ປິດ
+          </button>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={previewImageUrl}
+            alt="ຮູບຜົນກວດ"
+            className="max-h-[92vh] max-w-[94vw] rounded-xl bg-white object-contain shadow-lg"
+          />
+        </div>
+      )}
+
+      {deleteStaffTarget && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/45 p-4">
+          <div className="w-full max-w-[520px] rounded-2xl bg-white p-6 shadow-xl">
+            <h3 className="text-2xl font-bold text-[#120d34]">ຢືນຢັນການລົບອອກຈາກລາຍຊື່</h3>
+            <div className="mt-4 rounded-xl bg-[#f7f8fb] p-4 text-sm font-bold leading-7 text-[#120d34]">
+              <div>ລະຫັດ: {String(deleteStaffTarget.staff_id).padStart(2, "0")}</div>
+              <div>ຊື່: {deleteStaffTarget.staff_name}</div>
+              <div>ຊື່ເຂົ້າລະບົບ: {deleteStaffTarget.username}</div>
+            </div>
+            <p className="mt-4 text-sm font-semibold leading-7 text-[#767285]">
+              ລະບົບຈະຊ່ອນພະນັກງານຄົນນີ້ອອກຈາກລາຍງານພະນັກງານ ແລະ ລາຍຊື່ໃຫ້ເລືອກ, ແຕ່ປະຫວັດໃບສັ່ງກວດ ການຊຳລະເງິນ ແລະ ຜົນກວດຈະຍັງຢູ່ຄືເກົ່າ.
+            </p>
+            <div className="mt-6 flex flex-wrap justify-end gap-3">
+              <button
+                type="button"
+                onClick={() => setDeleteStaffTarget(null)}
+                className="rounded-xl bg-[#f5dc97] px-6 py-3 text-sm font-bold text-black shadow-sm"
+              >
+                ຍົກເລີກ
+              </button>
+              <button
+                type="button"
+                onClick={() => deleteStaffMutation.mutate(deleteStaffTarget.staff_id)}
+                disabled={deleteStaffMutation.isPending}
+                className="rounded-xl bg-[#ef4444] px-6 py-3 text-sm font-bold text-white shadow-sm hover:bg-[#dc2626] disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                {deleteStaffMutation.isPending ? "ກຳລັງລົບ..." : "ລົບ"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </AppShell>
   );
 }
@@ -673,7 +785,17 @@ function PatientsReport({ patients }: { patients: Patient[] }) {
   );
 }
 
-function StaffReport({ staff, canEdit }: { staff: Staff[]; canEdit: boolean }) {
+function StaffReport({
+  staff,
+  canEdit,
+  currentStaffId,
+  onDelete,
+}: {
+  staff: Staff[];
+  canEdit: boolean;
+  currentStaffId: number;
+  onDelete: (staff: Staff) => void;
+}) {
   return (
     <table className="w-full min-w-[900px] border-collapse text-left">
       <thead className="bg-[#f2f2f2] text-xs font-bold">
@@ -692,7 +814,7 @@ function StaffReport({ staff, canEdit }: { staff: Staff[]; canEdit: boolean }) {
         {staff.length === 0 ? (
           <tr>
             <td className="px-5 py-6 text-center" colSpan={8}>
-              ไม่มีข้อมูลพนักงาน
+              ບໍ່ມີຂໍ້ມູນພະນັກງານ
             </td>
           </tr>
         ) : (
@@ -709,12 +831,26 @@ function StaffReport({ staff, canEdit }: { staff: Staff[]; canEdit: boolean }) {
               </td>
               <td className="px-5 py-3">
                 {canEdit ? (
-                  <Link
-                    href={`/reports/staff/${item.staff_id}/edit`}
-                    className="inline-flex min-w-[72px] justify-center rounded-full bg-[#bafbd2] px-3 py-1 text-[11px] font-bold text-[#137547]"
-                  >
-                    ແກ້ໄຂ
-                  </Link>
+                  <div className="flex flex-wrap gap-2">
+                    <Link
+                      href={`/reports/staff/${item.staff_id}/edit`}
+                      className="inline-flex min-w-[72px] justify-center rounded-full bg-[#bafbd2] px-3 py-1 text-[11px] font-bold text-[#137547]"
+                    >
+                      ແກ້ໄຂ
+                    </Link>
+                    <button
+                      type="button"
+                      onClick={() => onDelete(item)}
+                      disabled={item.staff_id === currentStaffId}
+                      className={`inline-flex min-w-[72px] justify-center rounded-full px-3 py-1 text-[11px] font-bold shadow-sm ${
+                        item.staff_id === currentStaffId
+                          ? "cursor-not-allowed bg-[#eeeeee] text-[#9d98aa]"
+                          : "bg-[#ef4444] text-white hover:bg-[#dc2626]"
+                      }`}
+                    >
+                      ລົບ
+                    </button>
+                  </div>
                 ) : (
                   <span className="text-[#9d98aa]">ສະເພາະຜູ້ດູແລ</span>
                 )}
@@ -838,7 +974,7 @@ function PaymentsReport({
   );
 }
 
-function ResultsReport({ results }: { results: Result[] }) {
+function ResultsReport({ results, onViewImage }: { results: Result[]; onViewImage: (result: Result) => void }) {
   return (
     <table className="w-full min-w-[1100px] border-collapse text-left">
       <thead className="bg-[#f2f2f2] text-xs font-bold">
@@ -872,7 +1008,19 @@ function ResultsReport({ results }: { results: Result[] }) {
               <td className="px-5 py-3">{formatDateTime(result.result_date)}</td>
               <td className="px-5 py-3">{result.staff_name || "-"}</td>
               <td className="max-w-[320px] truncate px-5 py-3">{result.result_detail || "-"}</td>
-              <td className="px-5 py-3">{result.result_image_url ? "ມີຮູບ" : "-"}</td>
+              <td className="px-5 py-3">
+                {result.result_image_url ? (
+                  <button
+                    type="button"
+                    onClick={() => onViewImage(result)}
+                    className="rounded-full bg-[#addbf4] px-4 py-1 text-[11px] font-bold text-[#123879] shadow-sm"
+                  >
+                    ເບິ່ງຮູບ
+                  </button>
+                ) : (
+                  "-"
+                )}
+              </td>
             </tr>
           ))
         )}
@@ -886,6 +1034,8 @@ type PaymentMethodGroup = {
   count: number;
   total: number;
 };
+
+type IncomeMethod = "all" | "cash" | "transfer";
 
 type PaymentPeriodGroup = {
   period: string;
@@ -901,7 +1051,7 @@ function receiptNumber(payment: Payment) {
 function groupPaymentsByMethod(payments: Payment[]) {
   const map = new Map<string, PaymentMethodGroup>();
   payments.forEach((payment) => {
-    const key = payment.payment_type || "-";
+    const key = paymentMethodReportLabel(normalizePaymentMethod(payment.payment_type));
     const current = map.get(key) || { payment_type: key, count: 0, total: 0 };
     current.count += 1;
     current.total += Number(payment.amount || 0);
@@ -929,4 +1079,23 @@ function groupPaymentsByPeriod(payments: Payment[], mode: "day" | "month") {
 
 function paymentStatus(payment: Payment) {
   return String(payment.status || "PAID").toUpperCase();
+}
+
+function normalizePaymentMethod(method?: string | null): "cash" | "transfer" | "other" {
+  const value = String(method || "").trim();
+  if (value === "ເງິນສົດ" || value.includes("ສົດ")) return "cash";
+  if (value === "ເງິນໂອນ" || value === "ໂອນເງິນ" || value.includes("ໂອນ")) return "transfer";
+  return "other";
+}
+
+function paymentMethodReportLabel(method: "cash" | "transfer" | "other") {
+  if (method === "cash") return "ເງິນສົດ";
+  if (method === "transfer") return "ເງິນໂອນ";
+  return "ອື່ນໆ";
+}
+
+function incomeMethodLabel(method: IncomeMethod) {
+  if (method === "cash") return "ເງິນສົດ";
+  if (method === "transfer") return "ເງິນໂອນ";
+  return "ທັງໝົດ";
 }

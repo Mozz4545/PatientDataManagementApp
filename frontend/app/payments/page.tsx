@@ -14,6 +14,7 @@ import type { ApiResponse, Order, Payment, Staff } from "@/lib/types";
 const paymentSchema = z.object({
   staff_id: z.coerce.number().min(1, "ກະລຸນາເລືອກຜູ້ຮັບເງິນ"),
   payment_type: z.string().min(1, "ກະລຸນາເລືອກຊ່ອງທາງການຊຳລະ"),
+  cash_received: z.coerce.number().min(0, "ຈຳນວນເງິນທີ່ຮັບຕ້ອງບໍ່ຕິດລົບ").optional(),
 });
 
 type PaymentValues = z.infer<typeof paymentSchema>;
@@ -22,7 +23,9 @@ const adjustmentSchema = z.object({
 });
 type AdjustmentValues = z.infer<typeof adjustmentSchema>;
 
-const paymentTypes = ["ເງິນສົດ", "ໂອນເງິນ", "ບັດ"];
+const CASH_PAYMENT = "ເງິນສົດ";
+const TRANSFER_PAYMENT = "ເງິນໂອນ";
+const paymentTypes = [CASH_PAYMENT, TRANSFER_PAYMENT];
 
 export default function PaymentsPage() {
   const queryClient = useQueryClient();
@@ -65,7 +68,7 @@ export default function PaymentsPage() {
   );
 
   const filteredUnpaid = useMemo(() => filterOrders(unpaidOrders, search), [unpaidOrders, search]);
-  const filteredPayments = useMemo(() => filterPayments(payments, search), [payments, search]);
+  const filteredPayments = useMemo(() => filterPayments(activePayments, search), [activePayments, search]);
   const totalIncome = activePayments.reduce((sum, payment) => sum + Number(payment.amount || 0), 0);
 
   const {
@@ -74,15 +77,21 @@ export default function PaymentsPage() {
     reset,
     control,
     setError,
+    clearErrors,
     setValue,
     formState: { errors, isSubmitting },
   } = useForm<PaymentValues>({
     defaultValues: {
       staff_id: 0,
       payment_type: paymentTypes[0],
+      cash_received: 0,
     },
   });
   const selectedStaffId = Number(useWatch({ control, name: "staff_id" }) || 0);
+  const selectedPaymentType = useWatch({ control, name: "payment_type" });
+  const cashReceived = Number(useWatch({ control, name: "cash_received" }) || 0);
+  const selectedOrderAmount = Number(selectedOrder?.exam_price || 0);
+  const cashChange = Math.max(cashReceived - selectedOrderAmount, 0);
   const selectedStaff = useMemo(
     () => staffOptions.find((staff) => staff.staff_id === selectedStaffId) || null,
     [selectedStaffId, staffOptions]
@@ -105,7 +114,6 @@ export default function PaymentsPage() {
       return api.post("/payments", {
         order_id: selectedOrder.order_id,
         staff_id: values.staff_id,
-        payment_date: new Date().toISOString().slice(0, 19).replace("T", " "),
         payment_type: values.payment_type,
       });
     },
@@ -114,7 +122,7 @@ export default function PaymentsPage() {
       queryClient.invalidateQueries({ queryKey: ["orders"] });
       setSelectedOrder(null);
       setFormError(null);
-      reset({ staff_id: selectedStaffId, payment_type: paymentTypes[0] });
+      reset({ staff_id: selectedStaffId, payment_type: paymentTypes[0], cash_received: 0 });
       setTab("paid");
     },
     onError: (error: unknown) => {
@@ -151,6 +159,14 @@ export default function PaymentsPage() {
       setFormError(parsed.error.issues[0]?.message || "ຂໍ້ມູນບໍ່ຖືກຕ້ອງ");
       return;
     }
+    const amount = Number(selectedOrder?.exam_price || 0);
+    if (parsed.data.payment_type === CASH_PAYMENT && Number(parsed.data.cash_received || 0) < amount) {
+      const message = "ຈຳນວນເງິນທີ່ຮັບຕ້ອງບໍ່ນ້ອຍກວ່າຍອດຊຳລະ";
+      setError("cash_received", { message });
+      setFormError(message);
+      return;
+    }
+    clearErrors("cash_received");
     setFormError(null);
     createPaymentMutation.mutate(parsed.data);
   };
@@ -188,6 +204,7 @@ export default function PaymentsPage() {
                 onPay={(order) => {
                   if (!isReadyToPayStatus(displayOrderStatus(order))) return;
                   setSelectedOrder(order);
+                  setValue("cash_received", Number(order.exam_price || 0), { shouldValidate: false });
                 }}
               />
             ) : (
@@ -233,6 +250,24 @@ export default function PaymentsPage() {
                 ))}
               </select>
             </Field>
+
+            {selectedPaymentType === CASH_PAYMENT && (
+              <>
+                <Field label="ເງິນທີ່ຮັບ" required error={errors.cash_received?.message}>
+                  <input className="field" type="number" min={0} step={1} {...register("cash_received")} />
+                </Field>
+                <div className="mt-3 rounded-xl bg-[#f2fde9] p-3 text-sm font-bold text-[#120d34]">
+                  <div className="flex justify-between gap-4">
+                    <span>ຍອດຕ້ອງຊຳລະ</span>
+                    <span>{selectedOrderAmount.toLocaleString("lo-LA")} ກີບ</span>
+                  </div>
+                  <div className="mt-2 flex justify-between gap-4 text-[#137547]">
+                    <span>ເງິນທອນ</span>
+                    <span>{cashChange.toLocaleString("lo-LA")} ກີບ</span>
+                  </div>
+                </div>
+              </>
+            )}
 
             <Field label="ຜູ້ຮັບເງິນ" required error={errors.staff_id?.message}>
               <select className="field" {...register("staff_id")}>
@@ -423,7 +458,7 @@ function UnpaidOrdersTable({
               <td className="px-5 py-3">{formatDateTime(order.order_date)}</td>
               <td className="px-5 py-3">{Number(order.exam_price || 0).toLocaleString("lo-LA")} ກີບ</td>
               <td className="px-5 py-3">
-                <StatusPill status={displayOrderStatus(order)} />
+                <StatusPill status="UNPAID" />
               </td>
               <td className="px-5 py-3">
                 <button
@@ -501,7 +536,7 @@ function PaidPaymentsTable({
               <td className="px-5 py-3">{payment.payment_type || "-"}</td>
               <td className="px-5 py-3">{payment.staff_name || "-"}</td>
               <td className="px-5 py-3">
-                <PaymentStatusPill payment={payment} />
+                <StatusPill status="PAID" />
               </td>
               <td className="px-5 py-3">
                 <button
@@ -555,17 +590,6 @@ function Field({ label, required, error, children }: { label: string; required?:
 
 function paymentStatus(payment: Payment) {
   return String(payment.status || "PAID").toUpperCase();
-}
-
-function PaymentStatusPill({ payment }: { payment: Payment }) {
-  const status = paymentStatus(payment);
-  if (status === "VOID") {
-    return <span className="inline-flex min-w-[72px] justify-center rounded-full bg-[#f4e3b0] px-2.5 py-0.5 text-[11px] font-semibold text-black">Void</span>;
-  }
-  if (status === "REFUNDED") {
-    return <span className="inline-flex min-w-[72px] justify-center rounded-full bg-[#efabab] px-2.5 py-0.5 text-[11px] font-semibold text-black">Refund</span>;
-  }
-  return <StatusPill status="ຈ່າຍແລ້ວ" />;
 }
 
 function filterOrders(orders: Order[], search: string) {

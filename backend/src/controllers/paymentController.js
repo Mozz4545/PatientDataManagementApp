@@ -22,11 +22,16 @@ const createPayment = async (req, res) => {
   const connection = await pool.getConnection();
   try {
     await connection.beginTransaction();
-    const { order_id, staff_id, payment_date, payment_type } = req.body;
+    const { order_id, staff_id, payment_type } = req.body;
     const staffId = Number(staff_id || req.user?.id);
     if (!order_id || !staffId || !payment_type) {
       await connection.rollback();
       return res.status(400).json({ success: false, message: 'ກະລຸນາລະບຸໃບສັ່ງກວດ, ຜູ້ຮັບເງິນ ແລະ ຊ່ອງທາງຊຳລະ' });
+    }
+    const allowedPaymentTypes = ['ເງິນສົດ', 'ເງິນໂອນ'];
+    if (!allowedPaymentTypes.includes(payment_type)) {
+      await connection.rollback();
+      return res.status(400).json({ success: false, message: 'ຊ່ອງທາງຊຳລະຕ້ອງເປັນ ເງິນສົດ ຫຼື ເງິນໂອນ' });
     }
 
     const [staffRows] = await connection.execute(
@@ -77,6 +82,7 @@ const createPayment = async (req, res) => {
       return res.status(400).json({ success: false, message: 'ລາຄາການກວດຂອງໃບສັ່ງກວດບໍ່ຖືກຕ້ອງ' });
     }
 
+    const paidAt = new Date();
     let paymentId;
     if (existing.length) {
       paymentId = existing[0].payment_id;
@@ -86,15 +92,15 @@ const createPayment = async (req, res) => {
              receipt_no=COALESCE(NULLIF(receipt_no, ''), ?),
              adjustment_reason=NULL, adjusted_by=NULL, adjusted_at=NULL
          WHERE payment_id=?`,
-        [staffId, amount, payment_date || new Date(), payment_type, buildReceiptNo(paymentId, payment_date), paymentId]
+        [staffId, amount, paidAt, payment_type, buildReceiptNo(paymentId, paidAt), paymentId]
       );
     } else {
       const [result] = await connection.execute(
         'INSERT INTO payment (order_id, staff_id, amount, payment_date, payment_type, status) VALUES (?, ?, ?, ?, ?, ?)',
-        [order_id, staffId, amount, payment_date || new Date(), payment_type, 'PAID']
+        [order_id, staffId, amount, paidAt, payment_type, 'PAID']
       );
       paymentId = result.insertId;
-      const receiptNo = buildReceiptNo(paymentId, payment_date);
+      const receiptNo = buildReceiptNo(paymentId, paidAt);
       await connection.execute(
         'UPDATE payment SET receipt_no=? WHERE payment_id=?',
         [receiptNo, paymentId]

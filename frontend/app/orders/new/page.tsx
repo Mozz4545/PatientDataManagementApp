@@ -157,18 +157,8 @@ export default function NewOrderPage() {
         patient_id: patientId,
         exam_type_id: values.exam_type_id,
         staff_id: values.staff_id,
-        order_date: new Date().toISOString().slice(0, 19).replace("T", " "),
         note: values.note || null,
       });
-
-      try {
-        await api.post("/queues", {
-          order_id: orderResponse.data.data.order_id,
-          queue_date: new Date().toISOString().slice(0, 10),
-        });
-      } catch {
-        // Queue creation can fail if queue data is not ready yet.
-      }
 
       return orderResponse.data.data;
     },

@@ -1,62 +1,83 @@
+const STATUS_KEYS: Record<string, string> = {
+  PENDING: "PENDING",
+  WAITING: "PENDING",
+  PENDING_RESULT: "PENDING_RESULT",
+  CALLING: "CALLING",
+  IN_PROGRESS: "PENDING_RESULT",
+  COMPLETED: "WAITING_PAYMENT",
+  WAITING_PAYMENT: "WAITING_PAYMENT",
+  DONE: "DONE",
+  PAID: "PAID",
+  CANCELLED: "CANCELLED",
+  VOID: "VOID",
+  REFUNDED: "REFUNDED",
+  ACTIVE: "ACTIVE",
+  ADMIN: "ADMIN",
+  STAFF: "STAFF",
+  "ສ້າງແລ້ວ": "PENDING",
+  "ລໍຖ້າກວດ": "PENDING",
+  "ກຳລັງລໍຖ້າ": "PENDING",
+  "ກຳລັງເອີ້ນ": "CALLING",
+  "ເອີ້ນຄິວ": "CALLING",
+  "ກຳລັງກວດ": "PENDING_RESULT",
+  "ລໍຖ້າບັນທຶກ": "PENDING_RESULT",
+  "ລໍຖ້າບັນທຶກຜົນກວດ": "PENDING_RESULT",
+  "ບັນທຶກແລ້ວ": "WAITING_PAYMENT",
+  "ກວດສຳເລັດ": "WAITING_PAYMENT",
+  "ສຳເລັດແລ້ວ": "WAITING_PAYMENT",
+  "ລໍຖ້າຊຳລະ": "WAITING_PAYMENT",
+  "ຄ້າງຊຳລະ": "WAITING_PAYMENT",
+  "ຈ່າຍແລ້ວ": "PAID",
+  "ສຳເລັດ": "DONE",
+  "ຍັງບໍ່ໄດ້ຈ່າຍ": "UNPAID",
+  "ຍົກເລີກແລ້ວ": "CANCELLED",
+};
+
 const STATUS_LABELS: Record<string, string> = {
-  PENDING: "ສ້າງແລ້ວ",
-  PENDING_RESULT: "ລໍຖ້າກວດ",
-  WAITING: "ກຳລັງລໍຖ້າ",
-  WAITING_PAYMENT: "ລໍຖ້າຊຳລະ",
-  CALLING: "ກຳລັງເອີ້ນ",
-  IN_PROGRESS: "ກຳລັງກວດ",
-  COMPLETED: "ກວດສຳເລັດ",
-  DONE: "ຈ່າຍແລ້ວ",
+  PENDING: "ລໍຖ້າກວດ",
+  PENDING_RESULT: "ລໍຖ້າບັນທຶກຜົນກວດ",
+  CALLING: "ເອີ້ນຄິວ",
+  WAITING_PAYMENT: "ຄ້າງຊຳລະ",
+  DONE: "ສຳເລັດ",
+  PAID: "ຈ່າຍແລ້ວ",
+  UNPAID: "ຍັງບໍ່ໄດ້ຈ່າຍ",
   CANCELLED: "ຍົກເລີກແລ້ວ",
+  VOID: "Void",
+  REFUNDED: "Refund",
   ACTIVE: "ກຳລັງໃຊ້ງານ",
   ADMIN: "ຜູ້ດູແລລະບົບ",
   STAFF: "ພະນັກງານ",
-  "ສ້າງແລ້ວ": "ສ້າງແລ້ວ",
-  "ລໍຖ້າກວດ": "ລໍຖ້າກວດ",
-  "ກຳລັງລໍຖ້າ": "ກຳລັງລໍຖ້າ",
-  "ລໍຖ້າຊຳລະ": "ລໍຖ້າຊຳລະ",
-  "ກຳລັງເອີ້ນ": "ກຳລັງເອີ້ນ",
-  "ກຳລັງກວດ": "ກຳລັງກວດ",
-  "ສຳເລັດ": "ສຳເລັດ",
-  "ສຳເລັດແລ້ວ": "ກວດສຳເລັດ",
-  "ກວດສຳເລັດ": "ກວດສຳເລັດ",
-  "ຈ່າຍແລ້ວ": "ຈ່າຍແລ້ວ",
-  "ຍັງບໍ່ໄດ້ຈ່າຍ": "ຍັງບໍ່ໄດ້ຈ່າຍ",
-  "ບັນທຶກແລ້ວ": "ບັນທຶກແລ້ວ",
-  "ລໍຖ້າບັນທຶກ": "ລໍຖ້າບັນທຶກ",
-  "ຍົກເລີກແລ້ວ": "ຍົກເລີກແລ້ວ",
 };
 
 export function statusKey(status?: string) {
-  return String(status || "PENDING").trim().toUpperCase();
+  const raw = String(status || "PENDING").trim();
+  return STATUS_KEYS[raw.toUpperCase()] || STATUS_KEYS[raw] || raw.toUpperCase();
 }
 
 export function statusLabel(status?: string) {
-  const raw = String(status || "PENDING").trim();
-  return STATUS_LABELS[raw.toUpperCase()] || STATUS_LABELS[raw] || raw;
+  const key = statusKey(status);
+  return STATUS_LABELS[key] || String(status || "");
 }
 
 export function isCancelledStatus(status?: string) {
-  const key = statusKey(status);
-  return key === "CANCELLED" || status === "ຍົກເລີກແລ້ວ";
+  return statusKey(status) === "CANCELLED";
 }
 
 export function isWaitingQueueStatus(status?: string) {
-  const key = statusKey(status);
-  return key === "WAITING" || status === "ກຳລັງລໍຖ້າ";
+  return statusKey(status) === "PENDING";
 }
 
 export function isCallingQueueStatus(status?: string) {
-  return statusKey(status) === "CALLING" || status === "ກຳລັງເອີ້ນ";
+  return statusKey(status) === "CALLING";
 }
 
 export function isInProgressStatus(status?: string) {
-  return statusKey(status) === "IN_PROGRESS" || status === "ກຳລັງກວດ";
+  return statusKey(status) === "PENDING_RESULT";
 }
 
 export function isCompletedStatus(status?: string) {
   const key = statusKey(status);
-  return key === "COMPLETED" || key === "DONE" || status === "ສຳເລັດແລ້ວ" || status === "ກວດສຳເລັດ" || status === "ຈ່າຍແລ້ວ";
+  return key === "DONE" || key === "PAID";
 }
 
 export function isOpenStatus(status?: string) {
@@ -68,6 +89,5 @@ export function displayOrderStatus(order: { status?: string; workflow_status?: s
 }
 
 export function isReadyToPayStatus(status?: string) {
-  const key = statusKey(status);
-  return key === "WAITING_PAYMENT" || key === "COMPLETED" || status === "ລໍຖ້າຊຳລະ" || status === "ກວດສຳເລັດ";
+  return statusKey(status) === "WAITING_PAYMENT";
 }

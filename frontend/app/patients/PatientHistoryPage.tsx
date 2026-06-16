@@ -1,14 +1,18 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import AppShell from "@/components/AppShell";
 import { ActionButton, formatDateTime, PageHero, Panel, patientName, StatusPill } from "@/components/dashboard-ui";
-import api, { API_ORIGIN } from "@/lib/api";
+import api from "@/lib/api";
+import { getResultImageObjectUrl } from "@/lib/result-images";
 import { displayOrderStatus } from "@/lib/status";
+import { showToast } from "@/lib/toast";
 import type { ApiResponse, Order, Patient, Payment, Result } from "@/lib/types";
 
 export default function PatientHistoryPage({ patientId }: { patientId: number }) {
+  const [previewImageUrl, setPreviewImageUrl] = useState<string | null>(null);
+
   const patientQuery = useQuery({
     queryKey: ["patients", patientId],
     queryFn: async () => (await api.get<ApiResponse<Patient>>(`/patients/${patientId}`)).data.data,
@@ -58,6 +62,20 @@ export default function PatientHistoryPage({ patientId }: { patientId: number })
   }, [paymentsQuery.data]);
 
   const patient = patientQuery.data;
+
+  const openResultImage = async (result: Result) => {
+    try {
+      const imageUrl = await getResultImageObjectUrl(result.result_id);
+      setPreviewImageUrl(imageUrl);
+    } catch {
+      showToast("error", "ບໍ່ສາມາດເປີດຮູບຜົນກວດໄດ້");
+    }
+  };
+
+  const closePreviewImage = () => {
+    if (previewImageUrl?.startsWith("blob:")) URL.revokeObjectURL(previewImageUrl);
+    setPreviewImageUrl(null);
+  };
 
   return (
     <AppShell>
@@ -141,14 +159,13 @@ export default function PatientHistoryPage({ patientId }: { patientId: number })
                             <Info label="ຜູ້ບັນທຶກ" value={result.staff_name || "-"} />
                             <div className="rounded-lg bg-[#f7f8fb] p-3 leading-7 text-[#120d34]">{result.result_detail || "-"}</div>
                             {result.result_image_url && (
-                              <a
-                                href={buildAssetUrl(result.result_image_url)}
-                                target="_blank"
-                                rel="noreferrer"
+                              <button
+                                type="button"
+                                onClick={() => openResultImage(result)}
                                 className="inline-flex rounded-full bg-[#addbf4] px-4 py-1 text-[11px] font-bold text-[#123879]"
                               >
                                 ເປີດຮູບຜົນກວດ
-                              </a>
+                              </button>
                             )}
                           </div>
                         ) : (
@@ -184,6 +201,24 @@ export default function PatientHistoryPage({ patientId }: { patientId: number })
           )}
         </Panel>
       </div>
+
+      {previewImageUrl && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/80 p-4">
+          <button
+            type="button"
+            onClick={closePreviewImage}
+            className="absolute right-4 top-4 rounded-lg bg-[#efabab] px-4 py-2 text-sm font-bold text-black shadow-sm"
+          >
+            ປິດ
+          </button>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={previewImageUrl}
+            alt="ຮູບຜົນກວດ"
+            className="max-h-[92vh] max-w-[94vw] rounded-xl bg-white object-contain shadow-lg"
+          />
+        </div>
+      )}
     </AppShell>
   );
 }
@@ -221,10 +256,4 @@ function formatShortDate(value?: string | null) {
     month: "2-digit",
     year: "numeric",
   }).format(date);
-}
-
-function buildAssetUrl(path?: string | null) {
-  if (!path) return "";
-  if (/^https?:\/\//i.test(path)) return path;
-  return `${API_ORIGIN}${path.startsWith("/") ? "" : "/"}${path}`;
 }

@@ -35,10 +35,33 @@ const getResultByOrder = async (req, res) => {
   }
 };
 
+const getResultImage = async (req, res) => {
+  try {
+    await ensureResultSchema();
+    const [rows] = await pool.execute(
+      'SELECT result_image_url FROM result WHERE result_id = ? LIMIT 1',
+      [req.params.id]
+    );
+    if (!rows.length || !rows[0].result_image_url) {
+      return res.status(404).json({ success: false, message: 'ບໍ່ພົບຮູບຜົນກວດ' });
+    }
+
+    const filename = path.basename(rows[0].result_image_url);
+    const filePath = path.join(__dirname, '../../uploads/results', filename);
+    if (!fs.existsSync(filePath)) {
+      return res.status(404).json({ success: false, message: 'ບໍ່ພົບໄຟລ໌ຮູບຜົນກວດ' });
+    }
+
+    res.sendFile(filePath);
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+};
+
 const createResult = async (req, res) => {
   try {
     await ensureResultSchema();
-    const { order_id, result_detail, result_date } = req.body;
+    const { order_id, result_detail } = req.body;
     const staffId = req.user?.id;
     const resultImageUrl = req.file ? `/uploads/results/${req.file.filename}` : null;
 
@@ -64,10 +87,11 @@ const createResult = async (req, res) => {
     }
 
     const [result] = await pool.execute(
-      'INSERT INTO result (order_id, staff_id, result_detail, result_image_url, result_date) VALUES (?, ?, ?, ?, ?)',
-      [order_id, staffId, result_detail, resultImageUrl, result_date || new Date()]
+      'INSERT INTO result (order_id, staff_id, result_detail, result_image_url, result_date) VALUES (?, ?, ?, ?, NOW())',
+      [order_id, staffId, result_detail, resultImageUrl]
     );
-    const reportNo = buildReportNo(result.insertId, result_date);
+    const [resultRows] = await pool.execute('SELECT result_date FROM result WHERE result_id = ? LIMIT 1', [result.insertId]);
+    const reportNo = buildReportNo(result.insertId, resultRows[0]?.result_date || new Date());
     await pool.execute('UPDATE result SET report_no=? WHERE result_id=?', [reportNo, result.insertId]);
     await pool.execute('UPDATE `order` SET status=? WHERE order_id=? AND status <> ?', ['COMPLETED', order_id, 'DONE']);
     res.status(201).json({
@@ -132,7 +156,7 @@ const updateResult = async (req, res) => {
   }
 };
 
-module.exports = { getResults, getResultByOrder, createResult, updateResult };
+module.exports = { getResults, getResultByOrder, getResultImage, createResult, updateResult };
 
 async function ensureResultSchema() {
   await addColumnIfMissing('result', 'report_no', 'VARCHAR(40) NULL');

@@ -35,18 +35,15 @@ export function patientName(item: { first_name?: string; last_name?: string }) {
 
 export function statusTone(status?: string) {
   const normalized = statusKey(status);
-  if (normalized === "COMPLETED" || normalized === "DONE" || normalized === "ຈ່າຍແລ້ວ") {
+  if (normalized === "DONE" || normalized === "PAID") {
     return "bg-[#bafbd2] text-[#137547]";
   }
   if (normalized === "WAITING_PAYMENT") return "bg-[#fff7a5] text-[#a77b00]";
-  if (normalized === "PENDING" || normalized === "PENDING_RESULT") return "bg-[#fff7a5] text-[#a77b00]";
-  if (normalized === "ບັນທຶກແລ້ວ") return "bg-[#bafbd2] text-[#137547]";
-  if (normalized === "ຍັງບໍ່ໄດ້ຈ່າຍ") return "bg-[#fff7a5] text-[#a77b00]";
-  if (normalized === "ລໍຖ້າບັນທຶກ") return "bg-[#fff7a5] text-[#a77b00]";
-  if (normalized === "ກຳລັງເອີ້ນ") return "bg-[#addbf4] text-[#123879]";
-  if (normalized === "ກຳລັງກວດ") return "bg-[#c7a0ff] text-[#0345aa]";
-  if (normalized === "ຍົກເລີກແລ້ວ") return "bg-[#ff9fa6] text-[#b00000]";
-  if (normalized === "ກຳລັງລໍຖ້າ") return "bg-[#fff7a5] text-[#a77b00]";
+  if (normalized === "PENDING") return "bg-[#fff7a5] text-[#a77b00]";
+  if (normalized === "PENDING_RESULT") return "bg-[#c7a0ff] text-[#0345aa]";
+  if (normalized === "UNPAID") return "bg-[#fff7a5] text-[#a77b00]";
+  if (normalized === "CALLING") return "bg-[#addbf4] text-[#123879]";
+  if (normalized === "CANCELLED") return "bg-[#ff9fa6] text-[#b00000]";
   return "bg-[#ffeaa3] text-[#a16a00]";
 }
 
@@ -211,7 +208,7 @@ export function OrdersTable({
                   <StatusPill status={displayOrderStatus(order)} />
                 </td>
                 <td className="px-5 py-3 text-right">
-                  {onCancel && !isCancelledStatus(order.status) && statusKey(order.status) !== "COMPLETED" && (
+                  {onCancel && canCancelOrder(order) && (
                     <button
                       type="button"
                       onClick={() => onCancel(order)}
@@ -229,6 +226,12 @@ export function OrdersTable({
       </table>
     </div>
   );
+}
+
+function canCancelOrder(order: Order) {
+  const workflowStatus = displayOrderStatus(order);
+  const workflowKey = statusKey(workflowStatus);
+  return !isCancelledStatus(workflowStatus) && (workflowKey === "PENDING" || workflowKey === "PENDING_RESULT");
 }
 
 export function QueuesTable({

@@ -1,4 +1,5 @@
 const pool = require('../db/connection');
+const { createQueueForOrder } = require('../services/queueService');
 
 const orderSelect = `
   SELECT o.*, p.first_name, p.last_name, e.exam_name, e.price AS exam_price, s.staff_name,
@@ -54,21 +55,35 @@ const getOrderById = async (req, res) => {
 
 // POST /api/orders
 const createOrder = async (req, res) => {
+  const connection = await pool.getConnection();
   try {
-    const { patient_id, exam_type_id, staff_id, order_date, note } = req.body;
-    const [result] = await pool.execute(
-      'INSERT INTO `order` (patient_id, exam_type_id, staff_id, order_date, note) VALUES (?, ?, ?, ?, ?)',
-      [patient_id, exam_type_id, staff_id, order_date, note || null]
+    await connection.beginTransaction();
+    const { patient_id, exam_type_id, staff_id, note, queue_date } = req.body;
+    const [result] = await connection.execute(
+      'INSERT INTO `order` (patient_id, exam_type_id, staff_id, order_date, note) VALUES (?, ?, ?, NOW(), ?)',
+      [patient_id, exam_type_id, staff_id, note || null]
     );
-    const documentNo = buildOrderDocumentNo(result.insertId, order_date);
-    const billingNo = buildBillingNo(result.insertId, order_date);
-    await pool.execute(
+
+    const [orderRows] = await connection.execute('SELECT order_date FROM `order` WHERE order_id = ? LIMIT 1', [result.insertId]);
+    const orderDate = orderRows[0]?.order_date || new Date();
+    const documentNo = buildOrderDocumentNo(result.insertId, orderDate);
+    const billingNo = buildBillingNo(result.insertId, orderDate);
+    await connection.execute(
       'UPDATE `order` SET document_no=?, billing_no=? WHERE order_id=?',
       [documentNo, billingNo, result.insertId]
     );
-    res.status(201).json({ success: true, data: { order_id: result.insertId, document_no: documentNo, billing_no: billingNo } });
+    const queue = await createQueueForOrder(connection, result.insertId, queue_date);
+
+    await connection.commit();
+    res.status(201).json({
+      success: true,
+      data: { order_id: result.insertId, document_no: documentNo, billing_no: billingNo, queue },
+    });
   } catch (err) {
+    await connection.rollback();
     res.status(500).json({ success: false, message: err.message });
+  } finally {
+    connection.release();
   }
 };
 
@@ -86,9 +101,14 @@ const updateOrderStatus = async (req, res) => {
     }
 
     const [rows] = await pool.execute(
-      `SELECT o.*, pay.payment_id, COALESCE(pay.status, 'PAID') AS payment_status
+      `SELECT o.*, r.result_id,
+              pay.payment_id, COALESCE(pay.status, 'PAID') AS payment_status,
+              adjusted_pay.payment_id AS adjusted_payment_id,
+              adjusted_pay.status AS adjusted_payment_status
        FROM \`order\` o
+       LEFT JOIN result r ON r.order_id = o.order_id
        LEFT JOIN payment pay ON pay.order_id = o.order_id AND COALESCE(pay.status, 'PAID') = 'PAID'
+       LEFT JOIN payment adjusted_pay ON adjusted_pay.order_id = o.order_id AND COALESCE(adjusted_pay.status, 'PAID') IN ('VOID', 'REFUNDED')
        WHERE o.order_id = ?
        LIMIT 1`,
       [req.params.id]
@@ -96,7 +116,21 @@ const updateOrderStatus = async (req, res) => {
     if (!rows.length) return res.status(404).json({ success: false, message: 'Order not found' });
 
     const order = rows[0];
-    if (order.payment_id) {
+    if (status === 'CANCELLED') {
+      if (order.payment_id) {
+        return res.status(409).json({
+          success: false,
+          message: 'ໃບສັ່ງກວດນີ້ຊຳລະເງິນແລ້ວ ຕ້ອງຄືນເງິນ ຫຼື void ການຊຳລະກ່ອນຈຶ່ງຍົກເລີກໄດ້',
+        });
+      }
+
+      if (order.result_id && !order.adjusted_payment_id) {
+        return res.status(409).json({
+          success: false,
+          message: 'ໃບສັ່ງກວດນີ້ບັນທຶກຜົນກວດແລ້ວ ບໍ່ສາມາດຍົກເລີກໄດ້',
+        });
+      }
+    } else if (order.payment_id) {
       return res.status(409).json({ success: false, message: 'ໃບສັ່ງກວດທີ່ຊຳລະແລ້ວບໍ່ສາມາດແກ້ສະຖານະໂດຍກົງໄດ້ ກະລຸນາໃຊ້ void/refund' });
     }
 

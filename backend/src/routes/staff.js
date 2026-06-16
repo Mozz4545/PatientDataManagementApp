@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { getStaff, getStaffOptions, getStaffById, createStaff, updateStaff, resetPassword } = require('../controllers/staffController');
+const { getStaff, getStaffOptions, getStaffById, createStaff, updateStaff, resetPassword, deleteStaff } = require('../controllers/staffController');
 const authGuard = require('../middleware/authGuard');
 const roleGuard = require('../middleware/roleGuard');
 
@@ -15,5 +15,6 @@ router.get('/:id', authGuard, roleGuard(['ADMIN']), getStaffById);
 router.post('/',              authGuard, roleGuard(['ADMIN']), createStaff);
 router.put('/:id',            authGuard, roleGuard(['ADMIN']), updateStaff);
 router.patch('/:id/password', authGuard, roleGuard(['ADMIN']), resetPassword);
+router.delete('/:id',         authGuard, roleGuard(['ADMIN']), deleteStaff);
 
 module.exports = router;
