@@ -6,21 +6,11 @@ export const API_ORIGIN = API_BASE_URL.replace(/\/api\/?$/, "");
 
 const api = axios.create({
   baseURL: API_BASE_URL,
+  timeout: 10000,
+  withCredentials: true,
   headers: {
     "Content-Type": "application/json",
   },
-});
-
-api.interceptors.request.use((config) => {
-  if (typeof window === "undefined") return config;
-
-  const token = localStorage.getItem("radiology_token");
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
-  } else {
-    delete config.headers.Authorization;
-  }
-  return config;
 });
 
 api.interceptors.response.use(
@@ -37,20 +27,5 @@ api.interceptors.response.use(
     return Promise.reject(error);
   }
 );
-
-if (typeof window !== "undefined") {
-  const token = localStorage.getItem("radiology_token");
-  if (token) {
-    api.defaults.headers.common.Authorization = `Bearer ${token}`;
-  }
-}
-
-export const setAuthToken = (token?: string) => {
-  if (token) {
-    api.defaults.headers.common.Authorization = `Bearer ${token}`;
-  } else {
-    delete api.defaults.headers.common.Authorization;
-  }
-};
 
 export default api;

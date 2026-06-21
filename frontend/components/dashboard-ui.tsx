@@ -59,11 +59,11 @@ export function PageHero({
   return (
     <section className="border-b border-[#dedede] px-4 py-5 shadow-sm sm:px-6 sm:py-6 md:px-8 lg:px-10 lg:py-8">
       <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
-        <div>
+        <div className="min-w-0">
           <h2 className="text-2xl font-bold leading-tight text-[#120d34] sm:text-[28px] lg:text-[32px]">{title}</h2>
           <p className="mt-2 text-sm font-semibold text-[#7d798e] sm:text-base lg:text-lg">{subtitle}</p>
         </div>
-        {children && <div className="flex flex-col gap-2.5 sm:flex-row sm:flex-wrap sm:gap-3">{children}</div>}
+        {children && <div className="flex w-full flex-col gap-2.5 sm:w-auto sm:flex-row sm:flex-wrap sm:gap-3 xl:justify-end">{children}</div>}
       </div>
     </section>
   );
@@ -75,12 +75,14 @@ export function ActionButton({
   onClick,
   href,
   type = "button",
+  disabled = false,
 }: {
   children: React.ReactNode;
   tone?: "green" | "cream" | "blue" | "red" | "violet" | "orange";
   onClick?: () => void;
   href?: string;
   type?: "button" | "submit";
+  disabled?: boolean;
 }) {
   const tones = {
     green: "bg-[#99fba6] hover:bg-[#86f596]",
@@ -90,7 +92,9 @@ export function ActionButton({
     violet: "bg-[#8c7cff] text-white hover:bg-[#7867f0]",
     orange: "bg-[#ff6b00] text-white hover:bg-[#ee6300]",
   };
-  const className = `inline-flex min-h-10 items-center justify-center rounded-lg px-4 text-center text-sm font-semibold text-black shadow-sm transition sm:min-h-11 sm:px-5 sm:text-base ${tones[tone]}`;
+  const className = `inline-flex min-h-10 w-full items-center justify-center rounded-lg px-4 text-center text-sm font-semibold text-black shadow-sm transition sm:min-h-11 sm:w-auto sm:px-5 sm:text-base ${tones[tone]} ${
+    disabled ? "cursor-not-allowed opacity-50" : ""
+  }`;
 
   if (href) {
     return (
@@ -101,9 +105,75 @@ export function ActionButton({
   }
 
   return (
-    <button type={type} onClick={onClick} className={className}>
+    <button type={type} onClick={onClick} disabled={disabled} className={className}>
       {children}
     </button>
+  );
+}
+
+export function DataState({
+  type,
+  message,
+  onRetry,
+  compact = false,
+}: {
+  type: "loading" | "empty" | "error";
+  message?: string;
+  onRetry?: () => void;
+  compact?: boolean;
+}) {
+  const content = message || (type === "loading"
+    ? "ກຳລັງໂຫຼດຂໍ້ມູນ..."
+    : type === "empty"
+      ? "ບໍ່ມີຂໍ້ມູນ"
+      : "ບໍ່ສາມາດໂຫຼດຂໍ້ມູນໄດ້");
+
+  return (
+    <div className={`rounded-xl border text-center font-semibold ${compact ? "p-4 text-sm" : "p-6 text-sm sm:p-8"} ${
+      type === "error"
+        ? "border-red-200 bg-red-50 text-red-700"
+        : "border-slate-200 bg-[#f7f8fb] text-[#767285]"
+    }`}>
+      {type === "loading" && <div className="mx-auto mb-3 h-7 w-7 animate-spin rounded-full border-4 border-slate-200 border-t-[#123879]" />}
+      <div>{content}</div>
+      {type === "error" && onRetry && (
+        <button type="button" onClick={onRetry} className="mt-4 rounded-lg bg-[#123879] px-5 py-2 text-sm font-bold text-white shadow-sm">
+          ລອງໃໝ່
+        </button>
+      )}
+    </div>
+  );
+}
+
+export function Pagination({
+  page,
+  totalItems,
+  pageSize,
+  onPageChange,
+}: {
+  page: number;
+  totalItems: number;
+  pageSize: number;
+  onPageChange: (page: number) => void;
+}) {
+  const totalPages = Math.max(1, Math.ceil(totalItems / pageSize));
+  const currentPage = Math.min(Math.max(1, page), totalPages);
+  if (totalItems <= pageSize) return null;
+
+  return (
+    <div className="mt-4 flex flex-col items-center justify-between gap-3 rounded-xl bg-[#f7f8fb] px-4 py-3 sm:flex-row">
+      <div className="text-xs font-bold text-[#767285]">
+        ໜ້າ {currentPage.toLocaleString("lo-LA")} ຈາກ {totalPages.toLocaleString("lo-LA")} · {totalItems.toLocaleString("lo-LA")} ລາຍການ
+      </div>
+      <div className="flex gap-2">
+        <button type="button" disabled={currentPage === 1} onClick={() => onPageChange(currentPage - 1)} className="rounded-lg bg-white px-4 py-2 text-sm font-bold shadow-sm disabled:opacity-40">
+          ກ່ອນໜ້າ
+        </button>
+        <button type="button" disabled={currentPage === totalPages} onClick={() => onPageChange(currentPage + 1)} className="rounded-lg bg-[#123879] px-4 py-2 text-sm font-bold text-white shadow-sm disabled:opacity-40">
+          ຖັດໄປ
+        </button>
+      </div>
+    </div>
   );
 }
 
@@ -120,7 +190,7 @@ export function MetricCard({
     <div className="min-h-[112px] rounded-2xl bg-[#f3f3f3] px-4 py-4 sm:min-h-[128px] sm:px-5">
       <div className="flex items-center gap-2.5 text-sm font-bold sm:text-base">
         <span className="h-3.5 w-3.5 shrink-0 rounded-full" style={{ backgroundColor: color }} />
-        <span>{label}</span>
+        <span className="min-w-0 break-words">{label}</span>
       </div>
       <div className="mt-3 h-0.5 sm:mt-4" style={{ backgroundColor: color }} />
       <div
@@ -151,10 +221,10 @@ export function Panel({
   children: React.ReactNode;
 }) {
   return (
-    <section className="rounded-2xl border border-[#d9d9d9] bg-white p-4 shadow-sm sm:p-5">
-      <h3 className="mb-4 flex items-center gap-2.5 text-lg font-bold sm:mb-5 sm:text-xl">
+    <section className="min-w-0 rounded-2xl border border-[#d9d9d9] bg-white p-4 shadow-sm sm:p-5">
+      <h3 className="mb-4 flex min-w-0 items-center gap-2.5 text-lg font-bold sm:mb-5 sm:text-xl">
         <span className="h-3.5 w-3.5 shrink-0 rounded-full" style={{ backgroundColor: dot }} />
-        {title}
+        <span className="min-w-0 break-words">{title}</span>
       </h3>
       {children}
     </section>
@@ -171,7 +241,34 @@ export function OrdersTable({
   highlightFirst?: boolean;
 }) {
   return (
-    <div className="overflow-x-auto rounded-xl shadow-sm">
+    <>
+      <div className="space-y-3 md:hidden">
+        {orders.length === 0 ? (
+          <div className="rounded-xl bg-[#f7f8fb] p-5 text-center text-sm font-bold text-[#767285]">ບໍ່ມີຂໍ້ມູນ</div>
+        ) : (
+          orders.map((order) => (
+            <article key={order.order_id} className="rounded-xl border border-[#d9d9d9] bg-white p-4 shadow-sm">
+              <div className="flex items-start justify-between gap-3">
+                <div>
+                  <div className="font-bold text-[#123879]">ໃບສັ່ງ #{String(order.order_id).padStart(4, "0")}</div>
+                  <div className="mt-1 text-sm font-bold">{patientName(order)}</div>
+                </div>
+                <StatusPill status={displayOrderStatus(order)} />
+              </div>
+              <div className="mt-3 grid gap-2 text-xs font-semibold text-[#767285]">
+                <div><span className="text-[#120d34]">ປະເພດກວດ:</span> {order.exam_name || examOptions.find((item) => item.id === order.exam_type_id)?.name || "-"}</div>
+                <div><span className="text-[#120d34]">ວັນທີ:</span> {formatDateTime(order.order_date)}</div>
+              </div>
+              {onCancel && canCancelOrder(order) && (
+                <button type="button" onClick={() => onCancel(order)} className="mt-3 w-full rounded-lg bg-[#efabab] px-4 py-2 text-sm font-bold">
+                  ຍົກເລີກໃບສັ່ງກວດ
+                </button>
+              )}
+            </article>
+          ))
+        )}
+      </div>
+      <div className="hidden overflow-x-auto rounded-xl shadow-sm md:block">
       <table className="w-full min-w-[760px] border-collapse text-left">
         <thead className="bg-[#f2f2f2] text-xs font-bold">
           <tr>
@@ -213,7 +310,7 @@ export function OrdersTable({
                       type="button"
                       onClick={() => onCancel(order)}
                       className="text-xl leading-none text-[#234154]"
-                      aria-label="cancel order"
+                      aria-label="ຍົກເລີກໃບສັ່ງກວດ"
                     >
                       x
                     </button>
@@ -224,7 +321,8 @@ export function OrdersTable({
           )}
         </tbody>
       </table>
-    </div>
+      </div>
+    </>
   );
 }
 
@@ -244,7 +342,22 @@ export function QueuesTable({
   onCall?: (queue: Queue) => void;
 }) {
   return (
-    <div className="overflow-x-auto rounded-xl shadow-sm">
+    <>
+    <div className="space-y-3 md:hidden">
+      {queues.length === 0 ? (
+        <DataState type="empty" compact />
+      ) : queues.map((queue) => (
+        <article key={queue.queue_id} className="rounded-xl border border-[#d9d9d9] bg-white p-4 shadow-sm">
+          <div className="flex items-start justify-between gap-3">
+            <div><div className="text-xs font-bold text-[#1e66ff]">ຄິວ {String(queue.queue_no).padStart(2, "0")}</div><div className="mt-1 font-bold">{patientName(queue)}</div></div>
+            <StatusPill status={queue.status} />
+          </div>
+          <div className="mt-3 space-y-1 text-xs font-semibold text-[#767285]"><div>{queue.exam_name || "-"}</div><div>{formatDateTime(queue.queue_date)}</div></div>
+          {onCall && <button type="button" onClick={() => onCall(queue)} className="mt-3 w-full rounded-lg bg-[#addbf4] px-4 py-2 text-sm font-bold text-[#123879]">ເອີ້ນ</button>}
+        </article>
+      ))}
+    </div>
+    <div className="hidden overflow-x-auto rounded-xl shadow-sm md:block">
       <table className="w-full min-w-[720px] border-collapse text-left">
         <thead className={`${accent === "cyan" ? "bg-[#18bdce] text-white" : "bg-[#f2f2f2] text-black"} text-xs font-bold`}>
           <tr>
@@ -290,6 +403,7 @@ export function QueuesTable({
         </tbody>
       </table>
     </div>
+    </>
   );
 }
 
@@ -317,12 +431,12 @@ export function SearchBox({
 
 export function SmallStat({ label, value, color }: { label: string; value: number | string; color: string }) {
   return (
-    <div className="flex min-h-16 w-full items-center justify-between rounded-2xl bg-[#f3f3f3] px-4 sm:min-h-[72px]">
-      <div className="flex items-center gap-2.5 text-sm font-bold sm:text-base">
+    <div className="flex min-h-16 w-full items-center justify-between gap-3 rounded-2xl bg-[#f3f3f3] px-4 sm:min-h-[72px]">
+      <div className="flex min-w-0 items-center gap-2.5 text-sm font-bold sm:text-base">
         <span className="h-3.5 w-3.5 shrink-0 rounded-full" style={{ backgroundColor: color }} />
-        {label}
+        <span className="min-w-0 break-words">{label}</span>
       </div>
-      <div className="mx-3 h-10 w-0.5 shrink-0" style={{ backgroundColor: color }} />
+      <div className="hidden h-10 w-0.5 shrink-0 sm:block" style={{ backgroundColor: color }} />
       <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-[#dedede] text-2xl font-bold" style={{ color }}>
         {value}
       </div>

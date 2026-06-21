@@ -1,5 +1,5 @@
-import StaffFormPage from "../StaffFormPage";
+import { redirect } from "next/navigation";
 
-export default function NewStaffPage() {
-  return <StaffFormPage />;
+export default function LegacyNewStaffPage() {
+  redirect("/staff/new");
 }

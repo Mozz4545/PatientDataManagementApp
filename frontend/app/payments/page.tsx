@@ -5,11 +5,12 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useForm, useWatch, type FieldPath } from "react-hook-form";
 import { z } from "zod";
 import AppShell, { useCurrentUser } from "@/components/AppShell";
-import { ActionButton, formatDateTime, PageHero, SearchBox, StatusPill, patientName } from "@/components/dashboard-ui";
+import { ActionButton, DataState, formatDateTime, PageHero, SearchBox, StatusPill, patientName } from "@/components/dashboard-ui";
 import api from "@/lib/api";
 import { escapeHtml, printDocument, printLogoHtml } from "@/lib/print";
 import { displayOrderStatus, isCancelledStatus, isReadyToPayStatus } from "@/lib/status";
 import type { ApiResponse, Order, Payment, Staff } from "@/lib/types";
+import { useModalAccessibility } from "@/lib/useModalAccessibility";
 
 const paymentSchema = z.object({
   staff_id: z.coerce.number().min(1, "ກະລຸນາເລືອກຜູ້ຮັບເງິນ"),
@@ -37,6 +38,11 @@ export default function PaymentsPage() {
   const [selectedAdjustment, setSelectedAdjustment] = useState<{ payment: Payment; action: "void" | "refund" } | null>(null);
   const [formError, setFormError] = useState<string | null>(null);
   const isAdmin = userQuery.data?.role === "ADMIN";
+  const formModalRef = useModalAccessibility<HTMLFormElement>(Boolean(selectedOrder || selectedAdjustment), () => {
+    setSelectedOrder(null);
+    setSelectedAdjustment(null);
+  });
+  const receiptModalRef = useModalAccessibility(Boolean(selectedReceipt), () => setSelectedReceipt(null));
 
   const ordersQuery = useQuery({
     queryKey: ["orders", "payments"],
@@ -176,7 +182,6 @@ export default function PaymentsPage() {
       <PageHero title="ການຊຳລະເງິນ" subtitle="ຈັດການການຈ່າຍເງິນຂອງໃບສັ່ງກວດ">
         <SearchBox value={search} onChange={setSearch} placeholder="ID ຫຼື ຊື່" />
         <ActionButton onClick={() => (tab === "unpaid" ? ordersQuery.refetch() : paymentsQuery.refetch())}>ໂຫຼດໃໝ່</ActionButton>
-        <ActionButton href="/dashboard">ກັບຄືນ</ActionButton>
       </PageHero>
 
       <div className="px-4 py-4 sm:px-6 md:px-8 lg:px-10">
@@ -197,7 +202,15 @@ export default function PaymentsPage() {
           </div>
 
           <div className="overflow-x-auto rounded-xl border border-[#d9d9d9] bg-white shadow-sm">
-            {tab === "unpaid" ? (
+            {tab === "unpaid" && ordersQuery.isLoading ? (
+              <div className="p-4"><DataState type="loading" /></div>
+            ) : tab === "unpaid" && ordersQuery.isError ? (
+              <div className="p-4"><DataState type="error" message="ບໍ່ສາມາດໂຫຼດລາຍການຄ້າງຊຳລະໄດ້" onRetry={() => ordersQuery.refetch()} /></div>
+            ) : tab === "paid" && paymentsQuery.isLoading ? (
+              <div className="p-4"><DataState type="loading" /></div>
+            ) : tab === "paid" && paymentsQuery.isError ? (
+              <div className="p-4"><DataState type="error" message="ບໍ່ສາມາດໂຫຼດປະຫວັດການຊຳລະໄດ້" onRetry={() => paymentsQuery.refetch()} /></div>
+            ) : tab === "unpaid" ? (
               <UnpaidOrdersTable
                 orders={filteredUnpaid}
                 onNotice={printPaymentNotice}
@@ -225,7 +238,7 @@ export default function PaymentsPage() {
 
       {selectedOrder && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 px-4">
-          <form onSubmit={handleSubmit(onSubmit)} className="w-full max-w-[520px] rounded-2xl bg-white p-5 shadow-lg">
+          <form ref={formModalRef} role="dialog" aria-modal="true" onSubmit={handleSubmit(onSubmit)} className="w-full max-w-[520px] rounded-2xl bg-white p-5 shadow-lg">
             <h3 className="text-xl font-bold text-[#120d34]">ຈ່າຍເງິນ</h3>
             <div className="mt-3 rounded-xl bg-[#f6f6f6] p-3 text-sm font-semibold">
               <div>ໃບສັ່ງກວດ: #{String(selectedOrder.order_id).padStart(4, "0")}</div>
@@ -300,7 +313,7 @@ export default function PaymentsPage() {
 
       {selectedReceipt && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 px-4">
-          <div className="w-full max-w-[560px] rounded-2xl bg-white p-5 shadow-lg print:shadow-none">
+          <div ref={receiptModalRef} role="dialog" aria-modal="true" className="w-full max-w-[560px] rounded-2xl bg-white p-5 shadow-lg print:shadow-none">
             <div className="border-b border-[#d9d9d9] pb-4 text-center">
               <h3 className="text-2xl font-bold text-[#123879]">ໃບຮັບເງິນ</h3>
               <p className="mt-1 text-sm font-semibold">ພະແນກລັງສີ - ໂຮງໝໍ 103</p>
@@ -337,6 +350,9 @@ export default function PaymentsPage() {
       {selectedAdjustment && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 px-4">
           <form
+            ref={formModalRef}
+            role="dialog"
+            aria-modal="true"
             onSubmit={adjustmentForm.handleSubmit((values) => {
               const parsed = adjustmentSchema.safeParse(values);
               if (!parsed.success) {
@@ -429,6 +445,31 @@ function UnpaidOrdersTable({
   onPay: (order: Order) => void;
 }) {
   return (
+    <>
+    <div className="space-y-3 p-3 md:hidden">
+      {orders.length === 0 ? (
+        <div className="rounded-xl bg-[#f7f8fb] p-5 text-center text-sm font-bold text-[#767285]">ບໍ່ມີໃບສັ່ງກວດທີ່ຄ້າງຈ່າຍ</div>
+      ) : orders.map((order) => (
+        <article key={order.order_id} className="rounded-xl border border-[#d9d9d9] p-4 shadow-sm">
+          <div className="flex justify-between gap-3">
+            <div><div className="text-xs font-bold text-[#1e66ff]">#{String(order.order_id).padStart(4, "0")}</div><div className="mt-1 font-bold">{patientName(order)}</div></div>
+            <StatusPill status="UNPAID" />
+          </div>
+          <div className="mt-3 space-y-1 text-xs font-semibold text-[#767285]">
+            <div>{order.exam_name || "-"}</div>
+            <div>{formatDateTime(order.order_date)}</div>
+            <div className="text-base font-bold text-[#123879]">{Number(order.exam_price || 0).toLocaleString("lo-LA")} ກີບ</div>
+          </div>
+          <div className="mt-4 grid grid-cols-2 gap-2">
+            <button type="button" onClick={() => onNotice(order)} className="rounded-lg bg-[#addbf4] px-3 py-2 text-xs font-bold text-[#123879]">ໃບແຈ້ງຊຳລະ</button>
+            <button type="button" onClick={() => onPay(order)} disabled={!isReadyToPayStatus(displayOrderStatus(order))} className="rounded-lg bg-[#99fba6] px-3 py-2 text-xs font-bold text-[#123879] disabled:bg-[#eee] disabled:text-[#9d98aa]">
+              {isReadyToPayStatus(displayOrderStatus(order)) ? "ຈ່າຍເງິນ" : "ລໍຖ້າຜົນກວດ"}
+            </button>
+          </div>
+        </article>
+      ))}
+    </div>
+    <div className="hidden overflow-x-auto md:block">
     <table className="w-full min-w-[980px] border-collapse text-left">
       <thead className="bg-[#f2f2f2] text-xs font-bold">
         <tr>
@@ -488,6 +529,8 @@ function UnpaidOrdersTable({
         )}
       </tbody>
     </table>
+    </div>
+    </>
   );
 }
 
@@ -503,6 +546,29 @@ function PaidPaymentsTable({
   onAdjust: (payment: Payment, action: "void" | "refund") => void;
 }) {
   return (
+    <>
+    <div className="space-y-3 p-3 md:hidden">
+      {payments.length === 0 ? (
+        <div className="rounded-xl bg-[#f7f8fb] p-5 text-center text-sm font-bold text-[#767285]">ຍັງບໍ່ມີການຊຳລະເງິນ</div>
+      ) : payments.map((payment) => (
+        <article key={payment.payment_id} className="rounded-xl border border-[#d9d9d9] p-4 shadow-sm">
+          <div className="flex justify-between gap-3"><div><div className="text-xs font-bold text-[#1e66ff]">{receiptNumber(payment)}</div><div className="mt-1 font-bold">{patientName(payment)}</div></div><StatusPill status="PAID" /></div>
+          <div className="mt-3 space-y-1 text-xs font-semibold text-[#767285]">
+            <div>{payment.exam_name || "-"}</div><div>{formatDateTime(payment.payment_date)}</div>
+            <div>{payment.payment_type || "-"} · {payment.staff_name || "-"}</div>
+            <div className="text-base font-bold text-[#137547]">{Number(payment.amount || 0).toLocaleString("lo-LA")} ກີບ</div>
+          </div>
+          <div className="mt-4 flex flex-wrap gap-2">
+            <button type="button" onClick={() => onReceipt(payment)} className="rounded-lg bg-[#addbf4] px-3 py-2 text-xs font-bold text-[#123879]">ໃບຮັບເງິນ</button>
+            {isAdmin && paymentStatus(payment) === "PAID" && <>
+              <button type="button" onClick={() => onAdjust(payment, "void")} className="rounded-lg bg-[#f4e3b0] px-3 py-2 text-xs font-bold">ຍົກເລີກລາຍການ</button>
+              <button type="button" onClick={() => onAdjust(payment, "refund")} className="rounded-lg bg-[#efabab] px-3 py-2 text-xs font-bold">ຄືນເງິນ</button>
+            </>}
+          </div>
+        </article>
+      ))}
+    </div>
+    <div className="hidden overflow-x-auto md:block">
     <table className="w-full min-w-[900px] border-collapse text-left">
       <thead className="bg-[#f2f2f2] text-xs font-bold">
         <tr>
@@ -556,14 +622,14 @@ function PaidPaymentsTable({
                       onClick={() => onAdjust(payment, "void")}
                       className="rounded-full bg-[#f4e3b0] px-3 py-1 text-[11px] font-bold text-black"
                     >
-                      Void
+                      ຍົກເລີກລາຍການ
                     </button>
                     <button
                       type="button"
                       onClick={() => onAdjust(payment, "refund")}
                       className="rounded-full bg-[#efabab] px-3 py-1 text-[11px] font-bold text-black"
                     >
-                      Refund
+                      ຄືນເງິນ
                     </button>
                   </div>
                 ) : (
@@ -575,6 +641,8 @@ function PaidPaymentsTable({
         )}
       </tbody>
     </table>
+    </div>
+    </>
   );
 }
 

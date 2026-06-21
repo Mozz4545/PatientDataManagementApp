@@ -2,7 +2,7 @@
 
 import { useQuery } from "@tanstack/react-query";
 import AppShell from "@/components/AppShell";
-import { ActionButton, MetricCard, OrdersTable, PageHero, Panel } from "@/components/dashboard-ui";
+import { ActionButton, DataState, MetricCard, OrdersTable, PageHero, Panel } from "@/components/dashboard-ui";
 import api from "@/lib/api";
 import { displayOrderStatus, isOpenStatus, isReadyToPayStatus, isWaitingQueueStatus } from "@/lib/status";
 import type { ApiResponse, Order, Payment, Queue, Result } from "@/lib/types";
@@ -73,9 +73,11 @@ export default function DashboardPage() {
         <div className="mt-5 lg:mt-8">
           <Panel title="ໃບສັ່ງກວດຫຼ້າສຸດ">
             {ordersQuery.isLoading ? (
-              <div className="py-12 text-center text-[#767285]">ກຳລັງໂຫຼດ...</div>
+              <DataState type="loading" />
             ) : ordersQuery.isError ? (
-              <div className="py-12 text-center font-semibold text-red-600">ບໍ່ສາມາດໂຫຼດໃບສັ່ງກວດໄດ້</div>
+              <DataState type="error" message="ບໍ່ສາມາດໂຫຼດໃບສັ່ງກວດໄດ້" onRetry={() => ordersQuery.refetch()} />
+            ) : orders.length === 0 ? (
+              <DataState type="empty" message="ຍັງບໍ່ມີໃບສັ່ງກວດ" />
             ) : (
               <OrdersTable orders={orders.slice(0, 6)} />
             )}

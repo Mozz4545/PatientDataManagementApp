@@ -1,0 +1,5 @@
+2026/06/21-08:09:26.598 8254 Creating DB C:\Users\ASUS\Documents\GitHub\PatientDataManagementApp\UserManual_Lao\.edge-profile-1782004165727\Default\Sync Data\LevelDB since it was missing.
+2026/06/21-08:09:26.609 8254 Reusing MANIFEST C:\Users\ASUS\Documents\GitHub\PatientDataManagementApp\UserManual_Lao\.edge-profile-1782004165727\Default\Sync Data\LevelDB/MANIFEST-000001
+2026/06/21-08:11:20.510 8254 Level-0 table #5: started
+2026/06/21-08:11:20.537 8254 Level-0 table #5: 113908 bytes OK
+2026/06/21-08:11:20.541 8254 Delete type=0 #3

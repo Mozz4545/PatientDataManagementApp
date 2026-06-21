@@ -1,13 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { useMutation } from "@tanstack/react-query";
 import type { AxiosError } from "axios";
-import api, { setAuthToken } from "@/lib/api";
+import api from "@/lib/api";
 
 const loginSchema = z.object({
   username: z.string().min(1, "ກະລຸນາປ້ອນລະຫັດຜູ້ໃຊ້"),
@@ -27,17 +27,20 @@ export default function LoginPage() {
     defaultValues: { username: "", password: "" },
   });
 
+  useEffect(() => {
+    localStorage.removeItem("radiology_user");
+  }, []);
+
   const loginMutation = useMutation({
-    mutationFn: (values: LoginValues) => api.post("/auth/login", values),
+    mutationFn: (values: LoginValues) => api.post("/auth/login", {
+      username: values.username.trim(),
+      password: values.password,
+    }),
     onSuccess: (response) => {
-      const token = response.data?.data?.token;
       const user = response.data?.data?.user;
-      if (token) {
-        localStorage.setItem("radiology_token", token);
-        if (user) localStorage.setItem("radiology_user", JSON.stringify(user));
-        setAuthToken(token);
-        router.replace("/dashboard");
-      }
+      if (user) localStorage.setItem("radiology_user", JSON.stringify(user));
+      router.replace("/dashboard");
+      router.refresh();
     },
     onError: (error: unknown) => {
       const axiosError = error as AxiosError<{ message?: string }>;
@@ -52,7 +55,7 @@ export default function LoginPage() {
       return;
     }
     setFormError(null);
-    loginMutation.mutate(parsed.data);
+    loginMutation.mutate({ ...parsed.data, username: parsed.data.username.trim() });
   };
 
   return (

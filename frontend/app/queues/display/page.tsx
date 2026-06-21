@@ -7,11 +7,15 @@ import api from "@/lib/api";
 import type { ApiResponse, QueueDisplay } from "@/lib/types";
 
 export default function QueueDisplayPage() {
-  const [now, setNow] = useState(new Date());
+  const [now, setNow] = useState<Date | null>(null);
 
   useEffect(() => {
+    const firstTick = window.setTimeout(() => setNow(new Date()), 0);
     const timer = window.setInterval(() => setNow(new Date()), 1000);
-    return () => window.clearInterval(timer);
+    return () => {
+      window.clearTimeout(firstTick);
+      window.clearInterval(timer);
+    };
   }, []);
 
   const displayQuery = useQuery({
@@ -23,8 +27,8 @@ export default function QueueDisplayPage() {
 
   const current = displayQuery.data?.current ?? null;
   const recent = useMemo(() => (displayQuery.data?.recent ?? []).filter((queue) => queue.queue_id !== current?.queue_id), [current?.queue_id, displayQuery.data?.recent]);
-  const currentTime = formatDisplayTime(now);
-  const currentDate = formatDisplayDate(now);
+  const currentTime = now ? formatDisplayTime(now) : "--:--:--";
+  const currentDate = now ? formatDisplayDate(now) : "";
 
   return (
     <main className="min-h-screen bg-[#071a3f] text-white">

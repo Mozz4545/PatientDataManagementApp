@@ -5,17 +5,22 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useForm, type FieldPath } from "react-hook-form";
 import { z } from "zod";
 import AppShell, { useCurrentUser } from "@/components/AppShell";
-import { ActionButton, PageHero, Panel, SearchBox, StatusPill, formatDate, patientName } from "@/components/dashboard-ui";
+import { ActionButton, DataState, PageHero, Pagination, Panel, SearchBox, StatusPill, formatDate, patientName } from "@/components/dashboard-ui";
 import api from "@/lib/api";
 import { escapeHtml, lineBreaks, printDocument, printLogoHtml } from "@/lib/print";
 import { getResultImageDataUrl, getResultImageObjectUrl } from "@/lib/result-images";
 import { isCancelledStatus } from "@/lib/status";
 import { showToast } from "@/lib/toast";
 import type { ApiResponse, Order, Result } from "@/lib/types";
+import { useModalAccessibility } from "@/lib/useModalAccessibility";
 
 const resultSchema = z.object({
   result_detail: z.string().min(1, "ກະລຸນາປ້ອນຜົນກວດ"),
 });
+
+const RESULT_IMAGE_MAX_SIZE = 5 * 1024 * 1024;
+const RESULT_IMAGE_TYPES = ["image/jpeg", "image/png"];
+const RESULT_IMAGE_EXTENSIONS = [".jpg", ".jpeg", ".png"];
 
 type ResultValues = z.infer<typeof resultSchema>;
 
@@ -23,6 +28,8 @@ export default function ResultsPage() {
   const queryClient = useQueryClient();
   const userQuery = useCurrentUser();
   const [search, setSearch] = useState("");
+  const [page, setPage] = useState(1);
+  const pageSize = 10;
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [selectedResult, setSelectedResult] = useState<Result | null>(null);
   const [resultImage, setResultImage] = useState<File | null>(null);
@@ -31,6 +38,11 @@ export default function ResultsPage() {
   const [fullScreenImageOwned, setFullScreenImageOwned] = useState(false);
   const [savedImageObjectUrl, setSavedImageObjectUrl] = useState("");
   const [formError, setFormError] = useState<string | null>(null);
+  const formModalRef = useModalAccessibility<HTMLFormElement>(Boolean(selectedOrder), () => {
+    setSelectedOrder(null);
+    setSelectedResult(null);
+  });
+  const imageModalRef = useModalAccessibility(Boolean(fullScreenImageUrl), () => setFullScreenImageUrl(null));
 
   const ordersQuery = useQuery({
     queryKey: ["orders", "results"],
@@ -58,6 +70,8 @@ export default function ResultsPage() {
           .includes(text);
       });
   }, [ordersQuery.data, resultByOrder, search]);
+  const currentPage = Math.min(page, Math.max(1, Math.ceil(rows.length / pageSize)));
+  const pagedRows = rows.slice((currentPage - 1) * pageSize, currentPage * pageSize);
 
   const {
     register,
@@ -121,6 +135,8 @@ export default function ResultsPage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["results"] });
       queryClient.invalidateQueries({ queryKey: ["orders"] });
+      queryClient.invalidateQueries({ queryKey: ["queues"] });
+      queryClient.invalidateQueries({ queryKey: ["queue-display"] });
       showToast("success", selectedResult ? "ອັບເດດຜົນກວດສຳເລັດ" : "ບັນທຶກຜົນກວດສຳເລັດ");
       closeForm();
     },
@@ -152,11 +168,13 @@ export default function ResultsPage() {
       setResultImage(null);
       return;
     }
-    if (!["image/jpeg", "image/png"].includes(file.type)) {
+    const lowerName = file.name.toLowerCase();
+    const hasAllowedExtension = RESULT_IMAGE_EXTENSIONS.some((extension) => lowerName.endsWith(extension));
+    if (!RESULT_IMAGE_TYPES.includes(file.type) || !hasAllowedExtension) {
       setFormError("ອັບໂຫຼດໄດ້ສະເພາະໄຟລ໌ JPG ຫຼື PNG ເທົ່ານັ້ນ");
       return;
     }
-    if (file.size > 5 * 1024 * 1024) {
+    if (file.size > RESULT_IMAGE_MAX_SIZE) {
       setFormError("ຂະໜາດຮູບຕ້ອງບໍ່ເກີນ 5MB");
       return;
     }
@@ -206,7 +224,7 @@ export default function ResultsPage() {
   return (
     <AppShell>
       <PageHero title="ຜົນກວດ" subtitle="ບັນທຶກ ແລະ ຈັດການຜົນກວດລັງສີ">
-        <SearchBox value={search} onChange={setSearch} placeholder="ລະຫັດຄົນເຈັບ ຫຼື ຊື່" />
+        <SearchBox value={search} onChange={(value) => { setSearch(value); setPage(1); }} placeholder="ລະຫັດຄົນເຈັບ ຫຼື ຊື່" />
         <ActionButton
           onClick={() => {
             ordersQuery.refetch();
@@ -215,12 +233,46 @@ export default function ResultsPage() {
         >
           ໂຫຼດໃໝ່
         </ActionButton>
-        <ActionButton href="/dashboard">ກັບຄືນ</ActionButton>
       </PageHero>
 
       <div className="px-4 py-4 sm:px-6 md:px-8 lg:px-10 lg:py-6">
         <Panel title="ຜົນກວດ">
-          <div className="overflow-x-auto rounded-xl shadow-sm">
+          <div className="space-y-3 md:hidden">
+            {ordersQuery.isLoading || resultsQuery.isLoading ? (
+              <DataState type="loading" compact />
+            ) : ordersQuery.isError || resultsQuery.isError ? (
+              <DataState type="error" message="ບໍ່ສາມາດໂຫຼດຂໍ້ມູນຜົນກວດໄດ້" onRetry={() => { ordersQuery.refetch(); resultsQuery.refetch(); }} compact />
+            ) : rows.length === 0 ? (
+              <DataState type="empty" compact />
+            ) : (
+              pagedRows.map((order) => {
+                const result = resultByOrder.get(order.order_id);
+                return (
+                  <article key={order.order_id} className="rounded-xl border border-[#d9d9d9] bg-white p-4 shadow-sm">
+                    <div className="flex items-start justify-between gap-3">
+                      <div>
+                        <div className="text-xs font-bold text-[#1e66ff]">HN-{String(order.patient_id).padStart(6, "0")}</div>
+                        <h4 className="mt-1 font-bold">{patientName(order)}</h4>
+                      </div>
+                      <StatusPill status={result ? "ກວດສຳເລັດ" : "ລໍຖ້າບັນທຶກ"} />
+                    </div>
+                    <div className="mt-3 space-y-1 text-xs font-semibold text-[#767285]">
+                      <div>ປະເພດກວດ: <span className="text-[#120d34]">{order.exam_name || "-"}</span></div>
+                      <div>ວັນທີ: <span className="text-[#120d34]">{formatDate(result?.result_date || order.order_date)}</span></div>
+                      {result && <div className="line-clamp-2">ຜົນກວດ: <span className="text-[#120d34]">{result.result_detail || "-"}</span></div>}
+                    </div>
+                    <div className="mt-4 flex flex-wrap gap-2">
+                      {result && <button type="button" onClick={() => void printResultDocument(order, result)} className="rounded-lg bg-[#addbf4] px-4 py-2 text-xs font-bold text-[#123879]">ເອກະສານ</button>}
+                      <button type="button" onClick={() => openForm(order, result)} className="rounded-lg bg-[#99fba6] px-4 py-2 text-xs font-bold text-[#123879]">
+                        {result ? "ແກ້ໄຂ" : "ບັນທຶກຜົນ"}
+                      </button>
+                    </div>
+                  </article>
+                );
+              })
+            )}
+          </div>
+          <div className="hidden overflow-x-auto rounded-xl shadow-sm md:block">
             <table className="w-full min-w-[980px] border-collapse text-left">
               <thead className="bg-[#f2f2f2] text-xs font-bold">
                 <tr>
@@ -254,7 +306,7 @@ export default function ResultsPage() {
                     </td>
                   </tr>
                 ) : (
-                  rows.map((order) => {
+                  pagedRows.map((order) => {
                     const result = resultByOrder.get(order.order_id);
                     const hasImage = Boolean(result?.result_image_url);
                     return (
@@ -306,12 +358,13 @@ export default function ResultsPage() {
               </tbody>
             </table>
           </div>
+          <Pagination page={currentPage} totalItems={rows.length} pageSize={pageSize} onPageChange={setPage} />
         </Panel>
       </div>
 
       {selectedOrder && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 px-4 py-4">
-          <form onSubmit={handleSubmit(onSubmit)} className="flex max-h-[92vh] w-full max-w-[720px] flex-col overflow-hidden rounded-2xl bg-white shadow-lg">
+          <form ref={formModalRef} role="dialog" aria-modal="true" onSubmit={handleSubmit(onSubmit)} className="flex max-h-[92vh] w-full max-w-[720px] flex-col overflow-hidden rounded-2xl bg-white shadow-lg">
             <div className="border-b border-[#d9d9d9] px-5 py-4">
               <h3 className="text-xl font-bold text-[#120d34]">{selectedResult ? "ແກ້ໄຂຜົນກວດ" : "ບັນທຶກຜົນກວດ"}</h3>
             </div>
@@ -334,15 +387,33 @@ export default function ResultsPage() {
                 {errors.result_detail && <p className="mt-1 text-xs text-red-600">{errors.result_detail.message}</p>}
               </label>
 
-              <label className="mt-4 block text-xs font-bold text-black">
-                ຮູບຜົນກວດ
-                <input
-                  className="mt-2 block w-full rounded-lg border border-[#d9d9d9] bg-white p-2 text-sm shadow-sm"
-                  type="file"
-                  accept="image/jpeg,image/png,.jpg,.jpeg,.png"
-                  onChange={(event) => handleImageChange(event.target.files?.[0])}
-                />
-              </label>
+              <div className="mt-4">
+                <div className="text-xs font-bold text-black">ຮູບຜົນກວດ</div>
+                <label className="group relative mt-2 flex min-h-12 w-full cursor-pointer items-center gap-3 overflow-hidden rounded-lg border border-[#c8c8c8] bg-white pr-4 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:border-[#123879] hover:shadow-md active:translate-y-0 active:scale-[0.99]">
+                  <input
+                    className="peer absolute inset-0 z-10 cursor-pointer opacity-0"
+                    type="file"
+                    accept="image/jpeg,image/png,.jpg,.jpeg,.png"
+                    aria-label="ເລືອກຮູບຜົນກວດ"
+                    onChange={(event) => handleImageChange(event.target.files?.[0])}
+                  />
+                  <span className="flex min-h-12 shrink-0 items-center gap-2 bg-[#123879] px-4 text-sm font-bold text-white transition-colors duration-200 group-hover:bg-[#1b4d99] peer-focus-visible:bg-[#1b4d99]">
+                    <span className="text-lg transition-transform duration-200 group-hover:-translate-y-0.5" aria-hidden="true">
+                      ↑
+                    </span>
+                    {resultImage || (!removeResultImage && selectedResult?.result_image_url)
+                      ? "ກົດເພື່ອປ່ຽນຮູບ"
+                      : "ເລືອກໄຟລ໌"}
+                  </span>
+                  <span className="min-w-0 truncate text-sm font-semibold text-[#767285]">
+                    {resultImage?.name ||
+                      (!removeResultImage && selectedResult?.result_image_url
+                        ? "ມີຮູບບັນທຶກແລ້ວ"
+                        : "ຍັງບໍ່ໄດ້ເລືອກໄຟລ໌")}
+                  </span>
+                  <span className="pointer-events-none absolute inset-0 rounded-lg ring-2 ring-transparent peer-focus-visible:ring-[#18bdce]" />
+                </label>
+              </div>
 
               {removeResultImage && !resultImage && (
                 <div className="mt-3 rounded-lg bg-[#fff2f2] p-3 text-sm font-bold text-red-700">
@@ -403,7 +474,7 @@ export default function ResultsPage() {
       )}
 
       {fullScreenImageUrl && (
-        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/80 p-4">
+        <div ref={imageModalRef} role="dialog" aria-modal="true" className="fixed inset-0 z-[60] flex items-center justify-center bg-black/80 p-4">
           <button
             type="button"
             onClick={closeFullScreenImage}

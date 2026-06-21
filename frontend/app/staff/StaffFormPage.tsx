@@ -107,7 +107,8 @@ export default function StaffFormPage({ staffId }: { staffId?: number }) {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["staff"] });
-      router.push("/reports");
+      queryClient.invalidateQueries({ queryKey: ["staff-options"] });
+      router.push("/staff");
     },
     onError: (error: unknown) => {
       const message = getErrorMessage(error) || "ບໍ່ສາມາດບັນທຶກຂໍ້ມູນໄດ້";
@@ -147,7 +148,7 @@ export default function StaffFormPage({ staffId }: { staffId?: number }) {
   return (
     <AppShell>
       <PageHero title={title} subtitle={subtitle}>
-        <ActionButton href="/reports"> ຍ້ອນກັບ</ActionButton>
+        <ActionButton href="/staff">ກັບຄືນ</ActionButton>
       </PageHero>
 
       <div className="px-4 py-5 sm:px-6 lg:px-10">
@@ -166,7 +167,7 @@ export default function StaffFormPage({ staffId }: { staffId?: number }) {
                 <input className="field" placeholder="ກະລຸນາປ້ອນຊື່ເຂົ້າລະບົບ" {...register("username")} />
               </Field>
 
-              <Field label={isEdit ? "ລະຫັດຜ່ານ" : "รหัสผ่าน"} required={!isEdit} error={errors.password?.message}>
+              <Field label="ລະຫັດຜ່ານ" required={!isEdit} error={errors.password?.message}>
                 <input className="field" type="password" placeholder={isEdit ? "ກະລຸນາປ້ອນລະຫັດຜ່ານ" : "ຢ່າງນ້ອຍ 6 ຕົວອັກສອນ"} {...register("password")} />
               </Field>
 

@@ -8,9 +8,17 @@ router.use(authGuard);
 
 const uploadResultImage = (req, res, next) => {
   resultImageUpload.single('result_image')(req, res, (err) => {
-    if (!err) return next();
+    if (!err) {
+      const imageError = resultImageUpload.validateUploadedResultImage(req.file);
+      if (imageError) {
+        resultImageUpload.cleanupUploadedResultImage(req.file);
+        return res.status(400).json({ success: false, message: imageError });
+      }
+      return next();
+    }
+
     const message = err.code === 'LIMIT_FILE_SIZE'
-      ? 'ຂະໜາດຮູບຕ້ອງບໍ່ເກີນ 5MB'
+      ? resultImageUpload.messages.tooLarge
       : err.message;
     return res.status(400).json({ success: false, message });
   });

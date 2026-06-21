@@ -1,24 +1,15 @@
 const pool = require('../db/connection');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
-
-const ensureStaffStatusColumns = async () => {
-  const [rows] = await pool.execute(
-    `SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'staff' AND COLUMN_NAME IN ('is_active', 'deleted_at')`
-  );
-  const existing = new Set(rows.map((row) => row.COLUMN_NAME));
-  if (!existing.has('is_active')) {
-    await pool.execute('ALTER TABLE staff ADD COLUMN is_active TINYINT(1) NOT NULL DEFAULT 1');
-  }
-  if (!existing.has('deleted_at')) {
-    await pool.execute('ALTER TABLE staff ADD COLUMN deleted_at DATETIME NULL');
-  }
-};
+const { requiredString } = require('../utils/http');
 
 const login = async (req, res) => {
   const { username, password } = req.body;
   try {
-    await ensureStaffStatusColumns();
+    if (!requiredString(username) || !requiredString(password)) {
+      return res.status(400).json({ success: false, message: 'ກະລຸນາປ້ອນຊື່ຜູ້ໃຊ້ ແລະ ລະຫັດຜ່ານ' });
+    }
+
     const [rows] = await pool.execute(
       'SELECT * FROM staff WHERE username = ? AND is_active = 1',
       [username]
@@ -27,7 +18,7 @@ const login = async (req, res) => {
     if (!rows.length) {
       return res.status(401).json({
         success: false,
-        message: 'Invalid credentials',
+        message: 'ຊື່ຜູ້ໃຊ້ ຫຼື ລະຫັດຜ່ານບໍ່ຖືກຕ້ອງ',
       });
     }
 
@@ -37,7 +28,7 @@ const login = async (req, res) => {
     if (!valid) {
       return res.status(401).json({
         success: false,
-        message: 'Invalid credentials',
+        message: 'ຊື່ຜູ້ໃຊ້ ຫຼື ລະຫັດຜ່ານບໍ່ຖືກຕ້ອງ',
       });
     }
 
@@ -47,10 +38,10 @@ const login = async (req, res) => {
       { expiresIn: process.env.JWT_EXPIRES_IN }
     );
 
+    setSessionCookie(res, token);
     res.json({
       success: true,
       data: {
-        token,
         user: {
           id: user.staff_id,
           name: user.staff_name,
@@ -60,13 +51,13 @@ const login = async (req, res) => {
       },
     });
   } catch (err) {
-    res.status(500).json({ success: false, message: err.message });
+    console.error(err);
+    res.status(503).json({ success: false, message: 'ບໍ່ສາມາດເຊື່ອມຕໍ່ລະບົບໄດ້ ກະລຸນາລອງໃໝ່' });
   }
 };
 
 const me = async (req, res) => {
   try {
-    await ensureStaffStatusColumns();
     const [rows] = await pool.execute(
       'SELECT staff_id, username, staff_name, role, position FROM staff WHERE staff_id = ? AND is_active = 1',
       [req.user.id]
@@ -76,8 +67,32 @@ const me = async (req, res) => {
     }
     res.json({ success: true, data: rows[0] });
   } catch (err) {
-    res.status(500).json({ success: false, message: err.message });
+    sendServerError(res, err);
   }
 };
 
-module.exports = { login, me };
+const logout = async (_req, res) => {
+  res.setHeader('Set-Cookie', serializeSessionCookie('', 0));
+  res.json({ success: true, message: 'ອອກຈາກລະບົບສຳເລັດ' });
+};
+
+module.exports = { login, me, logout };
+
+function setSessionCookie(res, token) {
+  const maxAge = parseExpiryToSeconds(process.env.JWT_EXPIRES_IN || '8h');
+  res.setHeader('Set-Cookie', serializeSessionCookie(token, maxAge));
+}
+
+function serializeSessionCookie(value, maxAge) {
+  const secure = process.env.NODE_ENV === 'production' ? '; Secure' : '';
+  return `radiology_session=${encodeURIComponent(value)}; Path=/; HttpOnly; SameSite=Strict; Max-Age=${maxAge}${secure}`;
+}
+
+function parseExpiryToSeconds(value) {
+  const match = String(value).trim().match(/^(\d+)([smhd])?$/i);
+  if (!match) return 8 * 60 * 60;
+  const amount = Number(match[1]);
+  const unit = (match[2] || 's').toLowerCase();
+  const multiplier = unit === 'd' ? 86400 : unit === 'h' ? 3600 : unit === 'm' ? 60 : 1;
+  return amount * multiplier;
+}

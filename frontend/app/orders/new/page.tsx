@@ -9,6 +9,7 @@ import AppShell, { useCurrentUser } from "@/components/AppShell";
 import { ActionButton, examOptions, PageHero, patientName, SearchBox } from "@/components/dashboard-ui";
 import api from "@/lib/api";
 import type { ApiResponse, ExamType, Patient, Staff } from "@/lib/types";
+import { useModalAccessibility } from "@/lib/useModalAccessibility";
 
 const orderFormSchema = z.object({
   first_name: z.string().optional(),
@@ -36,6 +37,7 @@ export default function NewOrderPage() {
   const [staffPickerOpen, setStaffPickerOpen] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
+  const successModalRef = useModalAccessibility(Boolean(success), () => setSuccess(false));
 
   const examTypesQuery = useQuery({
     queryKey: ["exam-types"],
@@ -375,7 +377,7 @@ export default function NewOrderPage() {
 
       {success && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 px-4">
-          <div className="w-full max-w-[520px] rounded-2xl bg-[#f2fde9] p-6 text-center shadow-lg sm:p-8">
+          <div ref={successModalRef} role="dialog" aria-modal="true" className="w-full max-w-[520px] rounded-2xl bg-[#f2fde9] p-6 text-center shadow-lg sm:p-8">
             <h3 className="text-xl font-bold sm:text-2xl">ສ້າງໃບສັ່ງກວດສຳເລັດແລ້ວ</h3>
             <div className="mx-auto mt-6 flex h-24 w-24 items-center justify-center rounded-3xl border-[8px] border-[#27f108] text-6xl text-[#27f108]">
               ✓

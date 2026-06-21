@@ -1,5 +1,6 @@
 const pool = require('../db/connection');
 const { createQueueForOrder } = require('../services/queueService');
+const { isPositiveInt, sendServerError } = require('../utils/http');
 
 const orderSelect = `
   SELECT o.*, p.first_name, p.last_name, e.exam_name, e.price AS exam_price, s.staff_name,
@@ -35,7 +36,7 @@ const getOrders = async (req, res) => {
     const [rows] = await pool.execute(query, params);
     res.json({ success: true, data: rows });
   } catch (err) {
-    res.status(500).json({ success: false, message: err.message });
+    sendServerError(res, err);
   }
 };
 
@@ -49,7 +50,7 @@ const getOrderById = async (req, res) => {
     if (!rows.length) return res.status(404).json({ success: false, message: 'Order not found' });
     res.json({ success: true, data: rows[0] });
   } catch (err) {
-    res.status(500).json({ success: false, message: err.message });
+    sendServerError(res, err);
   }
 };
 
@@ -59,6 +60,11 @@ const createOrder = async (req, res) => {
   try {
     await connection.beginTransaction();
     const { patient_id, exam_type_id, staff_id, note, queue_date } = req.body;
+    if (!isPositiveInt(patient_id) || !isPositiveInt(exam_type_id) || !isPositiveInt(staff_id)) {
+      await connection.rollback();
+      return res.status(400).json({ success: false, message: 'ຂໍ້ມູນໃບສັ່ງກວດບໍ່ຖືກຕ້ອງ' });
+    }
+
     const [result] = await connection.execute(
       'INSERT INTO `order` (patient_id, exam_type_id, staff_id, order_date, note) VALUES (?, ?, ?, NOW(), ?)',
       [patient_id, exam_type_id, staff_id, note || null]
@@ -81,7 +87,7 @@ const createOrder = async (req, res) => {
     });
   } catch (err) {
     await connection.rollback();
-    res.status(500).json({ success: false, message: err.message });
+    sendServerError(res, err);
   } finally {
     connection.release();
   }
@@ -139,9 +145,15 @@ const updateOrderStatus = async (req, res) => {
       [status, req.params.id]
     );
     if (result.affectedRows === 0) return res.status(404).json({ success: false, message: 'Order not found' });
+    if (status === 'CANCELLED') {
+      await pool.execute(
+        'UPDATE queue SET status=? WHERE order_id=?',
+        ['ຍົກເລີກແລ້ວ', req.params.id]
+      );
+    }
     res.json({ success: true, message: 'Status updated' });
   } catch (err) {
-    res.status(500).json({ success: false, message: err.message });
+    sendServerError(res, err);
   }
 };
 

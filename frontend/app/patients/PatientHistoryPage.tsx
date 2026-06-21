@@ -9,9 +9,11 @@ import { getResultImageObjectUrl } from "@/lib/result-images";
 import { displayOrderStatus } from "@/lib/status";
 import { showToast } from "@/lib/toast";
 import type { ApiResponse, Order, Patient, Payment, Result } from "@/lib/types";
+import { useModalAccessibility } from "@/lib/useModalAccessibility";
 
 export default function PatientHistoryPage({ patientId }: { patientId: number }) {
   const [previewImageUrl, setPreviewImageUrl] = useState<string | null>(null);
+  const imageModalRef = useModalAccessibility(Boolean(previewImageUrl), () => setPreviewImageUrl(null));
 
   const patientQuery = useQuery({
     queryKey: ["patients", patientId],
@@ -203,7 +205,7 @@ export default function PatientHistoryPage({ patientId }: { patientId: number })
       </div>
 
       {previewImageUrl && (
-        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/80 p-4">
+        <div ref={imageModalRef} role="dialog" aria-modal="true" className="fixed inset-0 z-[60] flex items-center justify-center bg-black/80 p-4">
           <button
             type="button"
             onClick={closePreviewImage}

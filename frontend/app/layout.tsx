@@ -3,8 +3,8 @@ import "./globals.css";
 import Providers from "./providers";
 
 export const metadata: Metadata = {
-  title: "Radiology Patient Management - Hospital 103",
-  description: "Radiology Patient Management System",
+  title: "ລະບົບຈັດການຂໍ້ມູນຄົນເຈັບ - ໂຮງໝໍ 103",
+  description: "ລະບົບຈັດການຂໍ້ມູນຄົນເຈັບພະແນກລັງສີ",
   icons: {
     icon: "/radiology_logo_minimal.svg",
   },

@@ -4,19 +4,18 @@ import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
-type IconName = "dashboard" | "queue" | "orders" | "payments" | "results" | "examTypes" | "reports";
+type IconName = "dashboard" | "patients" | "queue" | "orders" | "payments" | "results" | "examTypes" | "staff" | "reports";
 
-const mainLinks: Array<{ href: string; label: string; icon: IconName }> = [
+const mainLinks: Array<{ href: string; label: string; icon: IconName; adminOnly?: boolean }> = [
   { href: "/dashboard", label: "ໜ້າຫຼັກ", icon: "dashboard" },
+  { href: "/patients", label: "ຂໍ້ມູນຄົນເຈັບ", icon: "patients" },
   { href: "/queues", label: "ຄິວ", icon: "queue" },
   { href: "/orders", label: "ໃບສັ່ງກວດ", icon: "orders" },
   { href: "/payments", label: "ການຊຳລະເງິນ", icon: "payments" },
   { href: "/results", label: "ຜົນກວດ", icon: "results" },
   { href: "/exam-types", label: "ປະເພດການກວດ", icon: "examTypes" },
-];
-
-const detailLinks: Array<{ href: string; label: string; icon: IconName; adminOnly: boolean }> = [
-  { href: "/reports", label: "ລາຍງານ", icon: "reports", adminOnly: true },
+  { href: "/staff", label: "ຂໍ້ມູນພະນັກງານ", icon: "staff", adminOnly: true },
+  { href: "/reports", label: "ລາຍງານ", icon: "reports" },
 ];
 
 function Icon({ name }: { name: IconName }) {
@@ -40,6 +39,17 @@ function Icon({ name }: { name: IconName }) {
         <circle cx="10" cy="8" r="3.5" />
         <path d="M21 19.5c0-1.9-1.2-3.4-3-3.9" />
         <path d="M16.5 4.8a3 3 0 0 1 0 5.4" />
+      </svg>
+    );
+  }
+
+  if (name === "patients") {
+    return (
+      <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+        <circle cx="9" cy="7.5" r="3.5" />
+        <path d="M3.5 20c0-3.3 2.5-6 5.5-6s5.5 2.7 5.5 6" />
+        <path d="M18 8.5v6" />
+        <path d="M15 11.5h6" />
       </svg>
     );
   }
@@ -98,6 +108,19 @@ function Icon({ name }: { name: IconName }) {
     );
   }
 
+  if (name === "staff") {
+    return (
+      <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+        <circle cx="8" cy="8" r="3.5" />
+        <path d="M2.5 20c0-3.3 2.5-6 5.5-6s5.5 2.7 5.5 6" />
+        <path d="M16 8h5" />
+        <path d="M18.5 5.5v5" />
+        <path d="M16 15.5h5" />
+        <path d="M16 19h5" />
+      </svg>
+    );
+  }
+
   return null;
 }
 
@@ -136,7 +159,7 @@ function NavLink({ href, label, icon }: { href: string; label: string; icon: Ico
 }
 
 export default function Sidebar({ userRole }: { userRole?: string }) {
-  const visibleDetailLinks = detailLinks.filter((link) => !link.adminOnly || userRole === "ADMIN");
+  const visibleLinks = mainLinks.filter((link) => !link.adminOnly || userRole === "ADMIN");
 
   return (
     <aside className="fixed left-0 top-0 z-30 hidden h-screen w-[248px] border-r border-[#dedede] bg-white lg:block">
@@ -148,22 +171,11 @@ export default function Sidebar({ userRole }: { userRole?: string }) {
       </div>
 
       <nav className="px-3 py-4">
-        <div className="space-y-1.5 border-b border-slate-200 pb-5">
-          {mainLinks.map((link) => (
+        <div className="space-y-1.5">
+          {visibleLinks.map((link) => (
             <NavLink key={link.href} {...link} />
           ))}
         </div>
-
-        {visibleDetailLinks.length > 0 && (
-          <div className="pt-10">
-            <p className="mb-3 px-3 text-[11px] font-bold uppercase text-[#767285]">DETAIL</p>
-            <div className="space-y-1.5">
-              {visibleDetailLinks.map((link) => (
-                <NavLink key={link.href} {...link} />
-              ))}
-            </div>
-          </div>
-        )}
       </nav>
     </aside>
   );

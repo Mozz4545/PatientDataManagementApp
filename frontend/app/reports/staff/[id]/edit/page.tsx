@@ -1,6 +1,6 @@
-import StaffFormPage from "../../StaffFormPage";
+import { redirect } from "next/navigation";
 
-export default async function EditStaffPage({ params }: { params: Promise<{ id: string }> }) {
+export default async function LegacyEditStaffPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  return <StaffFormPage staffId={Number(id)} />;
+  redirect(`/staff/${id}/edit`);
 }

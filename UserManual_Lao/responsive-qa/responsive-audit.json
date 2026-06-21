@@ -1,0 +1,3126 @@
+{
+  "generatedAt": "2026-06-21T01:22:48.605Z",
+  "viewports": [
+    {
+      "name": "desktop",
+      "width": 1440,
+      "height": 900
+    },
+    {
+      "name": "laptop",
+      "width": 1280,
+      "height": 720
+    },
+    {
+      "name": "tablet",
+      "width": 768,
+      "height": 1024
+    },
+    {
+      "name": "mobile",
+      "width": 390,
+      "height": 844
+    }
+  ],
+  "results": [
+    {
+      "viewportName": "desktop",
+      "route": "/dashboard",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "bodyOverflow": false,
+      "offenders": [],
+      "visibleFixedBottomNav": false,
+      "visibleSidebar": true,
+      "buttonLabels": [
+        "ໜ້າຫຼັກ",
+        "ຂໍ້ມູນຄົນເຈັບ",
+        "ຄິວ",
+        "ໃບສັ່ງກວດ",
+        "ການຊຳລະເງິນ",
+        "ຜົນກວດ",
+        "ປະເພດການກວດ",
+        "ຂໍ້ມູນພະນັກງານ",
+        "ລາຍງານ",
+        "ອອກຈາກລະບົບ",
+        "ສ້າງໃບສັ່ງກວດ",
+        "ໂຫຼດໃໝ່"
+      ]
+    },
+    {
+      "viewportName": "desktop",
+      "route": "/patients",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "bodyOverflow": false,
+      "offenders": [
+        {
+          "tag": "TABLE",
+          "text": "IDຊື່ ແລະ ນາມສະກຸນເພດອາຍຸວັນເກີດເບີໂທເບີສຸກເສີນຜົນກວດໃບສັ່ງກວດຈັດການHN-000002hun",
+          "className": "w-full min-w-[1180px] border-collapse text-left",
+          "rect": {
+            "left": 309,
+            "right": 1489,
+            "width": 1180
+          }
+        },
+        {
+          "tag": "THEAD",
+          "text": "IDຊື່ ແລະ ນາມສະກຸນເພດອາຍຸວັນເກີດເບີໂທເບີສຸກເສີນຜົນກວດໃບສັ່ງກວດຈັດການ",
+          "className": "bg-[#f2f2f2] text-xs font-bold",
+          "rect": {
+            "left": 309,
+            "right": 1489,
+            "width": 1180
+          }
+        },
+        {
+          "tag": "TR",
+          "text": "IDຊື່ ແລະ ນາມສະກຸນເພດອາຍຸວັນເກີດເບີໂທເບີສຸກເສີນຜົນກວດໃບສັ່ງກວດຈັດການ",
+          "className": "",
+          "rect": {
+            "left": 309,
+            "right": 1489,
+            "width": 1180
+          }
+        },
+        {
+          "tag": "TH",
+          "text": "ຈັດການ",
+          "className": "px-5 py-3",
+          "rect": {
+            "left": 1324,
+            "right": 1489,
+            "width": 166
+          }
+        },
+        {
+          "tag": "TBODY",
+          "text": "HN-000002hunnu sdgxxxຍິງ1-02054686360-ເບິ່ງຜົນກວດ (1)ປະຫວັດລະອຽດ (1)ແກ້ໄຂລົບHN-0",
+          "className": "text-xs text-[#767285]",
+          "rect": {
+            "left": 309,
+            "right": 1489,
+            "width": 1180
+          }
+        },
+        {
+          "tag": "TR",
+          "text": "HN-000002hunnu sdgxxxຍິງ1-02054686360-ເບິ່ງຜົນກວດ (1)ປະຫວັດລະອຽດ (1)ແກ້ໄຂລົບ",
+          "className": "border-t border-[#d7d7d7]",
+          "rect": {
+            "left": 309,
+            "right": 1489,
+            "width": 1180
+          }
+        },
+        {
+          "tag": "TD",
+          "text": "ແກ້ໄຂລົບ",
+          "className": "px-5 py-3",
+          "rect": {
+            "left": 1324,
+            "right": 1489,
+            "width": 166
+          }
+        },
+        {
+          "tag": "DIV",
+          "text": "ແກ້ໄຂລົບ",
+          "className": "flex flex-wrap gap-2",
+          "rect": {
+            "left": 1344,
+            "right": 1469,
+            "width": 126
+          }
+        },
+        {
+          "tag": "BUTTON",
+          "text": "ລົບ",
+          "className": "inline-flex rounded-full bg-[#ff4b4b] px-4 py-1 text-[11px] font-bold text-white shadow-sm disabled:opacity-60",
+          "rect": {
+            "left": 1407,
+            "right": 1453,
+            "width": 46
+          }
+        },
+        {
+          "tag": "TR",
+          "text": "HN-000001ທະນົງສິນ ດວງມະນີໄລຊາຍ18-02076100092-ເບິ່ງຜົນກວດ (1)ປະຫວັດລະອຽດ (1)ແກ້ໄຂ",
+          "className": "border-t border-[#d7d7d7]",
+          "rect": {
+            "left": 309,
+            "right": 1489,
+            "width": 1180
+          }
+        },
+        {
+          "tag": "TD",
+          "text": "ແກ້ໄຂລົບ",
+          "className": "px-5 py-3",
+          "rect": {
+            "left": 1324,
+            "right": 1489,
+            "width": 166
+          }
+        },
+        {
+          "tag": "DIV",
+          "text": "ແກ້ໄຂລົບ",
+          "className": "flex flex-wrap gap-2",
+          "rect": {
+            "left": 1344,
+            "right": 1469,
+            "width": 126
+          }
+        }
+      ],
+      "visibleFixedBottomNav": false,
+      "visibleSidebar": true,
+      "buttonLabels": [
+        "ໜ້າຫຼັກ",
+        "ຂໍ້ມູນຄົນເຈັບ",
+        "ຄິວ",
+        "ໃບສັ່ງກວດ",
+        "ການຊຳລະເງິນ",
+        "ຜົນກວດ",
+        "ປະເພດການກວດ",
+        "ຂໍ້ມູນພະນັກງານ",
+        "ລາຍງານ",
+        "ອອກຈາກລະບົບ",
+        "ສ້າງໃບສັ່ງກວດ",
+        "ໂຫຼດໃໝ່",
+        "ເບິ່ງຜົນກວດ (1)",
+        "ປະຫວັດລະອຽດ (1)",
+        "ແກ້ໄຂ",
+        "ລົບ",
+        "ເບິ່ງຜົນກວດ (1)",
+        "ປະຫວັດລະອຽດ (1)",
+        "ແກ້ໄຂ",
+        "ລົບ"
+      ]
+    },
+    {
+      "viewportName": "desktop",
+      "route": "/queues",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "bodyOverflow": false,
+      "offenders": [],
+      "visibleFixedBottomNav": false,
+      "visibleSidebar": true,
+      "buttonLabels": [
+        "ໜ້າຫຼັກ",
+        "ຂໍ້ມູນຄົນເຈັບ",
+        "ຄິວ",
+        "ໃບສັ່ງກວດ",
+        "ການຊຳລະເງິນ",
+        "ຜົນກວດ",
+        "ປະເພດການກວດ",
+        "ຂໍ້ມູນພະນັກງານ",
+        "ລາຍງານ",
+        "ອອກຈາກລະບົບ",
+        "ບໍ່ມີຄິວລໍຖ້າ",
+        "ເປີດຈໍສະແດງ",
+        "ໂຫຼດໃໝ່"
+      ]
+    },
+    {
+      "viewportName": "desktop",
+      "route": "/orders",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "bodyOverflow": false,
+      "offenders": [],
+      "visibleFixedBottomNav": false,
+      "visibleSidebar": true,
+      "buttonLabels": [
+        "ໜ້າຫຼັກ",
+        "ຂໍ້ມູນຄົນເຈັບ",
+        "ຄິວ",
+        "ໃບສັ່ງກວດ",
+        "ການຊຳລະເງິນ",
+        "ຜົນກວດ",
+        "ປະເພດການກວດ",
+        "ຂໍ້ມູນພະນັກງານ",
+        "ລາຍງານ",
+        "ອອກຈາກລະບົບ",
+        "ສ້າງໃບສັ່ງກວດ",
+        "ໂຫຼດໃໝ່",
+        "ໃບສັ່ງກວດທັງໝົດ2",
+        "ລໍຖ້າກວດ0",
+        "ໃບສັ່ງກວດຍົກເລີກ0"
+      ]
+    },
+    {
+      "viewportName": "desktop",
+      "route": "/orders/new",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "bodyOverflow": false,
+      "offenders": [],
+      "visibleFixedBottomNav": false,
+      "visibleSidebar": true,
+      "buttonLabels": [
+        "ໜ້າຫຼັກ",
+        "ຂໍ້ມູນຄົນເຈັບ",
+        "ຄິວ",
+        "ໃບສັ່ງກວດ",
+        "ການຊຳລະເງິນ",
+        "ຜົນກວດ",
+        "ປະເພດການກວດ",
+        "ຂໍ້ມູນພະນັກງານ",
+        "ລາຍງານ",
+        "ອອກຈາກລະບົບ",
+        "ກັບຄືນ",
+        "ສ້າງໃບສັ່ງກວດ"
+      ]
+    },
+    {
+      "viewportName": "desktop",
+      "route": "/payments",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "bodyOverflow": false,
+      "offenders": [],
+      "visibleFixedBottomNav": false,
+      "visibleSidebar": true,
+      "buttonLabels": [
+        "ໜ້າຫຼັກ",
+        "ຂໍ້ມູນຄົນເຈັບ",
+        "ຄິວ",
+        "ໃບສັ່ງກວດ",
+        "ການຊຳລະເງິນ",
+        "ຜົນກວດ",
+        "ປະເພດການກວດ",
+        "ຂໍ້ມູນພະນັກງານ",
+        "ລາຍງານ",
+        "ອອກຈາກລະບົບ",
+        "ໂຫຼດໃໝ່",
+        "ຍັງບໍ່ໄດ້ຈ່າຍ",
+        "ຈ່າຍແລ້ວ",
+        "ໃບແຈ້ງຊຳລະ",
+        "ຈ່າຍເງິນ"
+      ]
+    },
+    {
+      "viewportName": "desktop",
+      "route": "/results",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "bodyOverflow": false,
+      "offenders": [],
+      "visibleFixedBottomNav": false,
+      "visibleSidebar": true,
+      "buttonLabels": [
+        "ໜ້າຫຼັກ",
+        "ຂໍ້ມູນຄົນເຈັບ",
+        "ຄິວ",
+        "ໃບສັ່ງກວດ",
+        "ການຊຳລະເງິນ",
+        "ຜົນກວດ",
+        "ປະເພດການກວດ",
+        "ຂໍ້ມູນພະນັກງານ",
+        "ລາຍງານ",
+        "ອອກຈາກລະບົບ",
+        "ໂຫຼດໃໝ່",
+        "ເບິ່ງຮູບ",
+        "ເອກະສານ",
+        "ແກ້ໄຂ",
+        "ເບິ່ງຮູບ",
+        "ເອກະສານ",
+        "ແກ້ໄຂ"
+      ]
+    },
+    {
+      "viewportName": "desktop",
+      "route": "/exam-types",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "bodyOverflow": false,
+      "offenders": [],
+      "visibleFixedBottomNav": false,
+      "visibleSidebar": true,
+      "buttonLabels": [
+        "ໜ້າຫຼັກ",
+        "ຂໍ້ມູນຄົນເຈັບ",
+        "ຄິວ",
+        "ໃບສັ່ງກວດ",
+        "ການຊຳລະເງິນ",
+        "ຜົນກວດ",
+        "ປະເພດການກວດ",
+        "ຂໍ້ມູນພະນັກງານ",
+        "ລາຍງານ",
+        "ອອກຈາກລະບົບ",
+        "ບັນທຶກ",
+        "ແກ້ໄຂ",
+        "ລົບ",
+        "ແກ້ໄຂ",
+        "ລົບ",
+        "ແກ້ໄຂ",
+        "ລົບ",
+        "ແກ້ໄຂ",
+        "ລົບ"
+      ]
+    },
+    {
+      "viewportName": "desktop",
+      "route": "/staff",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "bodyOverflow": false,
+      "offenders": [],
+      "visibleFixedBottomNav": false,
+      "visibleSidebar": true,
+      "buttonLabels": [
+        "ໜ້າຫຼັກ",
+        "ຂໍ້ມູນຄົນເຈັບ",
+        "ຄິວ",
+        "ໃບສັ່ງກວດ",
+        "ການຊຳລະເງິນ",
+        "ຜົນກວດ",
+        "ປະເພດການກວດ",
+        "ຂໍ້ມູນພະນັກງານ",
+        "ລາຍງານ",
+        "ອອກຈາກລະບົບ",
+        "ໂຫຼດໃໝ່",
+        "ເພີ່ມພະນັກງານ",
+        "ພິມລາຍຊື່",
+        "ສົ່ງອອກ CSV",
+        "ແກ້ໄຂ",
+        "ແກ້ໄຂ",
+        "ປິດການນຳໃຊ້"
+      ]
+    },
+    {
+      "viewportName": "desktop",
+      "route": "/staff/new",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "bodyOverflow": false,
+      "offenders": [],
+      "visibleFixedBottomNav": false,
+      "visibleSidebar": true,
+      "buttonLabels": [
+        "ໜ້າຫຼັກ",
+        "ຂໍ້ມູນຄົນເຈັບ",
+        "ຄິວ",
+        "ໃບສັ່ງກວດ",
+        "ການຊຳລະເງິນ",
+        "ຜົນກວດ",
+        "ປະເພດການກວດ",
+        "ຂໍ້ມູນພະນັກງານ",
+        "ລາຍງານ",
+        "ອອກຈາກລະບົບ",
+        "ກັບຄືນ",
+        "ບັນທຶກຂໍ້ມູນພະນັກງານ"
+      ]
+    },
+    {
+      "viewportName": "desktop",
+      "route": "/reports",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "bodyOverflow": false,
+      "offenders": [],
+      "visibleFixedBottomNav": false,
+      "visibleSidebar": true,
+      "buttonLabels": [
+        "ໜ້າຫຼັກ",
+        "ຂໍ້ມູນຄົນເຈັບ",
+        "ຄິວ",
+        "ໃບສັ່ງກວດ",
+        "ການຊຳລະເງິນ",
+        "ຜົນກວດ",
+        "ປະເພດການກວດ",
+        "ຂໍ້ມູນພະນັກງານ",
+        "ລາຍງານ",
+        "ອອກຈາກລະບົບ",
+        "ໂຫຼດໃໝ່",
+        "ລ້າງຕົວກອງ",
+        "ລາຍງານການຊຳລະ",
+        "ລາຍງານຜົນກວດ",
+        "ທັງໝົດ",
+        "ລາຍວັນ",
+        "ລາຍເດືອນ",
+        "ທັງໝົດ",
+        "ເງິນສົດ",
+        "ເງິນໂອນ",
+        "ພິມເອກະສານ",
+        "ສົ່ງອອກ"
+      ]
+    },
+    {
+      "viewportName": "laptop",
+      "route": "/dashboard",
+      "viewport": {
+        "width": 1280,
+        "height": 720
+      },
+      "bodyOverflow": false,
+      "offenders": [],
+      "visibleFixedBottomNav": false,
+      "visibleSidebar": true,
+      "buttonLabels": [
+        "ໜ້າຫຼັກ",
+        "ຂໍ້ມູນຄົນເຈັບ",
+        "ຄິວ",
+        "ໃບສັ່ງກວດ",
+        "ການຊຳລະເງິນ",
+        "ຜົນກວດ",
+        "ປະເພດການກວດ",
+        "ຂໍ້ມູນພະນັກງານ",
+        "ລາຍງານ",
+        "ອອກຈາກລະບົບ",
+        "ສ້າງໃບສັ່ງກວດ",
+        "ໂຫຼດໃໝ່"
+      ]
+    },
+    {
+      "viewportName": "laptop",
+      "route": "/patients",
+      "viewport": {
+        "width": 1280,
+        "height": 720
+      },
+      "bodyOverflow": false,
+      "offenders": [
+        {
+          "tag": "TABLE",
+          "text": "IDຊື່ ແລະ ນາມສະກຸນເພດອາຍຸວັນເກີດເບີໂທເບີສຸກເສີນຜົນກວດໃບສັ່ງກວດຈັດການHN-000002hun",
+          "className": "w-full min-w-[1180px] border-collapse text-left",
+          "rect": {
+            "left": 309,
+            "right": 1489,
+            "width": 1180
+          }
+        },
+        {
+          "tag": "THEAD",
+          "text": "IDຊື່ ແລະ ນາມສະກຸນເພດອາຍຸວັນເກີດເບີໂທເບີສຸກເສີນຜົນກວດໃບສັ່ງກວດຈັດການ",
+          "className": "bg-[#f2f2f2] text-xs font-bold",
+          "rect": {
+            "left": 309,
+            "right": 1489,
+            "width": 1180
+          }
+        },
+        {
+          "tag": "TR",
+          "text": "IDຊື່ ແລະ ນາມສະກຸນເພດອາຍຸວັນເກີດເບີໂທເບີສຸກເສີນຜົນກວດໃບສັ່ງກວດຈັດການ",
+          "className": "",
+          "rect": {
+            "left": 309,
+            "right": 1489,
+            "width": 1180
+          }
+        },
+        {
+          "tag": "TH",
+          "text": "ໃບສັ່ງກວດ",
+          "className": "px-5 py-3",
+          "rect": {
+            "left": 1156,
+            "right": 1324,
+            "width": 167
+          }
+        },
+        {
+          "tag": "TH",
+          "text": "ຈັດການ",
+          "className": "px-5 py-3",
+          "rect": {
+            "left": 1324,
+            "right": 1489,
+            "width": 166
+          }
+        },
+        {
+          "tag": "TBODY",
+          "text": "HN-000002hunnu sdgxxxຍິງ1-02054686360-ເບິ່ງຜົນກວດ (1)ປະຫວັດລະອຽດ (1)ແກ້ໄຂລົບHN-0",
+          "className": "text-xs text-[#767285]",
+          "rect": {
+            "left": 309,
+            "right": 1489,
+            "width": 1180
+          }
+        },
+        {
+          "tag": "TR",
+          "text": "HN-000002hunnu sdgxxxຍິງ1-02054686360-ເບິ່ງຜົນກວດ (1)ປະຫວັດລະອຽດ (1)ແກ້ໄຂລົບ",
+          "className": "border-t border-[#d7d7d7]",
+          "rect": {
+            "left": 309,
+            "right": 1489,
+            "width": 1180
+          }
+        },
+        {
+          "tag": "TD",
+          "text": "ປະຫວັດລະອຽດ (1)",
+          "className": "px-5 py-3",
+          "rect": {
+            "left": 1156,
+            "right": 1324,
+            "width": 167
+          }
+        },
+        {
+          "tag": "A",
+          "text": "ປະຫວັດລະອຽດ (1)",
+          "className": "inline-flex rounded-full px-4 py-1 text-[11px] font-bold shadow-sm bg-[#f4e3b0] text-black",
+          "rect": {
+            "left": 1176,
+            "right": 1288,
+            "width": 112
+          }
+        },
+        {
+          "tag": "TD",
+          "text": "ແກ້ໄຂລົບ",
+          "className": "px-5 py-3",
+          "rect": {
+            "left": 1324,
+            "right": 1489,
+            "width": 166
+          }
+        },
+        {
+          "tag": "DIV",
+          "text": "ແກ້ໄຂລົບ",
+          "className": "flex flex-wrap gap-2",
+          "rect": {
+            "left": 1344,
+            "right": 1469,
+            "width": 126
+          }
+        },
+        {
+          "tag": "A",
+          "text": "ແກ້ໄຂ",
+          "className": "inline-flex rounded-full bg-[#99fba6] px-4 py-1 text-[11px] font-bold text-[#123879] shadow-sm",
+          "rect": {
+            "left": 1344,
+            "right": 1399,
+            "width": 56
+          }
+        }
+      ],
+      "visibleFixedBottomNav": false,
+      "visibleSidebar": true,
+      "buttonLabels": [
+        "ໜ້າຫຼັກ",
+        "ຂໍ້ມູນຄົນເຈັບ",
+        "ຄິວ",
+        "ໃບສັ່ງກວດ",
+        "ການຊຳລະເງິນ",
+        "ຜົນກວດ",
+        "ປະເພດການກວດ",
+        "ຂໍ້ມູນພະນັກງານ",
+        "ລາຍງານ",
+        "ອອກຈາກລະບົບ",
+        "ສ້າງໃບສັ່ງກວດ",
+        "ໂຫຼດໃໝ່",
+        "ເບິ່ງຜົນກວດ (1)",
+        "ປະຫວັດລະອຽດ (1)",
+        "ແກ້ໄຂ",
+        "ລົບ",
+        "ເບິ່ງຜົນກວດ (1)",
+        "ປະຫວັດລະອຽດ (1)",
+        "ແກ້ໄຂ",
+        "ລົບ"
+      ]
+    },
+    {
+      "viewportName": "laptop",
+      "route": "/queues",
+      "viewport": {
+        "width": 1280,
+        "height": 720
+      },
+      "bodyOverflow": false,
+      "offenders": [],
+      "visibleFixedBottomNav": false,
+      "visibleSidebar": true,
+      "buttonLabels": [
+        "ໜ້າຫຼັກ",
+        "ຂໍ້ມູນຄົນເຈັບ",
+        "ຄິວ",
+        "ໃບສັ່ງກວດ",
+        "ການຊຳລະເງິນ",
+        "ຜົນກວດ",
+        "ປະເພດການກວດ",
+        "ຂໍ້ມູນພະນັກງານ",
+        "ລາຍງານ",
+        "ອອກຈາກລະບົບ",
+        "ບໍ່ມີຄິວລໍຖ້າ",
+        "ເປີດຈໍສະແດງ",
+        "ໂຫຼດໃໝ່"
+      ]
+    },
+    {
+      "viewportName": "laptop",
+      "route": "/orders",
+      "viewport": {
+        "width": 1280,
+        "height": 720
+      },
+      "bodyOverflow": false,
+      "offenders": [],
+      "visibleFixedBottomNav": false,
+      "visibleSidebar": true,
+      "buttonLabels": [
+        "ໜ້າຫຼັກ",
+        "ຂໍ້ມູນຄົນເຈັບ",
+        "ຄິວ",
+        "ໃບສັ່ງກວດ",
+        "ການຊຳລະເງິນ",
+        "ຜົນກວດ",
+        "ປະເພດການກວດ",
+        "ຂໍ້ມູນພະນັກງານ",
+        "ລາຍງານ",
+        "ອອກຈາກລະບົບ",
+        "ສ້າງໃບສັ່ງກວດ",
+        "ໂຫຼດໃໝ່",
+        "ໃບສັ່ງກວດທັງໝົດ2",
+        "ລໍຖ້າກວດ0",
+        "ໃບສັ່ງກວດຍົກເລີກ0"
+      ]
+    },
+    {
+      "viewportName": "laptop",
+      "route": "/orders/new",
+      "viewport": {
+        "width": 1280,
+        "height": 720
+      },
+      "bodyOverflow": false,
+      "offenders": [],
+      "visibleFixedBottomNav": false,
+      "visibleSidebar": true,
+      "buttonLabels": [
+        "ໜ້າຫຼັກ",
+        "ຂໍ້ມູນຄົນເຈັບ",
+        "ຄິວ",
+        "ໃບສັ່ງກວດ",
+        "ການຊຳລະເງິນ",
+        "ຜົນກວດ",
+        "ປະເພດການກວດ",
+        "ຂໍ້ມູນພະນັກງານ",
+        "ລາຍງານ",
+        "ອອກຈາກລະບົບ",
+        "ກັບຄືນ",
+        "ສ້າງໃບສັ່ງກວດ"
+      ]
+    },
+    {
+      "viewportName": "laptop",
+      "route": "/payments",
+      "viewport": {
+        "width": 1280,
+        "height": 720
+      },
+      "bodyOverflow": false,
+      "offenders": [
+        {
+          "tag": "TABLE",
+          "text": "ເລກທີຊື່ຄົນເຈັບປະເພດການກວດວັນທີລາຄາສະຖານະໃບບິນຈ່າຍເງິນ#0002hunnu sdgxxxX-Ray Che",
+          "className": "w-full min-w-[980px] border-collapse text-left",
+          "rect": {
+            "left": 310,
+            "right": 1290,
+            "width": 980
+          }
+        },
+        {
+          "tag": "THEAD",
+          "text": "ເລກທີຊື່ຄົນເຈັບປະເພດການກວດວັນທີລາຄາສະຖານະໃບບິນຈ່າຍເງິນ",
+          "className": "bg-[#f2f2f2] text-xs font-bold",
+          "rect": {
+            "left": 310,
+            "right": 1290,
+            "width": 980
+          }
+        },
+        {
+          "tag": "TR",
+          "text": "ເລກທີຊື່ຄົນເຈັບປະເພດການກວດວັນທີລາຄາສະຖານະໃບບິນຈ່າຍເງິນ",
+          "className": "",
+          "rect": {
+            "left": 310,
+            "right": 1290,
+            "width": 980
+          }
+        },
+        {
+          "tag": "TH",
+          "text": "ຈ່າຍເງິນ",
+          "className": "px-5 py-3",
+          "rect": {
+            "left": 1178,
+            "right": 1290,
+            "width": 112
+          }
+        },
+        {
+          "tag": "TBODY",
+          "text": "#0002hunnu sdgxxxX-Ray Chest18/06/2026, 02:33:50150,000 ກີບຍັງບໍ່ໄດ້ຈ່າຍໃບແຈ້ງຊຳ",
+          "className": "text-xs text-[#767285]",
+          "rect": {
+            "left": 310,
+            "right": 1290,
+            "width": 980
+          }
+        },
+        {
+          "tag": "TR",
+          "text": "#0002hunnu sdgxxxX-Ray Chest18/06/2026, 02:33:50150,000 ກີບຍັງບໍ່ໄດ້ຈ່າຍໃບແຈ້ງຊຳ",
+          "className": "border-t border-[#d7d7d7]",
+          "rect": {
+            "left": 310,
+            "right": 1290,
+            "width": 980
+          }
+        },
+        {
+          "tag": "TD",
+          "text": "ຈ່າຍເງິນ",
+          "className": "px-5 py-3",
+          "rect": {
+            "left": 1178,
+            "right": 1290,
+            "width": 112
+          }
+        }
+      ],
+      "visibleFixedBottomNav": false,
+      "visibleSidebar": true,
+      "buttonLabels": [
+        "ໜ້າຫຼັກ",
+        "ຂໍ້ມູນຄົນເຈັບ",
+        "ຄິວ",
+        "ໃບສັ່ງກວດ",
+        "ການຊຳລະເງິນ",
+        "ຜົນກວດ",
+        "ປະເພດການກວດ",
+        "ຂໍ້ມູນພະນັກງານ",
+        "ລາຍງານ",
+        "ອອກຈາກລະບົບ",
+        "ໂຫຼດໃໝ່",
+        "ຍັງບໍ່ໄດ້ຈ່າຍ",
+        "ຈ່າຍແລ້ວ",
+        "ໃບແຈ້ງຊຳລະ",
+        "ຈ່າຍເງິນ"
+      ]
+    },
+    {
+      "viewportName": "laptop",
+      "route": "/results",
+      "viewport": {
+        "width": 1280,
+        "height": 720
+      },
+      "bodyOverflow": false,
+      "offenders": [
+        {
+          "tag": "TABLE",
+          "text": "ເລກທີລະຫັດຄົນເຈັບຊື່ຄົນເຈັບປະເພດການກວດວັນທີຜົນກວດສະຖານະຈັດການXR-20260618-00002HN",
+          "className": "w-full min-w-[980px] border-collapse text-left",
+          "rect": {
+            "left": 309,
+            "right": 1289,
+            "width": 980
+          }
+        },
+        {
+          "tag": "THEAD",
+          "text": "ເລກທີລະຫັດຄົນເຈັບຊື່ຄົນເຈັບປະເພດການກວດວັນທີຜົນກວດສະຖານະຈັດການ",
+          "className": "bg-[#f2f2f2] text-xs font-bold",
+          "rect": {
+            "left": 309,
+            "right": 1289,
+            "width": 980
+          }
+        },
+        {
+          "tag": "TR",
+          "text": "ເລກທີລະຫັດຄົນເຈັບຊື່ຄົນເຈັບປະເພດການກວດວັນທີຜົນກວດສະຖານະຈັດການ",
+          "className": "",
+          "rect": {
+            "left": 309,
+            "right": 1289,
+            "width": 980
+          }
+        },
+        {
+          "tag": "TH",
+          "text": "ຈັດການ",
+          "className": "px-5 py-3",
+          "rect": {
+            "left": 1112,
+            "right": 1289,
+            "width": 177
+          }
+        },
+        {
+          "tag": "TBODY",
+          "text": "XR-20260618-00002HN-000002hunnu sdgxxxX-Ray Chest18/06/2026swເບິ່ງຮູບຄ້າງຊຳລະເອກ",
+          "className": "text-xs text-[#767285]",
+          "rect": {
+            "left": 309,
+            "right": 1289,
+            "width": 980
+          }
+        },
+        {
+          "tag": "TR",
+          "text": "XR-20260618-00002HN-000002hunnu sdgxxxX-Ray Chest18/06/2026swເບິ່ງຮູບຄ້າງຊຳລະເອກ",
+          "className": "border-t border-[#d7d7d7]",
+          "rect": {
+            "left": 309,
+            "right": 1289,
+            "width": 980
+          }
+        },
+        {
+          "tag": "TD",
+          "text": "ເອກະສານແກ້ໄຂ",
+          "className": "px-5 py-3",
+          "rect": {
+            "left": 1112,
+            "right": 1289,
+            "width": 177
+          }
+        },
+        {
+          "tag": "TR",
+          "text": "XR-20260527-00001HN-000001ທະນົງສິນ ດວງມະນີໄລX-Ray Chest27/05/20261ເບິ່ງຮູບຄ້າງຊຳ",
+          "className": "border-t border-[#d7d7d7]",
+          "rect": {
+            "left": 309,
+            "right": 1289,
+            "width": 980
+          }
+        },
+        {
+          "tag": "TD",
+          "text": "ເອກະສານແກ້ໄຂ",
+          "className": "px-5 py-3",
+          "rect": {
+            "left": 1112,
+            "right": 1289,
+            "width": 177
+          }
+        }
+      ],
+      "visibleFixedBottomNav": false,
+      "visibleSidebar": true,
+      "buttonLabels": [
+        "ໜ້າຫຼັກ",
+        "ຂໍ້ມູນຄົນເຈັບ",
+        "ຄິວ",
+        "ໃບສັ່ງກວດ",
+        "ການຊຳລະເງິນ",
+        "ຜົນກວດ",
+        "ປະເພດການກວດ",
+        "ຂໍ້ມູນພະນັກງານ",
+        "ລາຍງານ",
+        "ອອກຈາກລະບົບ",
+        "ໂຫຼດໃໝ່",
+        "ເບິ່ງຮູບ",
+        "ເອກະສານ",
+        "ແກ້ໄຂ",
+        "ເບິ່ງຮູບ",
+        "ເອກະສານ",
+        "ແກ້ໄຂ"
+      ]
+    },
+    {
+      "viewportName": "laptop",
+      "route": "/exam-types",
+      "viewport": {
+        "width": 1280,
+        "height": 720
+      },
+      "bodyOverflow": false,
+      "offenders": [
+        {
+          "tag": "TABLE",
+          "text": "IDຊື່ລາຍລະອຽດລາຄາຈັດການ1X-Ray ChestChest radiography150,000 ກີບແກ້ໄຂລົບ2CT Abdom",
+          "className": "jsx-bb5f2846ce6b1bf5 w-full min-w-[720px] border-collapse text-left",
+          "rect": {
+            "left": 690,
+            "right": 1410,
+            "width": 720
+          }
+        },
+        {
+          "tag": "THEAD",
+          "text": "IDຊື່ລາຍລະອຽດລາຄາຈັດການ",
+          "className": "jsx-bb5f2846ce6b1bf5 bg-[#f2f2f2] text-xs font-bold",
+          "rect": {
+            "left": 690,
+            "right": 1410,
+            "width": 720
+          }
+        },
+        {
+          "tag": "TR",
+          "text": "IDຊື່ລາຍລະອຽດລາຄາຈັດການ",
+          "className": "jsx-bb5f2846ce6b1bf5",
+          "rect": {
+            "left": 690,
+            "right": 1410,
+            "width": 720
+          }
+        },
+        {
+          "tag": "TH",
+          "text": "ຈັດການ",
+          "className": "jsx-bb5f2846ce6b1bf5 px-5 py-3",
+          "rect": {
+            "left": 1245,
+            "right": 1410,
+            "width": 165
+          }
+        },
+        {
+          "tag": "TBODY",
+          "text": "1X-Ray ChestChest radiography150,000 ກີບແກ້ໄຂລົບ2CT AbdomenComputed tomography a",
+          "className": "jsx-bb5f2846ce6b1bf5 text-xs text-[#767285]",
+          "rect": {
+            "left": 690,
+            "right": 1410,
+            "width": 720
+          }
+        },
+        {
+          "tag": "TR",
+          "text": "1X-Ray ChestChest radiography150,000 ກີບແກ້ໄຂລົບ",
+          "className": "jsx-bb5f2846ce6b1bf5 border-t border-[#d7d7d7]",
+          "rect": {
+            "left": 690,
+            "right": 1410,
+            "width": 720
+          }
+        },
+        {
+          "tag": "TD",
+          "text": "ແກ້ໄຂລົບ",
+          "className": "jsx-bb5f2846ce6b1bf5 px-5 py-3",
+          "rect": {
+            "left": 1245,
+            "right": 1410,
+            "width": 165
+          }
+        },
+        {
+          "tag": "DIV",
+          "text": "ແກ້ໄຂລົບ",
+          "className": "jsx-bb5f2846ce6b1bf5 flex flex-wrap gap-2",
+          "rect": {
+            "left": 1265,
+            "right": 1390,
+            "width": 125
+          }
+        },
+        {
+          "tag": "BUTTON",
+          "text": "ແກ້ໄຂ",
+          "className": "jsx-bb5f2846ce6b1bf5 rounded-full bg-[#bafbd2] px-4 py-1 text-[11px] font-bold text-[#137547]",
+          "rect": {
+            "left": 1265,
+            "right": 1321,
+            "width": 56
+          }
+        },
+        {
+          "tag": "BUTTON",
+          "text": "ລົບ",
+          "className": "jsx-bb5f2846ce6b1bf5 rounded-full bg-[#ef4444] px-4 py-1 text-[11px] font-bold text-white shadow-sm hover:bg-[#dc2626]",
+          "rect": {
+            "left": 1329,
+            "right": 1375,
+            "width": 46
+          }
+        },
+        {
+          "tag": "TR",
+          "text": "2CT AbdomenComputed tomography abdomen450,000 ກີບແກ້ໄຂລົບ",
+          "className": "jsx-bb5f2846ce6b1bf5 border-t border-[#d7d7d7]",
+          "rect": {
+            "left": 690,
+            "right": 1410,
+            "width": 720
+          }
+        },
+        {
+          "tag": "TD",
+          "text": "ແກ້ໄຂລົບ",
+          "className": "jsx-bb5f2846ce6b1bf5 px-5 py-3",
+          "rect": {
+            "left": 1245,
+            "right": 1410,
+            "width": 165
+          }
+        }
+      ],
+      "visibleFixedBottomNav": false,
+      "visibleSidebar": true,
+      "buttonLabels": [
+        "ໜ້າຫຼັກ",
+        "ຂໍ້ມູນຄົນເຈັບ",
+        "ຄິວ",
+        "ໃບສັ່ງກວດ",
+        "ການຊຳລະເງິນ",
+        "ຜົນກວດ",
+        "ປະເພດການກວດ",
+        "ຂໍ້ມູນພະນັກງານ",
+        "ລາຍງານ",
+        "ອອກຈາກລະບົບ",
+        "ບັນທຶກ",
+        "ແກ້ໄຂ",
+        "ລົບ",
+        "ແກ້ໄຂ",
+        "ລົບ",
+        "ແກ້ໄຂ",
+        "ລົບ",
+        "ແກ້ໄຂ",
+        "ລົບ"
+      ]
+    },
+    {
+      "viewportName": "laptop",
+      "route": "/staff",
+      "viewport": {
+        "width": 1280,
+        "height": 720
+      },
+      "bodyOverflow": false,
+      "offenders": [],
+      "visibleFixedBottomNav": false,
+      "visibleSidebar": true,
+      "buttonLabels": [
+        "ໜ້າຫຼັກ",
+        "ຂໍ້ມູນຄົນເຈັບ",
+        "ຄິວ",
+        "ໃບສັ່ງກວດ",
+        "ການຊຳລະເງິນ",
+        "ຜົນກວດ",
+        "ປະເພດການກວດ",
+        "ຂໍ້ມູນພະນັກງານ",
+        "ລາຍງານ",
+        "ອອກຈາກລະບົບ",
+        "ໂຫຼດໃໝ່",
+        "ເພີ່ມພະນັກງານ",
+        "ພິມລາຍຊື່",
+        "ສົ່ງອອກ CSV",
+        "ແກ້ໄຂ",
+        "ແກ້ໄຂ",
+        "ປິດການນຳໃຊ້"
+      ]
+    },
+    {
+      "viewportName": "laptop",
+      "route": "/staff/new",
+      "viewport": {
+        "width": 1280,
+        "height": 720
+      },
+      "bodyOverflow": false,
+      "offenders": [],
+      "visibleFixedBottomNav": false,
+      "visibleSidebar": true,
+      "buttonLabels": [
+        "ໜ້າຫຼັກ",
+        "ຂໍ້ມູນຄົນເຈັບ",
+        "ຄິວ",
+        "ໃບສັ່ງກວດ",
+        "ການຊຳລະເງິນ",
+        "ຜົນກວດ",
+        "ປະເພດການກວດ",
+        "ຂໍ້ມູນພະນັກງານ",
+        "ລາຍງານ",
+        "ອອກຈາກລະບົບ",
+        "ກັບຄືນ",
+        "ບັນທຶກຂໍ້ມູນພະນັກງານ"
+      ]
+    },
+    {
+      "viewportName": "laptop",
+      "route": "/reports",
+      "viewport": {
+        "width": 1280,
+        "height": 720
+      },
+      "bodyOverflow": false,
+      "offenders": [
+        {
+          "tag": "TABLE",
+          "text": "ເລກໃບຮັບເງິນໃບສັ່ງກວດວັນທີຈ່າຍຊື່ຄົນເຈັບປະເພດການກວດຈຳນວນເງິນຊ່ອງທາງຜູ້ຮັບເງິນສະຖ",
+          "className": "w-full min-w-[1040px] border-collapse text-left",
+          "rect": {
+            "left": 326,
+            "right": 1366,
+            "width": 1040
+          }
+        },
+        {
+          "tag": "THEAD",
+          "text": "ເລກໃບຮັບເງິນໃບສັ່ງກວດວັນທີຈ່າຍຊື່ຄົນເຈັບປະເພດການກວດຈຳນວນເງິນຊ່ອງທາງຜູ້ຮັບເງິນສະຖ",
+          "className": "bg-[#f2f2f2] text-xs font-bold",
+          "rect": {
+            "left": 326,
+            "right": 1366,
+            "width": 1040
+          }
+        },
+        {
+          "tag": "TR",
+          "text": "ເລກໃບຮັບເງິນໃບສັ່ງກວດວັນທີຈ່າຍຊື່ຄົນເຈັບປະເພດການກວດຈຳນວນເງິນຊ່ອງທາງຜູ້ຮັບເງິນສະຖ",
+          "className": "",
+          "rect": {
+            "left": 326,
+            "right": 1366,
+            "width": 1040
+          }
+        },
+        {
+          "tag": "TH",
+          "text": "ສະຖານະ",
+          "className": "px-5 py-3",
+          "rect": {
+            "left": 1254,
+            "right": 1366,
+            "width": 112
+          }
+        },
+        {
+          "tag": "TBODY",
+          "text": "RCPT-20260615-00001#000115/06/2026, 19:14:05ທະນົງສິນ ດວງມະນີໄລX-Ray Chest150,000",
+          "className": "text-xs text-[#767285]",
+          "rect": {
+            "left": 326,
+            "right": 1366,
+            "width": 1040
+          }
+        },
+        {
+          "tag": "TR",
+          "text": "RCPT-20260615-00001#000115/06/2026, 19:14:05ທະນົງສິນ ດວງມະນີໄລX-Ray Chest150,000",
+          "className": "border-t border-[#d7d7d7]",
+          "rect": {
+            "left": 326,
+            "right": 1366,
+            "width": 1040
+          }
+        },
+        {
+          "tag": "TD",
+          "text": "ຈ່າຍແລ້ວ",
+          "className": "px-5 py-3",
+          "rect": {
+            "left": 1254,
+            "right": 1366,
+            "width": 112
+          }
+        },
+        {
+          "tag": "SPAN",
+          "text": "ຈ່າຍແລ້ວ",
+          "className": "inline-flex min-w-[72px] justify-center rounded-full px-2.5 py-0.5 text-[11px] font-semibold bg-[#bafbd2] text-[#137547]",
+          "rect": {
+            "left": 1274,
+            "right": 1346,
+            "width": 72
+          }
+        }
+      ],
+      "visibleFixedBottomNav": false,
+      "visibleSidebar": true,
+      "buttonLabels": [
+        "ໜ້າຫຼັກ",
+        "ຂໍ້ມູນຄົນເຈັບ",
+        "ຄິວ",
+        "ໃບສັ່ງກວດ",
+        "ການຊຳລະເງິນ",
+        "ຜົນກວດ",
+        "ປະເພດການກວດ",
+        "ຂໍ້ມູນພະນັກງານ",
+        "ລາຍງານ",
+        "ອອກຈາກລະບົບ",
+        "ໂຫຼດໃໝ່",
+        "ລ້າງຕົວກອງ",
+        "ລາຍງານການຊຳລະ",
+        "ລາຍງານຜົນກວດ",
+        "ທັງໝົດ",
+        "ລາຍວັນ",
+        "ລາຍເດືອນ",
+        "ທັງໝົດ",
+        "ເງິນສົດ",
+        "ເງິນໂອນ",
+        "ພິມເອກະສານ",
+        "ສົ່ງອອກ"
+      ]
+    },
+    {
+      "viewportName": "tablet",
+      "route": "/dashboard",
+      "viewport": {
+        "width": 768,
+        "height": 1024
+      },
+      "bodyOverflow": false,
+      "offenders": [
+        {
+          "tag": "TABLE",
+          "text": "ເລກທີຊື່ ແລະ ນາມສະກຸນປະເພດກວດວັນທີ ແລະ ເວລາສະຖານະ02hunnu sdgxxxX-Ray Chest18/06/",
+          "className": "w-full min-w-[760px] border-collapse text-left",
+          "rect": {
+            "left": 53,
+            "right": 813,
+            "width": 760
+          }
+        },
+        {
+          "tag": "THEAD",
+          "text": "ເລກທີຊື່ ແລະ ນາມສະກຸນປະເພດກວດວັນທີ ແລະ ເວລາສະຖານະ",
+          "className": "bg-[#f2f2f2] text-xs font-bold",
+          "rect": {
+            "left": 53,
+            "right": 813,
+            "width": 760
+          }
+        },
+        {
+          "tag": "TR",
+          "text": "ເລກທີຊື່ ແລະ ນາມສະກຸນປະເພດກວດວັນທີ ແລະ ເວລາສະຖານະ",
+          "className": "",
+          "rect": {
+            "left": 53,
+            "right": 813,
+            "width": 760
+          }
+        },
+        {
+          "tag": "TH",
+          "text": "",
+          "className": "px-5 py-3",
+          "rect": {
+            "left": 764,
+            "right": 813,
+            "width": 49
+          }
+        },
+        {
+          "tag": "TBODY",
+          "text": "02hunnu sdgxxxX-Ray Chest18/06/2026, 02:33:50ຄ້າງຊຳລະ01ທະນົງສິນ ດວງມະນີໄລX-Ray C",
+          "className": "text-xs text-[#767285]",
+          "rect": {
+            "left": 53,
+            "right": 813,
+            "width": 760
+          }
+        },
+        {
+          "tag": "TR",
+          "text": "02hunnu sdgxxxX-Ray Chest18/06/2026, 02:33:50ຄ້າງຊຳລະ",
+          "className": "border-t border-[#d7d7d7] ",
+          "rect": {
+            "left": 53,
+            "right": 813,
+            "width": 760
+          }
+        },
+        {
+          "tag": "TD",
+          "text": "",
+          "className": "px-5 py-3 text-right",
+          "rect": {
+            "left": 764,
+            "right": 813,
+            "width": 49
+          }
+        },
+        {
+          "tag": "TR",
+          "text": "01ທະນົງສິນ ດວງມະນີໄລX-Ray Chest27/05/2026, 14:00:34ສຳເລັດ",
+          "className": "border-t border-[#d7d7d7] ",
+          "rect": {
+            "left": 53,
+            "right": 813,
+            "width": 760
+          }
+        },
+        {
+          "tag": "TD",
+          "text": "",
+          "className": "px-5 py-3 text-right",
+          "rect": {
+            "left": 764,
+            "right": 813,
+            "width": 49
+          }
+        }
+      ],
+      "visibleFixedBottomNav": true,
+      "visibleSidebar": false,
+      "buttonLabels": [
+        "ເມນູ",
+        "×",
+        "ໜ້າຫຼັກ",
+        "ຂໍ້ມູນຄົນເຈັບ",
+        "ຈັດການຄິວ",
+        "ໃບສັ່ງກວດ",
+        "ການຊຳລະເງິນ",
+        "ຜົນກວດ",
+        "ປະເພດການກວດ",
+        "ຂໍ້ມູນພະນັກງານ",
+        "ລາຍງານ",
+        "ອອກຈາກລະບົບ",
+        "⌂ໜ້າຫຼັກ",
+        "☷ຄິວ",
+        "▤ສັ່ງກວດ",
+        "₭ຊຳລະ",
+        "✓ຜົນກວດ",
+        "ສ້າງໃບສັ່ງກວດ",
+        "ໂຫຼດໃໝ່"
+      ]
+    },
+    {
+      "viewportName": "tablet",
+      "route": "/patients",
+      "viewport": {
+        "width": 768,
+        "height": 1024
+      },
+      "bodyOverflow": false,
+      "offenders": [
+        {
+          "tag": "TABLE",
+          "text": "IDຊື່ ແລະ ນາມສະກຸນເພດອາຍຸວັນເກີດເບີໂທເບີສຸກເສີນຜົນກວດໃບສັ່ງກວດຈັດການHN-000002hun",
+          "className": "w-full min-w-[1180px] border-collapse text-left",
+          "rect": {
+            "left": 53,
+            "right": 1233,
+            "width": 1180
+          }
+        },
+        {
+          "tag": "THEAD",
+          "text": "IDຊື່ ແລະ ນາມສະກຸນເພດອາຍຸວັນເກີດເບີໂທເບີສຸກເສີນຜົນກວດໃບສັ່ງກວດຈັດການ",
+          "className": "bg-[#f2f2f2] text-xs font-bold",
+          "rect": {
+            "left": 53,
+            "right": 1233,
+            "width": 1180
+          }
+        },
+        {
+          "tag": "TR",
+          "text": "IDຊື່ ແລະ ນາມສະກຸນເພດອາຍຸວັນເກີດເບີໂທເບີສຸກເສີນຜົນກວດໃບສັ່ງກວດຈັດການ",
+          "className": "",
+          "rect": {
+            "left": 53,
+            "right": 1233,
+            "width": 1180
+          }
+        },
+        {
+          "tag": "TH",
+          "text": "ຜົນກວດ",
+          "className": "px-5 py-3",
+          "rect": {
+            "left": 748,
+            "right": 900,
+            "width": 153
+          }
+        },
+        {
+          "tag": "TH",
+          "text": "ໃບສັ່ງກວດ",
+          "className": "px-5 py-3",
+          "rect": {
+            "left": 900,
+            "right": 1068,
+            "width": 167
+          }
+        },
+        {
+          "tag": "TH",
+          "text": "ຈັດການ",
+          "className": "px-5 py-3",
+          "rect": {
+            "left": 1068,
+            "right": 1233,
+            "width": 166
+          }
+        },
+        {
+          "tag": "TBODY",
+          "text": "HN-000002hunnu sdgxxxຍິງ1-02054686360-ເບິ່ງຜົນກວດ (1)ປະຫວັດລະອຽດ (1)ແກ້ໄຂລົບHN-0",
+          "className": "text-xs text-[#767285]",
+          "rect": {
+            "left": 53,
+            "right": 1233,
+            "width": 1180
+          }
+        },
+        {
+          "tag": "TR",
+          "text": "HN-000002hunnu sdgxxxຍິງ1-02054686360-ເບິ່ງຜົນກວດ (1)ປະຫວັດລະອຽດ (1)ແກ້ໄຂລົບ",
+          "className": "border-t border-[#d7d7d7]",
+          "rect": {
+            "left": 53,
+            "right": 1233,
+            "width": 1180
+          }
+        },
+        {
+          "tag": "TD",
+          "text": "ເບິ່ງຜົນກວດ (1)",
+          "className": "px-5 py-3",
+          "rect": {
+            "left": 748,
+            "right": 900,
+            "width": 153
+          }
+        },
+        {
+          "tag": "BUTTON",
+          "text": "ເບິ່ງຜົນກວດ (1)",
+          "className": "rounded-full px-4 py-1 text-[11px] font-bold shadow-sm bg-[#addbf4] text-[#123879]",
+          "rect": {
+            "left": 768,
+            "right": 866,
+            "width": 98
+          }
+        },
+        {
+          "tag": "TD",
+          "text": "ປະຫວັດລະອຽດ (1)",
+          "className": "px-5 py-3",
+          "rect": {
+            "left": 900,
+            "right": 1068,
+            "width": 167
+          }
+        },
+        {
+          "tag": "A",
+          "text": "ປະຫວັດລະອຽດ (1)",
+          "className": "inline-flex rounded-full px-4 py-1 text-[11px] font-bold shadow-sm bg-[#f4e3b0] text-black",
+          "rect": {
+            "left": 920,
+            "right": 1032,
+            "width": 112
+          }
+        }
+      ],
+      "visibleFixedBottomNav": true,
+      "visibleSidebar": false,
+      "buttonLabels": [
+        "ເມນູ",
+        "×",
+        "ໜ້າຫຼັກ",
+        "ຂໍ້ມູນຄົນເຈັບ",
+        "ຈັດການຄິວ",
+        "ໃບສັ່ງກວດ",
+        "ການຊຳລະເງິນ",
+        "ຜົນກວດ",
+        "ປະເພດການກວດ",
+        "ຂໍ້ມູນພະນັກງານ",
+        "ລາຍງານ",
+        "ອອກຈາກລະບົບ",
+        "⌂ໜ້າຫຼັກ",
+        "☷ຄິວ",
+        "▤ສັ່ງກວດ",
+        "₭ຊຳລະ",
+        "✓ຜົນກວດ",
+        "ສ້າງໃບສັ່ງກວດ",
+        "ໂຫຼດໃໝ່",
+        "ເບິ່ງຜົນກວດ (1)",
+        "ປະຫວັດລະອຽດ (1)",
+        "ແກ້ໄຂ",
+        "ລົບ",
+        "ເບິ່ງຜົນກວດ (1)",
+        "ປະຫວັດລະອຽດ (1)",
+        "ແກ້ໄຂ",
+        "ລົບ"
+      ]
+    },
+    {
+      "viewportName": "tablet",
+      "route": "/queues",
+      "viewport": {
+        "width": 768,
+        "height": 1024
+      },
+      "bodyOverflow": false,
+      "offenders": [
+        {
+          "tag": "TABLE",
+          "text": "ຄິວ #ຊື່ ແລະ ນາມສະກຸນປະເພດການກວດວັນທີ ແລະ ເວລາສະຖານະບໍ່ມີຂໍ້ມູນ",
+          "className": "w-full min-w-[720px] border-collapse text-left",
+          "rect": {
+            "left": 53,
+            "right": 773,
+            "width": 720
+          }
+        },
+        {
+          "tag": "THEAD",
+          "text": "ຄິວ #ຊື່ ແລະ ນາມສະກຸນປະເພດການກວດວັນທີ ແລະ ເວລາສະຖານະ",
+          "className": "bg-[#18bdce] text-white text-xs font-bold",
+          "rect": {
+            "left": 53,
+            "right": 773,
+            "width": 720
+          }
+        },
+        {
+          "tag": "TR",
+          "text": "ຄິວ #ຊື່ ແລະ ນາມສະກຸນປະເພດການກວດວັນທີ ແລະ ເວລາສະຖານະ",
+          "className": "",
+          "rect": {
+            "left": 53,
+            "right": 773,
+            "width": 720
+          }
+        },
+        {
+          "tag": "TH",
+          "text": "ສະຖານະ",
+          "className": "px-5 py-3",
+          "rect": {
+            "left": 661,
+            "right": 773,
+            "width": 112
+          }
+        },
+        {
+          "tag": "TBODY",
+          "text": "ບໍ່ມີຂໍ້ມູນ",
+          "className": "text-xs text-[#767285]",
+          "rect": {
+            "left": 53,
+            "right": 773,
+            "width": 720
+          }
+        },
+        {
+          "tag": "TR",
+          "text": "ບໍ່ມີຂໍ້ມູນ",
+          "className": "bg-[#fff5dc]",
+          "rect": {
+            "left": 53,
+            "right": 773,
+            "width": 720
+          }
+        },
+        {
+          "tag": "TD",
+          "text": "ບໍ່ມີຂໍ້ມູນ",
+          "className": "px-5 py-6 text-center",
+          "rect": {
+            "left": 53,
+            "right": 773,
+            "width": 720
+          }
+        },
+        {
+          "tag": "TABLE",
+          "text": "ຄິວ #ຊື່ ແລະ ນາມສະກຸນປະເພດການກວດວັນທີ ແລະ ເວລາສະຖານະ01hunnu sdgxxxX-Ray Chest18/",
+          "className": "w-full min-w-[720px] border-collapse text-left",
+          "rect": {
+            "left": 53,
+            "right": 773,
+            "width": 720
+          }
+        },
+        {
+          "tag": "THEAD",
+          "text": "ຄິວ #ຊື່ ແລະ ນາມສະກຸນປະເພດການກວດວັນທີ ແລະ ເວລາສະຖານະ",
+          "className": "bg-[#f2f2f2] text-black text-xs font-bold",
+          "rect": {
+            "left": 53,
+            "right": 773,
+            "width": 720
+          }
+        },
+        {
+          "tag": "TR",
+          "text": "ຄິວ #ຊື່ ແລະ ນາມສະກຸນປະເພດການກວດວັນທີ ແລະ ເວລາສະຖານະ",
+          "className": "",
+          "rect": {
+            "left": 53,
+            "right": 773,
+            "width": 720
+          }
+        },
+        {
+          "tag": "TH",
+          "text": "ສະຖານະ",
+          "className": "px-5 py-3",
+          "rect": {
+            "left": 634,
+            "right": 773,
+            "width": 139
+          }
+        },
+        {
+          "tag": "TBODY",
+          "text": "01hunnu sdgxxxX-Ray Chest18/06/2026, 00:00:00ສຳເລັດ01ທະນົງສິນ ດວງມະນີໄລX-Ray Che",
+          "className": "text-xs text-[#767285]",
+          "rect": {
+            "left": 53,
+            "right": 773,
+            "width": 720
+          }
+        }
+      ],
+      "visibleFixedBottomNav": true,
+      "visibleSidebar": false,
+      "buttonLabels": [
+        "ເມນູ",
+        "×",
+        "ໜ້າຫຼັກ",
+        "ຂໍ້ມູນຄົນເຈັບ",
+        "ຈັດການຄິວ",
+        "ໃບສັ່ງກວດ",
+        "ການຊຳລະເງິນ",
+        "ຜົນກວດ",
+        "ປະເພດການກວດ",
+        "ຂໍ້ມູນພະນັກງານ",
+        "ລາຍງານ",
+        "ອອກຈາກລະບົບ",
+        "⌂ໜ້າຫຼັກ",
+        "☷ຄິວ",
+        "▤ສັ່ງກວດ",
+        "₭ຊຳລະ",
+        "✓ຜົນກວດ",
+        "ບໍ່ມີຄິວລໍຖ້າ",
+        "ເປີດຈໍສະແດງ",
+        "ໂຫຼດໃໝ່"
+      ]
+    },
+    {
+      "viewportName": "tablet",
+      "route": "/orders",
+      "viewport": {
+        "width": 768,
+        "height": 1024
+      },
+      "bodyOverflow": false,
+      "offenders": [
+        {
+          "tag": "TABLE",
+          "text": "ເລກທີຊື່ ແລະ ນາມສະກຸນປະເພດກວດວັນທີ ແລະ ເວລາສະຖານະ02hunnu sdgxxxX-Ray Chest18/06/",
+          "className": "w-full min-w-[760px] border-collapse text-left",
+          "rect": {
+            "left": 53,
+            "right": 813,
+            "width": 760
+          }
+        },
+        {
+          "tag": "THEAD",
+          "text": "ເລກທີຊື່ ແລະ ນາມສະກຸນປະເພດກວດວັນທີ ແລະ ເວລາສະຖານະ",
+          "className": "bg-[#f2f2f2] text-xs font-bold",
+          "rect": {
+            "left": 53,
+            "right": 813,
+            "width": 760
+          }
+        },
+        {
+          "tag": "TR",
+          "text": "ເລກທີຊື່ ແລະ ນາມສະກຸນປະເພດກວດວັນທີ ແລະ ເວລາສະຖານະ",
+          "className": "",
+          "rect": {
+            "left": 53,
+            "right": 813,
+            "width": 760
+          }
+        },
+        {
+          "tag": "TH",
+          "text": "",
+          "className": "px-5 py-3",
+          "rect": {
+            "left": 764,
+            "right": 813,
+            "width": 49
+          }
+        },
+        {
+          "tag": "TBODY",
+          "text": "02hunnu sdgxxxX-Ray Chest18/06/2026, 02:33:50ຄ້າງຊຳລະ01ທະນົງສິນ ດວງມະນີໄລX-Ray C",
+          "className": "text-xs text-[#767285]",
+          "rect": {
+            "left": 53,
+            "right": 813,
+            "width": 760
+          }
+        },
+        {
+          "tag": "TR",
+          "text": "02hunnu sdgxxxX-Ray Chest18/06/2026, 02:33:50ຄ້າງຊຳລະ",
+          "className": "border-t border-[#d7d7d7] bg-[#d5ffd8]",
+          "rect": {
+            "left": 53,
+            "right": 813,
+            "width": 760
+          }
+        },
+        {
+          "tag": "TD",
+          "text": "",
+          "className": "px-5 py-3 text-right",
+          "rect": {
+            "left": 764,
+            "right": 813,
+            "width": 49
+          }
+        },
+        {
+          "tag": "TR",
+          "text": "01ທະນົງສິນ ດວງມະນີໄລX-Ray Chest27/05/2026, 14:00:34ສຳເລັດ",
+          "className": "border-t border-[#d7d7d7] ",
+          "rect": {
+            "left": 53,
+            "right": 813,
+            "width": 760
+          }
+        },
+        {
+          "tag": "TD",
+          "text": "",
+          "className": "px-5 py-3 text-right",
+          "rect": {
+            "left": 764,
+            "right": 813,
+            "width": 49
+          }
+        }
+      ],
+      "visibleFixedBottomNav": true,
+      "visibleSidebar": false,
+      "buttonLabels": [
+        "ເມນູ",
+        "×",
+        "ໜ້າຫຼັກ",
+        "ຂໍ້ມູນຄົນເຈັບ",
+        "ຈັດການຄິວ",
+        "ໃບສັ່ງກວດ",
+        "ການຊຳລະເງິນ",
+        "ຜົນກວດ",
+        "ປະເພດການກວດ",
+        "ຂໍ້ມູນພະນັກງານ",
+        "ລາຍງານ",
+        "ອອກຈາກລະບົບ",
+        "⌂ໜ້າຫຼັກ",
+        "☷ຄິວ",
+        "▤ສັ່ງກວດ",
+        "₭ຊຳລະ",
+        "✓ຜົນກວດ",
+        "ສ້າງໃບສັ່ງກວດ",
+        "ໂຫຼດໃໝ່",
+        "ໃບສັ່ງກວດທັງໝົດ2",
+        "ລໍຖ້າກວດ0",
+        "ໃບສັ່ງກວດຍົກເລີກ0"
+      ]
+    },
+    {
+      "viewportName": "tablet",
+      "route": "/orders/new",
+      "viewport": {
+        "width": 768,
+        "height": 1024
+      },
+      "bodyOverflow": false,
+      "offenders": [],
+      "visibleFixedBottomNav": true,
+      "visibleSidebar": false,
+      "buttonLabels": [
+        "ເມນູ",
+        "×",
+        "ໜ້າຫຼັກ",
+        "ຂໍ້ມູນຄົນເຈັບ",
+        "ຈັດການຄິວ",
+        "ໃບສັ່ງກວດ",
+        "ການຊຳລະເງິນ",
+        "ຜົນກວດ",
+        "ປະເພດການກວດ",
+        "ຂໍ້ມູນພະນັກງານ",
+        "ລາຍງານ",
+        "ອອກຈາກລະບົບ",
+        "⌂ໜ້າຫຼັກ",
+        "☷ຄິວ",
+        "▤ສັ່ງກວດ",
+        "₭ຊຳລະ",
+        "✓ຜົນກວດ",
+        "ກັບຄືນ",
+        "ສ້າງໃບສັ່ງກວດ"
+      ]
+    },
+    {
+      "viewportName": "tablet",
+      "route": "/payments",
+      "viewport": {
+        "width": 768,
+        "height": 1024
+      },
+      "bodyOverflow": false,
+      "offenders": [
+        {
+          "tag": "TABLE",
+          "text": "ເລກທີຊື່ຄົນເຈັບປະເພດການກວດວັນທີລາຄາສະຖານະໃບບິນຈ່າຍເງິນ#0002hunnu sdgxxxX-Ray Che",
+          "className": "w-full min-w-[980px] border-collapse text-left",
+          "rect": {
+            "left": 54,
+            "right": 1034,
+            "width": 980
+          }
+        },
+        {
+          "tag": "THEAD",
+          "text": "ເລກທີຊື່ຄົນເຈັບປະເພດການກວດວັນທີລາຄາສະຖານະໃບບິນຈ່າຍເງິນ",
+          "className": "bg-[#f2f2f2] text-xs font-bold",
+          "rect": {
+            "left": 54,
+            "right": 1034,
+            "width": 980
+          }
+        },
+        {
+          "tag": "TR",
+          "text": "ເລກທີຊື່ຄົນເຈັບປະເພດການກວດວັນທີລາຄາສະຖານະໃບບິນຈ່າຍເງິນ",
+          "className": "",
+          "rect": {
+            "left": 54,
+            "right": 1034,
+            "width": 980
+          }
+        },
+        {
+          "tag": "TH",
+          "text": "ສະຖານະ",
+          "className": "px-5 py-3",
+          "rect": {
+            "left": 670,
+            "right": 791,
+            "width": 121
+          }
+        },
+        {
+          "tag": "TH",
+          "text": "ໃບບິນ",
+          "className": "px-5 py-3",
+          "rect": {
+            "left": 791,
+            "right": 922,
+            "width": 131
+          }
+        },
+        {
+          "tag": "TH",
+          "text": "ຈ່າຍເງິນ",
+          "className": "px-5 py-3",
+          "rect": {
+            "left": 922,
+            "right": 1034,
+            "width": 112
+          }
+        },
+        {
+          "tag": "TBODY",
+          "text": "#0002hunnu sdgxxxX-Ray Chest18/06/2026, 02:33:50150,000 ກີບຍັງບໍ່ໄດ້ຈ່າຍໃບແຈ້ງຊຳ",
+          "className": "text-xs text-[#767285]",
+          "rect": {
+            "left": 54,
+            "right": 1034,
+            "width": 980
+          }
+        },
+        {
+          "tag": "TR",
+          "text": "#0002hunnu sdgxxxX-Ray Chest18/06/2026, 02:33:50150,000 ກີບຍັງບໍ່ໄດ້ຈ່າຍໃບແຈ້ງຊຳ",
+          "className": "border-t border-[#d7d7d7]",
+          "rect": {
+            "left": 54,
+            "right": 1034,
+            "width": 980
+          }
+        },
+        {
+          "tag": "TD",
+          "text": "ຍັງບໍ່ໄດ້ຈ່າຍ",
+          "className": "px-5 py-3",
+          "rect": {
+            "left": 670,
+            "right": 791,
+            "width": 121
+          }
+        },
+        {
+          "tag": "TD",
+          "text": "ໃບແຈ້ງຊຳລະ",
+          "className": "px-5 py-3",
+          "rect": {
+            "left": 791,
+            "right": 922,
+            "width": 131
+          }
+        },
+        {
+          "tag": "BUTTON",
+          "text": "ໃບແຈ້ງຊຳລະ",
+          "className": "rounded-full bg-[#addbf4] px-4 py-1 text-[11px] font-bold text-[#123879] shadow-sm",
+          "rect": {
+            "left": 811,
+            "right": 892,
+            "width": 81
+          }
+        },
+        {
+          "tag": "TD",
+          "text": "ຈ່າຍເງິນ",
+          "className": "px-5 py-3",
+          "rect": {
+            "left": 922,
+            "right": 1034,
+            "width": 112
+          }
+        }
+      ],
+      "visibleFixedBottomNav": true,
+      "visibleSidebar": false,
+      "buttonLabels": [
+        "ເມນູ",
+        "×",
+        "ໜ້າຫຼັກ",
+        "ຂໍ້ມູນຄົນເຈັບ",
+        "ຈັດການຄິວ",
+        "ໃບສັ່ງກວດ",
+        "ການຊຳລະເງິນ",
+        "ຜົນກວດ",
+        "ປະເພດການກວດ",
+        "ຂໍ້ມູນພະນັກງານ",
+        "ລາຍງານ",
+        "ອອກຈາກລະບົບ",
+        "⌂ໜ້າຫຼັກ",
+        "☷ຄິວ",
+        "▤ສັ່ງກວດ",
+        "₭ຊຳລະ",
+        "✓ຜົນກວດ",
+        "ໂຫຼດໃໝ່",
+        "ຍັງບໍ່ໄດ້ຈ່າຍ",
+        "ຈ່າຍແລ້ວ",
+        "ໃບແຈ້ງຊຳລະ",
+        "ຈ່າຍເງິນ"
+      ]
+    },
+    {
+      "viewportName": "tablet",
+      "route": "/results",
+      "viewport": {
+        "width": 768,
+        "height": 1024
+      },
+      "bodyOverflow": false,
+      "offenders": [
+        {
+          "tag": "TABLE",
+          "text": "ເລກທີລະຫັດຄົນເຈັບຊື່ຄົນເຈັບປະເພດການກວດວັນທີຜົນກວດສະຖານະຈັດການXR-20260618-00002HN",
+          "className": "w-full min-w-[980px] border-collapse text-left",
+          "rect": {
+            "left": 53,
+            "right": 1033,
+            "width": 980
+          }
+        },
+        {
+          "tag": "THEAD",
+          "text": "ເລກທີລະຫັດຄົນເຈັບຊື່ຄົນເຈັບປະເພດການກວດວັນທີຜົນກວດສະຖານະຈັດການ",
+          "className": "bg-[#f2f2f2] text-xs font-bold",
+          "rect": {
+            "left": 53,
+            "right": 1033,
+            "width": 980
+          }
+        },
+        {
+          "tag": "TR",
+          "text": "ເລກທີລະຫັດຄົນເຈັບຊື່ຄົນເຈັບປະເພດການກວດວັນທີຜົນກວດສະຖານະຈັດການ",
+          "className": "",
+          "rect": {
+            "left": 53,
+            "right": 1033,
+            "width": 980
+          }
+        },
+        {
+          "tag": "TH",
+          "text": "ສະຖານະ",
+          "className": "px-5 py-3",
+          "rect": {
+            "left": 743,
+            "right": 856,
+            "width": 113
+          }
+        },
+        {
+          "tag": "TH",
+          "text": "ຈັດການ",
+          "className": "px-5 py-3",
+          "rect": {
+            "left": 856,
+            "right": 1033,
+            "width": 177
+          }
+        },
+        {
+          "tag": "TBODY",
+          "text": "XR-20260618-00002HN-000002hunnu sdgxxxX-Ray Chest18/06/2026swເບິ່ງຮູບຄ້າງຊຳລະເອກ",
+          "className": "text-xs text-[#767285]",
+          "rect": {
+            "left": 53,
+            "right": 1033,
+            "width": 980
+          }
+        },
+        {
+          "tag": "TR",
+          "text": "XR-20260618-00002HN-000002hunnu sdgxxxX-Ray Chest18/06/2026swເບິ່ງຮູບຄ້າງຊຳລະເອກ",
+          "className": "border-t border-[#d7d7d7]",
+          "rect": {
+            "left": 53,
+            "right": 1033,
+            "width": 980
+          }
+        },
+        {
+          "tag": "TD",
+          "text": "ຄ້າງຊຳລະ",
+          "className": "px-5 py-3",
+          "rect": {
+            "left": 743,
+            "right": 856,
+            "width": 113
+          }
+        },
+        {
+          "tag": "SPAN",
+          "text": "ຄ້າງຊຳລະ",
+          "className": "inline-flex min-w-[72px] justify-center rounded-full px-2.5 py-0.5 text-[11px] font-semibold bg-[#fff7a5] text-[#a77b00]",
+          "rect": {
+            "left": 763,
+            "right": 835,
+            "width": 72
+          }
+        },
+        {
+          "tag": "TD",
+          "text": "ເອກະສານແກ້ໄຂ",
+          "className": "px-5 py-3",
+          "rect": {
+            "left": 856,
+            "right": 1033,
+            "width": 177
+          }
+        },
+        {
+          "tag": "DIV",
+          "text": "ເອກະສານແກ້ໄຂ",
+          "className": "flex flex-wrap gap-2",
+          "rect": {
+            "left": 876,
+            "right": 1013,
+            "width": 137
+          }
+        },
+        {
+          "tag": "BUTTON",
+          "text": "ເອກະສານ",
+          "className": "rounded-full bg-[#addbf4] px-4 py-1 text-[11px] font-bold text-[#123879]",
+          "rect": {
+            "left": 876,
+            "right": 947,
+            "width": 71
+          }
+        }
+      ],
+      "visibleFixedBottomNav": true,
+      "visibleSidebar": false,
+      "buttonLabels": [
+        "ເມນູ",
+        "×",
+        "ໜ້າຫຼັກ",
+        "ຂໍ້ມູນຄົນເຈັບ",
+        "ຈັດການຄິວ",
+        "ໃບສັ່ງກວດ",
+        "ການຊຳລະເງິນ",
+        "ຜົນກວດ",
+        "ປະເພດການກວດ",
+        "ຂໍ້ມູນພະນັກງານ",
+        "ລາຍງານ",
+        "ອອກຈາກລະບົບ",
+        "⌂ໜ້າຫຼັກ",
+        "☷ຄິວ",
+        "▤ສັ່ງກວດ",
+        "₭ຊຳລະ",
+        "✓ຜົນກວດ",
+        "ໂຫຼດໃໝ່",
+        "ເບິ່ງຮູບ",
+        "ເອກະສານ",
+        "ແກ້ໄຂ",
+        "ເບິ່ງຮູບ",
+        "ເອກະສານ",
+        "ແກ້ໄຂ"
+      ]
+    },
+    {
+      "viewportName": "tablet",
+      "route": "/exam-types",
+      "viewport": {
+        "width": 768,
+        "height": 1024
+      },
+      "bodyOverflow": false,
+      "offenders": [
+        {
+          "tag": "TABLE",
+          "text": "IDຊື່ລາຍລະອຽດລາຄາຈັດການ1X-Ray ChestChest radiography150,000 ກີບແກ້ໄຂລົບ2CT Abdom",
+          "className": "jsx-bb5f2846ce6b1bf5 w-full min-w-[720px] border-collapse text-left",
+          "rect": {
+            "left": 54,
+            "right": 774,
+            "width": 720
+          }
+        },
+        {
+          "tag": "THEAD",
+          "text": "IDຊື່ລາຍລະອຽດລາຄາຈັດການ",
+          "className": "jsx-bb5f2846ce6b1bf5 bg-[#f2f2f2] text-xs font-bold",
+          "rect": {
+            "left": 54,
+            "right": 774,
+            "width": 720
+          }
+        },
+        {
+          "tag": "TR",
+          "text": "IDຊື່ລາຍລະອຽດລາຄາຈັດການ",
+          "className": "jsx-bb5f2846ce6b1bf5",
+          "rect": {
+            "left": 54,
+            "right": 774,
+            "width": 720
+          }
+        },
+        {
+          "tag": "TH",
+          "text": "ຈັດການ",
+          "className": "jsx-bb5f2846ce6b1bf5 px-5 py-3",
+          "rect": {
+            "left": 609,
+            "right": 774,
+            "width": 165
+          }
+        },
+        {
+          "tag": "TBODY",
+          "text": "1X-Ray ChestChest radiography150,000 ກີບແກ້ໄຂລົບ2CT AbdomenComputed tomography a",
+          "className": "jsx-bb5f2846ce6b1bf5 text-xs text-[#767285]",
+          "rect": {
+            "left": 54,
+            "right": 774,
+            "width": 720
+          }
+        },
+        {
+          "tag": "TR",
+          "text": "1X-Ray ChestChest radiography150,000 ກີບແກ້ໄຂລົບ",
+          "className": "jsx-bb5f2846ce6b1bf5 border-t border-[#d7d7d7]",
+          "rect": {
+            "left": 54,
+            "right": 774,
+            "width": 720
+          }
+        },
+        {
+          "tag": "TD",
+          "text": "ແກ້ໄຂລົບ",
+          "className": "jsx-bb5f2846ce6b1bf5 px-5 py-3",
+          "rect": {
+            "left": 609,
+            "right": 774,
+            "width": 165
+          }
+        },
+        {
+          "tag": "TR",
+          "text": "2CT AbdomenComputed tomography abdomen450,000 ກີບແກ້ໄຂລົບ",
+          "className": "jsx-bb5f2846ce6b1bf5 border-t border-[#d7d7d7]",
+          "rect": {
+            "left": 54,
+            "right": 774,
+            "width": 720
+          }
+        },
+        {
+          "tag": "TD",
+          "text": "ແກ້ໄຂລົບ",
+          "className": "jsx-bb5f2846ce6b1bf5 px-5 py-3",
+          "rect": {
+            "left": 609,
+            "right": 774,
+            "width": 165
+          }
+        },
+        {
+          "tag": "TR",
+          "text": "3MRI BrainMagnetic resonance imaging brain650,000 ກີບແກ້ໄຂລົບ",
+          "className": "jsx-bb5f2846ce6b1bf5 border-t border-[#d7d7d7]",
+          "rect": {
+            "left": 54,
+            "right": 774,
+            "width": 720
+          }
+        },
+        {
+          "tag": "TD",
+          "text": "ແກ້ໄຂລົບ",
+          "className": "jsx-bb5f2846ce6b1bf5 px-5 py-3",
+          "rect": {
+            "left": 609,
+            "right": 774,
+            "width": 165
+          }
+        },
+        {
+          "tag": "TR",
+          "text": "4UltrasoundUltrasound examination200,000 ກີບແກ້ໄຂລົບ",
+          "className": "jsx-bb5f2846ce6b1bf5 border-t border-[#d7d7d7]",
+          "rect": {
+            "left": 54,
+            "right": 774,
+            "width": 720
+          }
+        }
+      ],
+      "visibleFixedBottomNav": true,
+      "visibleSidebar": false,
+      "buttonLabels": [
+        "ເມນູ",
+        "×",
+        "ໜ້າຫຼັກ",
+        "ຂໍ້ມູນຄົນເຈັບ",
+        "ຈັດການຄິວ",
+        "ໃບສັ່ງກວດ",
+        "ການຊຳລະເງິນ",
+        "ຜົນກວດ",
+        "ປະເພດການກວດ",
+        "ຂໍ້ມູນພະນັກງານ",
+        "ລາຍງານ",
+        "ອອກຈາກລະບົບ",
+        "⌂ໜ້າຫຼັກ",
+        "☷ຄິວ",
+        "▤ສັ່ງກວດ",
+        "₭ຊຳລະ",
+        "✓ຜົນກວດ",
+        "ບັນທຶກ",
+        "ແກ້ໄຂ",
+        "ລົບ",
+        "ແກ້ໄຂ",
+        "ລົບ",
+        "ແກ້ໄຂ",
+        "ລົບ",
+        "ແກ້ໄຂ",
+        "ລົບ"
+      ]
+    },
+    {
+      "viewportName": "tablet",
+      "route": "/staff",
+      "viewport": {
+        "width": 768,
+        "height": 1024
+      },
+      "bodyOverflow": false,
+      "offenders": [
+        {
+          "tag": "TABLE",
+          "text": "ລະຫັດຊື່ຊື່ເຂົ້າລະບົບຕຳແໜ່ງພະແນກເບີໂທສິດນຳໃຊ້ຈັດການSTF-0001Admin UseradminSystem",
+          "className": "w-full min-w-[920px] border-collapse text-left",
+          "rect": {
+            "left": 54,
+            "right": 974,
+            "width": 920
+          }
+        },
+        {
+          "tag": "THEAD",
+          "text": "ລະຫັດຊື່ຊື່ເຂົ້າລະບົບຕຳແໜ່ງພະແນກເບີໂທສິດນຳໃຊ້ຈັດການ",
+          "className": "bg-[#f2f2f2] text-xs font-bold",
+          "rect": {
+            "left": 54,
+            "right": 974,
+            "width": 920
+          }
+        },
+        {
+          "tag": "TR",
+          "text": "ລະຫັດຊື່ຊື່ເຂົ້າລະບົບຕຳແໜ່ງພະແນກເບີໂທສິດນຳໃຊ້ຈັດການ",
+          "className": "",
+          "rect": {
+            "left": 54,
+            "right": 974,
+            "width": 920
+          }
+        },
+        {
+          "tag": "TH",
+          "text": "ຈັດການ",
+          "className": "px-5 py-3",
+          "rect": {
+            "left": 759,
+            "right": 974,
+            "width": 215
+          }
+        },
+        {
+          "tag": "TBODY",
+          "text": "STF-0001Admin UseradminSystem Administrator--ຜູ້ດູແລລະບົບແກ້ໄຂບັນຊີທີ່ກຳລັງໃຊ້ງາ",
+          "className": "text-xs text-[#767285]",
+          "rect": {
+            "left": 54,
+            "right": 974,
+            "width": 920
+          }
+        },
+        {
+          "tag": "TR",
+          "text": "STF-0001Admin UseradminSystem Administrator--ຜູ້ດູແລລະບົບແກ້ໄຂບັນຊີທີ່ກຳລັງໃຊ້ງາ",
+          "className": "border-t border-[#d7d7d7]",
+          "rect": {
+            "left": 54,
+            "right": 974,
+            "width": 920
+          }
+        },
+        {
+          "tag": "TD",
+          "text": "ແກ້ໄຂບັນຊີທີ່ກຳລັງໃຊ້ງານ",
+          "className": "px-5 py-3",
+          "rect": {
+            "left": 759,
+            "right": 974,
+            "width": 215
+          }
+        },
+        {
+          "tag": "DIV",
+          "text": "ແກ້ໄຂບັນຊີທີ່ກຳລັງໃຊ້ງານ",
+          "className": "flex flex-wrap gap-2",
+          "rect": {
+            "left": 779,
+            "right": 954,
+            "width": 175
+          }
+        },
+        {
+          "tag": "A",
+          "text": "ແກ້ໄຂ",
+          "className": "inline-flex min-w-[76px] justify-center rounded-full bg-[#bafbd2] px-3 py-1 text-[11px] font-bold text-[#137547]",
+          "rect": {
+            "left": 779,
+            "right": 855,
+            "width": 76
+          }
+        },
+        {
+          "tag": "SPAN",
+          "text": "ບັນຊີທີ່ກຳລັງໃຊ້ງານ",
+          "className": "inline-flex min-w-[128px] justify-center rounded-full bg-[#eeeafe] px-3 py-1 text-[11px] font-bold text-[#123879]",
+          "rect": {
+            "left": 779,
+            "right": 907,
+            "width": 128
+          }
+        },
+        {
+          "tag": "TR",
+          "text": "STF-0002ສະກັນໄຊດາວສະຫວ່າງຫມໍIT02055555555ພະນັກງານແກ້ໄຂປິດການນຳໃຊ້",
+          "className": "border-t border-[#d7d7d7]",
+          "rect": {
+            "left": 54,
+            "right": 974,
+            "width": 920
+          }
+        },
+        {
+          "tag": "TD",
+          "text": "ແກ້ໄຂປິດການນຳໃຊ້",
+          "className": "px-5 py-3",
+          "rect": {
+            "left": 759,
+            "right": 974,
+            "width": 215
+          }
+        }
+      ],
+      "visibleFixedBottomNav": true,
+      "visibleSidebar": false,
+      "buttonLabels": [
+        "ເມນູ",
+        "×",
+        "ໜ້າຫຼັກ",
+        "ຂໍ້ມູນຄົນເຈັບ",
+        "ຈັດການຄິວ",
+        "ໃບສັ່ງກວດ",
+        "ການຊຳລະເງິນ",
+        "ຜົນກວດ",
+        "ປະເພດການກວດ",
+        "ຂໍ້ມູນພະນັກງານ",
+        "ລາຍງານ",
+        "ອອກຈາກລະບົບ",
+        "⌂ໜ້າຫຼັກ",
+        "☷ຄິວ",
+        "▤ສັ່ງກວດ",
+        "₭ຊຳລະ",
+        "✓ຜົນກວດ",
+        "ໂຫຼດໃໝ່",
+        "ເພີ່ມພະນັກງານ",
+        "ພິມລາຍຊື່",
+        "ສົ່ງອອກ CSV",
+        "ແກ້ໄຂ",
+        "ແກ້ໄຂ",
+        "ປິດການນຳໃຊ້"
+      ]
+    },
+    {
+      "viewportName": "tablet",
+      "route": "/staff/new",
+      "viewport": {
+        "width": 768,
+        "height": 1024
+      },
+      "bodyOverflow": false,
+      "offenders": [],
+      "visibleFixedBottomNav": true,
+      "visibleSidebar": false,
+      "buttonLabels": [
+        "ເມນູ",
+        "×",
+        "ໜ້າຫຼັກ",
+        "ຂໍ້ມູນຄົນເຈັບ",
+        "ຈັດການຄິວ",
+        "ໃບສັ່ງກວດ",
+        "ການຊຳລະເງິນ",
+        "ຜົນກວດ",
+        "ປະເພດການກວດ",
+        "ຂໍ້ມູນພະນັກງານ",
+        "ລາຍງານ",
+        "ອອກຈາກລະບົບ",
+        "⌂ໜ້າຫຼັກ",
+        "☷ຄິວ",
+        "▤ສັ່ງກວດ",
+        "₭ຊຳລະ",
+        "✓ຜົນກວດ",
+        "ກັບຄືນ",
+        "ບັນທຶກຂໍ້ມູນພະນັກງານ"
+      ]
+    },
+    {
+      "viewportName": "tablet",
+      "route": "/reports",
+      "viewport": {
+        "width": 768,
+        "height": 1024
+      },
+      "bodyOverflow": false,
+      "offenders": [
+        {
+          "tag": "TABLE",
+          "text": "ວັນທີຈຳນວນລາຍການລາຍຮັບລວມຊ່ອງທາງຊຳລະ2026-06-151150,000 ກີບເງິນສົດ: 150,000 ກີບ",
+          "className": "w-full min-w-[760px] border-collapse text-left",
+          "rect": {
+            "left": 70,
+            "right": 830,
+            "width": 760
+          }
+        },
+        {
+          "tag": "THEAD",
+          "text": "ວັນທີຈຳນວນລາຍການລາຍຮັບລວມຊ່ອງທາງຊຳລະ",
+          "className": "bg-[#f2f2f2] text-xs font-bold",
+          "rect": {
+            "left": 70,
+            "right": 830,
+            "width": 760
+          }
+        },
+        {
+          "tag": "TR",
+          "text": "ວັນທີຈຳນວນລາຍການລາຍຮັບລວມຊ່ອງທາງຊຳລະ",
+          "className": "",
+          "rect": {
+            "left": 70,
+            "right": 830,
+            "width": 760
+          }
+        },
+        {
+          "tag": "TH",
+          "text": "ຊ່ອງທາງຊຳລະ",
+          "className": "px-5 py-3",
+          "rect": {
+            "left": 599,
+            "right": 830,
+            "width": 231
+          }
+        },
+        {
+          "tag": "TBODY",
+          "text": "2026-06-151150,000 ກີບເງິນສົດ: 150,000 ກີບ",
+          "className": "text-xs text-[#767285]",
+          "rect": {
+            "left": 70,
+            "right": 830,
+            "width": 760
+          }
+        },
+        {
+          "tag": "TR",
+          "text": "2026-06-151150,000 ກີບເງິນສົດ: 150,000 ກີບ",
+          "className": "border-t border-[#d7d7d7]",
+          "rect": {
+            "left": 70,
+            "right": 830,
+            "width": 760
+          }
+        },
+        {
+          "tag": "TD",
+          "text": "ເງິນສົດ: 150,000 ກີບ",
+          "className": "px-5 py-3",
+          "rect": {
+            "left": 599,
+            "right": 830,
+            "width": 231
+          }
+        },
+        {
+          "tag": "TABLE",
+          "text": "ເລກໃບຮັບເງິນໃບສັ່ງກວດວັນທີຈ່າຍຊື່ຄົນເຈັບປະເພດການກວດຈຳນວນເງິນຊ່ອງທາງຜູ້ຮັບເງິນສະຖ",
+          "className": "w-full min-w-[1040px] border-collapse text-left",
+          "rect": {
+            "left": 70,
+            "right": 1110,
+            "width": 1040
+          }
+        },
+        {
+          "tag": "THEAD",
+          "text": "ເລກໃບຮັບເງິນໃບສັ່ງກວດວັນທີຈ່າຍຊື່ຄົນເຈັບປະເພດການກວດຈຳນວນເງິນຊ່ອງທາງຜູ້ຮັບເງິນສະຖ",
+          "className": "bg-[#f2f2f2] text-xs font-bold",
+          "rect": {
+            "left": 70,
+            "right": 1110,
+            "width": 1040
+          }
+        },
+        {
+          "tag": "TR",
+          "text": "ເລກໃບຮັບເງິນໃບສັ່ງກວດວັນທີຈ່າຍຊື່ຄົນເຈັບປະເພດການກວດຈຳນວນເງິນຊ່ອງທາງຜູ້ຮັບເງິນສະຖ",
+          "className": "",
+          "rect": {
+            "left": 70,
+            "right": 1110,
+            "width": 1040
+          }
+        },
+        {
+          "tag": "TH",
+          "text": "ຈຳນວນເງິນ",
+          "className": "px-5 py-3",
+          "rect": {
+            "left": 715,
+            "right": 817,
+            "width": 102
+          }
+        },
+        {
+          "tag": "TH",
+          "text": "ຊ່ອງທາງ",
+          "className": "px-5 py-3",
+          "rect": {
+            "left": 817,
+            "right": 893,
+            "width": 76
+          }
+        }
+      ],
+      "visibleFixedBottomNav": true,
+      "visibleSidebar": false,
+      "buttonLabels": [
+        "ເມນູ",
+        "×",
+        "ໜ້າຫຼັກ",
+        "ຂໍ້ມູນຄົນເຈັບ",
+        "ຈັດການຄິວ",
+        "ໃບສັ່ງກວດ",
+        "ການຊຳລະເງິນ",
+        "ຜົນກວດ",
+        "ປະເພດການກວດ",
+        "ຂໍ້ມູນພະນັກງານ",
+        "ລາຍງານ",
+        "ອອກຈາກລະບົບ",
+        "⌂ໜ້າຫຼັກ",
+        "☷ຄິວ",
+        "▤ສັ່ງກວດ",
+        "₭ຊຳລະ",
+        "✓ຜົນກວດ",
+        "ໂຫຼດໃໝ່",
+        "ລ້າງຕົວກອງ",
+        "ລາຍງານການຊຳລະ",
+        "ລາຍງານຜົນກວດ",
+        "ທັງໝົດ",
+        "ລາຍວັນ",
+        "ລາຍເດືອນ",
+        "ທັງໝົດ",
+        "ເງິນສົດ",
+        "ເງິນໂອນ",
+        "ພິມເອກະສານ",
+        "ສົ່ງອອກ"
+      ]
+    },
+    {
+      "viewportName": "mobile",
+      "route": "/dashboard",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "bodyOverflow": false,
+      "offenders": [],
+      "visibleFixedBottomNav": true,
+      "visibleSidebar": false,
+      "buttonLabels": [
+        "ເມນູ",
+        "×",
+        "ໜ້າຫຼັກ",
+        "ຂໍ້ມູນຄົນເຈັບ",
+        "ຈັດການຄິວ",
+        "ໃບສັ່ງກວດ",
+        "ການຊຳລະເງິນ",
+        "ຜົນກວດ",
+        "ປະເພດການກວດ",
+        "ຂໍ້ມູນພະນັກງານ",
+        "ລາຍງານ",
+        "ອອກຈາກລະບົບ",
+        "⌂ໜ້າຫຼັກ",
+        "☷ຄິວ",
+        "▤ສັ່ງກວດ",
+        "₭ຊຳລະ",
+        "✓ຜົນກວດ",
+        "ສ້າງໃບສັ່ງກວດ",
+        "ໂຫຼດໃໝ່"
+      ]
+    },
+    {
+      "viewportName": "mobile",
+      "route": "/patients",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "bodyOverflow": false,
+      "offenders": [],
+      "visibleFixedBottomNav": true,
+      "visibleSidebar": false,
+      "buttonLabels": [
+        "ເມນູ",
+        "×",
+        "ໜ້າຫຼັກ",
+        "ຂໍ້ມູນຄົນເຈັບ",
+        "ຈັດການຄິວ",
+        "ໃບສັ່ງກວດ",
+        "ການຊຳລະເງິນ",
+        "ຜົນກວດ",
+        "ປະເພດການກວດ",
+        "ຂໍ້ມູນພະນັກງານ",
+        "ລາຍງານ",
+        "ອອກຈາກລະບົບ",
+        "⌂ໜ້າຫຼັກ",
+        "☷ຄິວ",
+        "▤ສັ່ງກວດ",
+        "₭ຊຳລະ",
+        "✓ຜົນກວດ",
+        "ສ້າງໃບສັ່ງກວດ",
+        "ໂຫຼດໃໝ່",
+        "ຜົນກວດ (1)",
+        "ປະຫວັດ (1)",
+        "ແກ້ໄຂ",
+        "ລົບ",
+        "ຜົນກວດ (1)",
+        "ປະຫວັດ (1)",
+        "ແກ້ໄຂ",
+        "ລົບ"
+      ]
+    },
+    {
+      "viewportName": "mobile",
+      "route": "/queues",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "bodyOverflow": false,
+      "offenders": [],
+      "visibleFixedBottomNav": true,
+      "visibleSidebar": false,
+      "buttonLabels": [
+        "ເມນູ",
+        "×",
+        "ໜ້າຫຼັກ",
+        "ຂໍ້ມູນຄົນເຈັບ",
+        "ຈັດການຄິວ",
+        "ໃບສັ່ງກວດ",
+        "ການຊຳລະເງິນ",
+        "ຜົນກວດ",
+        "ປະເພດການກວດ",
+        "ຂໍ້ມູນພະນັກງານ",
+        "ລາຍງານ",
+        "ອອກຈາກລະບົບ",
+        "⌂ໜ້າຫຼັກ",
+        "☷ຄິວ",
+        "▤ສັ່ງກວດ",
+        "₭ຊຳລະ",
+        "✓ຜົນກວດ",
+        "ບໍ່ມີຄິວລໍຖ້າ",
+        "ເປີດຈໍສະແດງ",
+        "ໂຫຼດໃໝ່"
+      ]
+    },
+    {
+      "viewportName": "mobile",
+      "route": "/orders",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "bodyOverflow": false,
+      "offenders": [],
+      "visibleFixedBottomNav": true,
+      "visibleSidebar": false,
+      "buttonLabels": [
+        "ເມນູ",
+        "×",
+        "ໜ້າຫຼັກ",
+        "ຂໍ້ມູນຄົນເຈັບ",
+        "ຈັດການຄິວ",
+        "ໃບສັ່ງກວດ",
+        "ການຊຳລະເງິນ",
+        "ຜົນກວດ",
+        "ປະເພດການກວດ",
+        "ຂໍ້ມູນພະນັກງານ",
+        "ລາຍງານ",
+        "ອອກຈາກລະບົບ",
+        "⌂ໜ້າຫຼັກ",
+        "☷ຄິວ",
+        "▤ສັ່ງກວດ",
+        "₭ຊຳລະ",
+        "✓ຜົນກວດ",
+        "ສ້າງໃບສັ່ງກວດ",
+        "ໂຫຼດໃໝ່",
+        "ໃບສັ່ງກວດທັງໝົດ2",
+        "ລໍຖ້າກວດ0",
+        "ໃບສັ່ງກວດຍົກເລີກ0"
+      ]
+    },
+    {
+      "viewportName": "mobile",
+      "route": "/orders/new",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "bodyOverflow": false,
+      "offenders": [],
+      "visibleFixedBottomNav": true,
+      "visibleSidebar": false,
+      "buttonLabels": [
+        "ເມນູ",
+        "×",
+        "ໜ້າຫຼັກ",
+        "ຂໍ້ມູນຄົນເຈັບ",
+        "ຈັດການຄິວ",
+        "ໃບສັ່ງກວດ",
+        "ການຊຳລະເງິນ",
+        "ຜົນກວດ",
+        "ປະເພດການກວດ",
+        "ຂໍ້ມູນພະນັກງານ",
+        "ລາຍງານ",
+        "ອອກຈາກລະບົບ",
+        "⌂ໜ້າຫຼັກ",
+        "☷ຄິວ",
+        "▤ສັ່ງກວດ",
+        "₭ຊຳລະ",
+        "✓ຜົນກວດ",
+        "ກັບຄືນ",
+        "ສ້າງໃບສັ່ງກວດ"
+      ]
+    },
+    {
+      "viewportName": "mobile",
+      "route": "/payments",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "bodyOverflow": false,
+      "offenders": [],
+      "visibleFixedBottomNav": true,
+      "visibleSidebar": false,
+      "buttonLabels": [
+        "ເມນູ",
+        "×",
+        "ໜ້າຫຼັກ",
+        "ຂໍ້ມູນຄົນເຈັບ",
+        "ຈັດການຄິວ",
+        "ໃບສັ່ງກວດ",
+        "ການຊຳລະເງິນ",
+        "ຜົນກວດ",
+        "ປະເພດການກວດ",
+        "ຂໍ້ມູນພະນັກງານ",
+        "ລາຍງານ",
+        "ອອກຈາກລະບົບ",
+        "⌂ໜ້າຫຼັກ",
+        "☷ຄິວ",
+        "▤ສັ່ງກວດ",
+        "₭ຊຳລະ",
+        "✓ຜົນກວດ",
+        "ໂຫຼດໃໝ່",
+        "ຍັງບໍ່ໄດ້ຈ່າຍ",
+        "ຈ່າຍແລ້ວ",
+        "ໃບແຈ້ງຊຳລະ",
+        "ຈ່າຍເງິນ"
+      ]
+    },
+    {
+      "viewportName": "mobile",
+      "route": "/results",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "bodyOverflow": false,
+      "offenders": [],
+      "visibleFixedBottomNav": true,
+      "visibleSidebar": false,
+      "buttonLabels": [
+        "ເມນູ",
+        "×",
+        "ໜ້າຫຼັກ",
+        "ຂໍ້ມູນຄົນເຈັບ",
+        "ຈັດການຄິວ",
+        "ໃບສັ່ງກວດ",
+        "ການຊຳລະເງິນ",
+        "ຜົນກວດ",
+        "ປະເພດການກວດ",
+        "ຂໍ້ມູນພະນັກງານ",
+        "ລາຍງານ",
+        "ອອກຈາກລະບົບ",
+        "⌂ໜ້າຫຼັກ",
+        "☷ຄິວ",
+        "▤ສັ່ງກວດ",
+        "₭ຊຳລະ",
+        "✓ຜົນກວດ",
+        "ໂຫຼດໃໝ່",
+        "ເອກະສານ",
+        "ແກ້ໄຂ",
+        "ເອກະສານ",
+        "ແກ້ໄຂ"
+      ]
+    },
+    {
+      "viewportName": "mobile",
+      "route": "/exam-types",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "bodyOverflow": false,
+      "offenders": [],
+      "visibleFixedBottomNav": true,
+      "visibleSidebar": false,
+      "buttonLabels": [
+        "ເມນູ",
+        "×",
+        "ໜ້າຫຼັກ",
+        "ຂໍ້ມູນຄົນເຈັບ",
+        "ຈັດການຄິວ",
+        "ໃບສັ່ງກວດ",
+        "ການຊຳລະເງິນ",
+        "ຜົນກວດ",
+        "ປະເພດການກວດ",
+        "ຂໍ້ມູນພະນັກງານ",
+        "ລາຍງານ",
+        "ອອກຈາກລະບົບ",
+        "⌂ໜ້າຫຼັກ",
+        "☷ຄິວ",
+        "▤ສັ່ງກວດ",
+        "₭ຊຳລະ",
+        "✓ຜົນກວດ",
+        "ບັນທຶກ",
+        "ແກ້ໄຂ",
+        "ລົບ",
+        "ແກ້ໄຂ",
+        "ລົບ",
+        "ແກ້ໄຂ",
+        "ລົບ",
+        "ແກ້ໄຂ",
+        "ລົບ"
+      ]
+    },
+    {
+      "viewportName": "mobile",
+      "route": "/staff",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "bodyOverflow": false,
+      "offenders": [],
+      "visibleFixedBottomNav": true,
+      "visibleSidebar": false,
+      "buttonLabels": [
+        "ເມນູ",
+        "×",
+        "ໜ້າຫຼັກ",
+        "ຂໍ້ມູນຄົນເຈັບ",
+        "ຈັດການຄິວ",
+        "ໃບສັ່ງກວດ",
+        "ການຊຳລະເງິນ",
+        "ຜົນກວດ",
+        "ປະເພດການກວດ",
+        "ຂໍ້ມູນພະນັກງານ",
+        "ລາຍງານ",
+        "ອອກຈາກລະບົບ",
+        "⌂ໜ້າຫຼັກ",
+        "☷ຄິວ",
+        "▤ສັ່ງກວດ",
+        "₭ຊຳລະ",
+        "✓ຜົນກວດ",
+        "ໂຫຼດໃໝ່",
+        "ເພີ່ມພະນັກງານ",
+        "ພິມລາຍຊື່",
+        "ສົ່ງອອກ CSV",
+        "ແກ້ໄຂ",
+        "ແກ້ໄຂ",
+        "ປິດການນຳໃຊ້"
+      ]
+    },
+    {
+      "viewportName": "mobile",
+      "route": "/staff/new",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "bodyOverflow": false,
+      "offenders": [],
+      "visibleFixedBottomNav": true,
+      "visibleSidebar": false,
+      "buttonLabels": [
+        "ເມນູ",
+        "×",
+        "ໜ້າຫຼັກ",
+        "ຂໍ້ມູນຄົນເຈັບ",
+        "ຈັດການຄິວ",
+        "ໃບສັ່ງກວດ",
+        "ການຊຳລະເງິນ",
+        "ຜົນກວດ",
+        "ປະເພດການກວດ",
+        "ຂໍ້ມູນພະນັກງານ",
+        "ລາຍງານ",
+        "ອອກຈາກລະບົບ",
+        "⌂ໜ້າຫຼັກ",
+        "☷ຄິວ",
+        "▤ສັ່ງກວດ",
+        "₭ຊຳລະ",
+        "✓ຜົນກວດ",
+        "ກັບຄືນ",
+        "ບັນທຶກຂໍ້ມູນພະນັກງານ"
+      ]
+    },
+    {
+      "viewportName": "mobile",
+      "route": "/reports",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "bodyOverflow": false,
+      "offenders": [],
+      "visibleFixedBottomNav": true,
+      "visibleSidebar": false,
+      "buttonLabels": [
+        "ເມນູ",
+        "×",
+        "ໜ້າຫຼັກ",
+        "ຂໍ້ມູນຄົນເຈັບ",
+        "ຈັດການຄິວ",
+        "ໃບສັ່ງກວດ",
+        "ການຊຳລະເງິນ",
+        "ຜົນກວດ",
+        "ປະເພດການກວດ",
+        "ຂໍ້ມູນພະນັກງານ",
+        "ລາຍງານ",
+        "ອອກຈາກລະບົບ",
+        "⌂ໜ້າຫຼັກ",
+        "☷ຄິວ",
+        "▤ສັ່ງກວດ",
+        "₭ຊຳລະ",
+        "✓ຜົນກວດ",
+        "ໂຫຼດໃໝ່",
+        "ລ້າງຕົວກອງ",
+        "ລາຍງານການຊຳລະ",
+        "ລາຍງານຜົນກວດ",
+        "ທັງໝົດ",
+        "ລາຍວັນ",
+        "ລາຍເດືອນ",
+        "ທັງໝົດ",
+        "ເງິນສົດ",
+        "ເງິນໂອນ",
+        "ພິມເອກະສານ",
+        "ສົ່ງອອກ"
+      ]
+    }
+  ]
+}

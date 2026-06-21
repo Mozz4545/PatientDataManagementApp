@@ -1,21 +1,23 @@
 "use client";
 
-import Link from "next/link";
 import { useMemo, useState } from "react";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import AppShell, { useCurrentUser } from "@/components/AppShell";
-import { ActionButton, formatDateTime, PageHero, SearchBox, StatusPill, patientName } from "@/components/dashboard-ui";
+import { ActionButton, DataState, formatDateTime, PageHero, Pagination, SearchBox, StatusPill, patientName } from "@/components/dashboard-ui";
 import api from "@/lib/api";
 import { escapeHtml, printDocument, printLogoHtml } from "@/lib/print";
 import { getResultImageObjectUrl } from "@/lib/result-images";
-import { displayOrderStatus, isReadyToPayStatus, statusLabel } from "@/lib/status";
+import { displayOrderStatus, isReadyToPayStatus } from "@/lib/status";
 import { showToast } from "@/lib/toast";
-import type { ApiResponse, Order, Patient, Payment, Result, Staff } from "@/lib/types";
+import type { ApiResponse, Order, Payment, Result } from "@/lib/types";
+import { useModalAccessibility } from "@/lib/useModalAccessibility";
 
 export default function ReportsPage() {
-  const queryClient = useQueryClient();
-  const [tab, setTab] = useState<"patients" | "payments" | "staff" | "results">("patients");
+  const [tab, setTab] = useState<"payments" | "results">("payments");
   const [search, setSearch] = useState("");
+  const [paymentPage, setPaymentPage] = useState(1);
+  const [resultPage, setResultPage] = useState(1);
+  const pageSize = 10;
   const [dateFrom, setDateFrom] = useState("");
   const [dateTo, setDateTo] = useState("");
   const today = new Date().toISOString().slice(0, 10);
@@ -25,27 +27,12 @@ export default function ReportsPage() {
   const [incomeMonth, setIncomeMonth] = useState(today.slice(0, 7));
   const [previewImageUrl, setPreviewImageUrl] = useState<string | null>(null);
   const [previewImageOwned, setPreviewImageOwned] = useState(false);
-  const [deleteStaffTarget, setDeleteStaffTarget] = useState<Staff | null>(null);
+  const [selectedResultDetail, setSelectedResultDetail] = useState<Result | null>(null);
+  const detailModalRef = useModalAccessibility(Boolean(selectedResultDetail), () => setSelectedResultDetail(null));
+  const imageModalRef = useModalAccessibility(Boolean(previewImageUrl), () => setPreviewImageUrl(null));
   const userQuery = useCurrentUser();
   const isAdmin = userQuery.data?.role === "ADMIN";
-  const currentStaffId = Number(userQuery.data?.staff_id || userQuery.data?.id || 0);
-
-  const deleteStaffMutation = useMutation({
-    mutationFn: async (staffId: number) => (await api.delete<ApiResponse<unknown>>(`/staff/${staffId}`)).data,
-    onSuccess: () => {
-      showToast("success", "ລົບພະນັກງານອອກຈາກລາຍຊື່ສຳເລັດ");
-      setDeleteStaffTarget(null);
-      queryClient.invalidateQueries({ queryKey: ["staff"] });
-      queryClient.invalidateQueries({ queryKey: ["staff-options"] });
-    },
-  });
-
-  const patientsQuery = useQuery({
-    queryKey: ["patients", search],
-    queryFn: async () => (await api.get<ApiResponse<Patient[]>>("/patients", { params: { q: search, limit: 1000 } })).data.data,
-    enabled: isAdmin,
-    retry: false,
-  });
+  const activeTab = isAdmin ? tab : "results";
 
   const ordersQuery = useQuery({
     queryKey: ["orders", "report"],
@@ -56,42 +43,21 @@ export default function ReportsPage() {
 
   const paymentsQuery = useQuery({
     queryKey: ["payments"],
-    queryFn: async () => (await api.get<ApiResponse<Payment[]>>("/payments")).data.data,
-    enabled: isAdmin,
-    retry: false,
-  });
-
-  const staffQuery = useQuery({
-    queryKey: ["staff"],
-    queryFn: async () => (await api.get<ApiResponse<Staff[]>>("/staff")).data.data,
+    queryFn: async () => (await api.get<ApiResponse<Payment[]>>("/reports/payments")).data.data,
     enabled: isAdmin,
     retry: false,
   });
 
   const resultsQuery = useQuery({
     queryKey: ["results", "report"],
-    queryFn: async () => (await api.get<ApiResponse<Result[]>>("/results")).data.data,
-    enabled: isAdmin,
+    queryFn: async () => (await api.get<ApiResponse<Result[]>>("/reports/results")).data.data,
+    enabled: Boolean(userQuery.data),
     retry: false,
   });
 
   const payments = useMemo(() => (paymentsQuery.data ?? []).filter((payment) => paymentStatus(payment) === "PAID"), [paymentsQuery.data]);
-  const patients = patientsQuery.data ?? [];
-  const staff = useMemo(() => staffQuery.data ?? [], [staffQuery.data]);
   const results = useMemo(() => resultsQuery.data ?? [], [resultsQuery.data]);
-  const totalIncome = payments.reduce((sum, payment) => sum + Number(payment.amount || 0), 0);
-  const paidOrders = payments.length;
   const unpaidOrders = (ordersQuery.data ?? []).filter((order) => isReadyToPayStatus(displayOrderStatus(order))).length;
-
-  const filteredStaff = useMemo(() => {
-    const text = search.trim().toLowerCase();
-    if (!text) return staff;
-    return staff.filter((item) =>
-      `${item.staff_id} ${item.staff_name} ${item.username} ${item.position || ""} ${item.department || ""} ${item.phone || ""} ${item.role}`
-        .toLowerCase()
-        .includes(text)
-    );
-  }, [staff, search]);
 
   const filteredPayments = useMemo(() => {
     const text = search.trim().toLowerCase();
@@ -126,6 +92,19 @@ export default function ReportsPage() {
   }, [results, search, dateFrom, dateTo]);
 
   const reportIncome = filteredPayments.reduce((sum, payment) => sum + Number(payment.amount || 0), 0);
+  const cashIncome = filteredPayments
+    .filter((payment) => normalizePaymentMethod(payment.payment_type) === "cash")
+    .reduce((sum, payment) => sum + Number(payment.amount || 0), 0);
+  const transferIncome = filteredPayments
+    .filter((payment) => normalizePaymentMethod(payment.payment_type) === "transfer")
+    .reduce((sum, payment) => sum + Number(payment.amount || 0), 0);
+  const resultPatientCount = new Set(filteredResults.map((result) => result.patient_id).filter(Boolean)).size;
+  const resultsWithImage = filteredResults.filter((result) => result.result_image_url).length;
+  const resultsWithoutImage = filteredResults.length - resultsWithImage;
+  const currentPaymentPage = Math.min(paymentPage, Math.max(1, Math.ceil(filteredPayments.length / pageSize)));
+  const currentResultPage = Math.min(resultPage, Math.max(1, Math.ceil(filteredResults.length / pageSize)));
+  const pagedPayments = filteredPayments.slice((currentPaymentPage - 1) * pageSize, currentPaymentPage * pageSize);
+  const pagedResults = filteredResults.slice((currentResultPage - 1) * pageSize, currentResultPage * pageSize);
   const incomeByMethod = useMemo(() => groupPaymentsByMethod(filteredPayments), [filteredPayments]);
   const groupedPayments = useMemo(
     () => groupPaymentsByPeriod(filteredPayments, incomePeriod === "month" ? "month" : "day"),
@@ -138,12 +117,21 @@ export default function ReportsPage() {
       ? `ລາຍວັນ ${incomeDate || "-"}`
       : `ລາຍເດືອນ ${incomeMonth || "-"}`;
   const incomePeriodLabel = `${baseIncomePeriodLabel} / ${incomeMethodLabel(incomeMethod)}`;
+  const resultDateRangeInvalid = Boolean(dateFrom && dateTo && dateFrom > dateTo);
 
-  const handleSearch = () => {
-    if (tab === "patients") patientsQuery.refetch();
-    if (tab === "payments") paymentsQuery.refetch();
-    if (tab === "staff") staffQuery.refetch();
-    if (tab === "results") resultsQuery.refetch();
+  const handleRefresh = () => {
+    if (activeTab === "payments") paymentsQuery.refetch();
+    if (activeTab === "results") resultsQuery.refetch();
+  };
+
+  const clearFilters = () => {
+    setSearch("");
+    setDateFrom("");
+    setDateTo("");
+    setIncomePeriod("all");
+    setIncomeMethod("all");
+    setIncomeDate(today);
+    setIncomeMonth(today.slice(0, 7));
   };
 
   const openResultImage = async (result: Result) => {
@@ -165,58 +153,9 @@ export default function ReportsPage() {
   };
 
   const handlePrint = () => {
-    const period = tab === "payments" ? incomePeriodLabel : formatPeriod(dateFrom, dateTo);
+    const period = activeTab === "payments" ? incomePeriodLabel : formatPeriod(dateFrom, dateTo);
 
-    if (tab === "patients") {
-      printTableReport({
-        title: "ລາຍງານຂໍ້ມູນຄົນເຈັບ",
-        period,
-        summary: [
-          ["ຈຳນວນຄົນເຈັບ", patients.length.toLocaleString("lo-LA")],
-          ["ຄຳສັ່ງກວດທັງໝົດ", (ordersQuery.data ?? []).length.toLocaleString("lo-LA")],
-          ["ລາຍຮັບລວມ", `${totalIncome.toLocaleString("lo-LA")} ກີບ`],
-          ["ຜູ້ອອກລາຍງານ", userQuery.data?.staff_name || userQuery.data?.name || "-"],
-        ],
-        columns: ["ລະຫັດຄົນເຈັບ", "ຊື່", "ນາມສະກຸນ", "ອາຍຸ", "ເພດ", "ວັນເກີດ", "ເບີໂທ", "ເບີສຸກເສີນ", "ທີ່ຢູ່", "ວັນທີລົງທະບຽນ"],
-        rows: patients.map((patient) => [
-          `HN-${String(patient.patient_id).padStart(6, "0")}`,
-          patient.first_name || "-",
-          patient.last_name || "-",
-          patient.age ?? "-",
-          patient.gender === "F" ? "ຍິງ" : patient.gender === "M" ? "ຊາຍ" : "ອື່ນໆ",
-          patient.date_of_birth || "-",
-          patient.phone || "-",
-          patient.emergency_phone || "-",
-          patient.address || "-",
-          patient.created_at ? formatDateTime(patient.created_at) : "-",
-        ]),
-      });
-    }
-
-    if (tab === "staff") {
-      printTableReport({
-        title: "ລາຍງານຂໍ້ມູນພະນັກງານ",
-        period,
-        summary: [
-          ["ຈຳນວນພະນັກງານ", filteredStaff.length.toLocaleString("lo-LA")],
-          ["ຜູ້ດູແລ", filteredStaff.filter((item) => item.role === "ADMIN").length.toLocaleString("lo-LA")],
-          ["ພະນັກງານ", filteredStaff.filter((item) => item.role !== "ADMIN").length.toLocaleString("lo-LA")],
-          ["ຜູ້ອອກລາຍງານ", userQuery.data?.staff_name || userQuery.data?.name || "-"],
-        ],
-        columns: ["ລະຫັດ", "ຊື່ພະນັກງານ", "ຊື່ເຂົ້າລະບົບ", "ຕຳແໜ່ງ", "ພະແນກ", "ເບີໂທ", "ສິດນຳໃຊ້"],
-        rows: filteredStaff.map((item) => [
-          `STF-${String(item.staff_id).padStart(4, "0")}`,
-          item.staff_name,
-          item.username,
-          item.position || "-",
-          item.department || "-",
-          item.phone || "-",
-          statusLabel(item.role),
-        ]),
-      });
-    }
-
-    if (tab === "payments") {
+    if (activeTab === "payments") {
       printTableReport({
         title: "ລາຍງານການຊຳລະເງິນ",
         period,
@@ -240,7 +179,7 @@ export default function ReportsPage() {
       });
     }
 
-    if (tab === "results") {
+    if (activeTab === "results") {
       printTableReport({
         title: "ລາຍງານຜົນກວດ",
         period,
@@ -267,38 +206,7 @@ export default function ReportsPage() {
   };
 
   const handleExport = () => {
-    if (tab === "patients") {
-      downloadCsv("patients-report.csv", [
-        ["ID", "ຊື່", "ນາມສະກຸນ", "ອາຍຸ", "ເພດ", "ວັນເກີດ", "ເບີໂທ", "ເບີສຸກເສີນ", "ທີ່ຢູ່", "ວັນທີລົງທະບຽນ"],
-        ...patients.map((patient) => [
-          patient.patient_id,
-          patient.first_name,
-          patient.last_name,
-          patient.age ?? "",
-          patient.gender || "",
-          patient.date_of_birth || "",
-          patient.phone || "",
-          patient.emergency_phone || "",
-          patient.address || "",
-          patient.created_at || "",
-        ]),
-      ]);
-    }
-    if (tab === "staff") {
-      downloadCsv("staff-report.csv", [
-        ["ລະຫັດ", "ຊື່ພະນັກງານ", "ຊື່ເຂົ້າລະບົບ", "ຕຳແໜ່ງ", "ພະແນກ", "ເບີໂທ", "ສິດນຳໃຊ້"],
-        ...filteredStaff.map((staffItem) => [
-          staffItem.staff_id,
-          staffItem.staff_name,
-          staffItem.username,
-          staffItem.position || "",
-          staffItem.department || "",
-          staffItem.phone || "",
-          statusLabel(staffItem.role),
-        ]),
-      ]);
-    }
-    if (tab === "payments") {
+    if (activeTab === "payments") {
       downloadCsv("payments-report.csv", [
         ["ເລກໃບຮັບເງິນ", "Order ID", "ວັນທີຈ່າຍ", "ຄົນເຈັບ", "ປະເພດການກວດ", "ຈຳນວນເງິນ", "ຊ່ອງທາງ", "ຜູ້ຮັບເງິນ"],
         ...filteredPayments.map((payment) => [
@@ -313,7 +221,7 @@ export default function ReportsPage() {
         ]),
       ]);
     }
-    if (tab === "results") {
+    if (activeTab === "results") {
       downloadCsv("results-report.csv", [
         ["Result ID", "Order ID", "Patient ID", "ຄົນເຈັບ", "ປະເພດການກວດ", "ວັນທີບັນທຶກ", "ຜູ້ບັນທຶກ", "ລາຍລະອຽດ", "ຮູບ"],
         ...filteredResults.map((result) => [
@@ -339,61 +247,67 @@ export default function ReportsPage() {
     );
   }
 
-  if (!isAdmin) {
-    return (
-      <AppShell>
-        <PageHero title="ລາຍງານ" subtitle="ສະເພາະຜູ້ດູແລລະບົບເທົ່ານັ້ນ">
-          <ActionButton href="/dashboard">ກັບຄືນ</ActionButton>
-        </PageHero>
-        <div className="px-4 py-5 sm:px-6 lg:px-10">
-          <div className="rounded-xl border border-red-200 bg-red-50 p-4 font-semibold text-red-700">
-            ທ່ານບໍ່ມີສິດເບິ່ງລາຍງານ ຫຼື ຈັດການຂໍ້ມູນພະນັກງານ
-          </div>
-        </div>
-      </AppShell>
-    );
-  }
-
   return (
     <AppShell>
-      <PageHero title="ລາຍງານ" subtitle="ລາຍລະອຽດການບັນທຶກຂໍ້ມູນ">
-        <SearchBox value={search} onChange={setSearch} placeholder="ຄົ້ນຫາລາຍລະອຽດ" />
-        <ActionButton tone="violet" onClick={handleSearch}>
-          ຄົ້ນຫາ
+      <PageHero title="ລາຍງານ" subtitle={isAdmin ? "ລາຍງານການຊຳລະ ແລະ ຜົນກວດ" : "ລາຍງານຜົນກວດ"}>
+        <SearchBox value={search} onChange={(value) => { setSearch(value); setPaymentPage(1); setResultPage(1); }} placeholder="ຄົ້ນຫາລາຍລະອຽດ" />
+        <ActionButton tone="violet" onClick={handleRefresh}>
+          ໂຫຼດໃໝ່
         </ActionButton>
-        {isAdmin && tab === "staff" && (
-          <ActionButton href="/reports/staff/new" tone="green">
-            ເພີ່ມພະນັກງານ
-          </ActionButton>
-        )}
-        <ActionButton href="/dashboard">ກັບຄືນ</ActionButton>
+        <ActionButton onClick={clearFilters}>ລ້າງຕົວກອງ</ActionButton>
       </PageHero>
 
       <div className="px-4 py-4 sm:px-6 md:px-8 lg:px-10">
-        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-6">
-          <Summary label="ຄົນເຈັບທັງໝົດ" value={patients.length.toLocaleString("lo-LA")} color="#123879" />
-          <Summary label="ພະນັກງານທັງໝົດ" value={staff.length.toLocaleString("lo-LA")} color="#18bdce" />
-          <Summary
-            label={
-              tab === "payments"
-                ? incomePeriod === "all"
-                  ? "ລາຍຮັບທັງໝົດ"
-                  : incomePeriod === "day"
-                    ? "ລາຍຮັບລາຍວັນ"
-                    : "ລາຍຮັບລາຍເດືອນ"
-                : "ລາຍຮັບລວມ"
-            }
-            value={(tab === "payments" ? reportIncome : totalIncome).toLocaleString("lo-LA")}
-            color="#00c800"
-          />
-          <Summary label="ຄຳສັ່ງກວດທັງໝົດ" value={String((ordersQuery.data ?? []).length).padStart(3, "0")} color="#a47b00" suffix="ຄຳສັ່ງ" />
-          <Summary label="ຄຳສັ່ງຍັງບໍ່ສຳເລັດ" value={unpaidOrders} color="#ff0000" suffix="ຄຳສັ່ງ" />
-          <Summary label="ການຊຳລະເງິນ" value={String(paidOrders).padStart(3, "0")} color="#000" suffix="ລາຍການ" />
+        <div className="mb-4 flex items-end gap-2 overflow-x-auto border-b border-[#d9d9d9] sm:gap-3">
+          {isAdmin && (
+            <button
+              type="button"
+              onClick={() => setTab("payments")}
+              className={`shrink-0 rounded-t-xl border border-b-0 px-4 py-2.5 text-base font-bold sm:px-5 ${
+                activeTab === "payments" ? "bg-[#123879] text-white" : "bg-white text-[#120d34]"
+              }`}
+            >
+              ລາຍງານການຊຳລະ
+            </button>
+          )}
+          <button
+            type="button"
+            onClick={() => setTab("results")}
+            className={`shrink-0 rounded-t-xl border border-b-0 px-4 py-2.5 text-base font-bold sm:px-5 ${
+              activeTab === "results" ? "bg-[#123879] text-white" : "bg-white text-[#120d34]"
+            }`}
+          >
+            ລາຍງານຜົນກວດ
+          </button>
+        </div>
+
+        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
+          {activeTab === "payments" ? (
+            <>
+              <Summary
+                label={incomePeriod === "all" ? "ລາຍຮັບທັງໝົດ" : incomePeriod === "day" ? "ລາຍຮັບລາຍວັນ" : "ລາຍຮັບລາຍເດືອນ"}
+                value={reportIncome.toLocaleString("lo-LA")}
+                color="#00a83e"
+                suffix="ກີບ"
+              />
+              <Summary label="ຈຳນວນລາຍການ" value={filteredPayments.length} color="#123879" suffix="ລາຍການ" />
+              <Summary label="ເງິນສົດ" value={cashIncome.toLocaleString("lo-LA")} color="#8c4dff" suffix="ກີບ" />
+              <Summary label="ເງິນໂອນ" value={transferIncome.toLocaleString("lo-LA")} color="#168bd2" suffix="ກີບ" />
+              <Summary label="ຄ້າງຊຳລະ" value={unpaidOrders} color="#e44343" suffix="ຄຳສັ່ງ" />
+            </>
+          ) : (
+            <>
+              <Summary label="ຜົນກວດທັງໝົດ" value={filteredResults.length} color="#123879" suffix="ລາຍການ" />
+              <Summary label="ຄົນເຈັບ" value={resultPatientCount} color="#8c4dff" suffix="ຄົນ" />
+              <Summary label="ມີຮູບຜົນກວດ" value={resultsWithImage} color="#00a83e" suffix="ລາຍການ" />
+              <Summary label="ບໍ່ມີຮູບ" value={resultsWithoutImage} color="#e28400" suffix="ລາຍການ" />
+            </>
+          )}
         </div>
 
         <section className="mt-5 rounded-2xl border border-[#d9d9d9] bg-white p-4 shadow-sm sm:p-5">
           <div className="mb-3 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-            {tab === "payments" ? (
+            {activeTab === "payments" ? (
               <div className="flex flex-col gap-2 lg:flex-row lg:items-end">
                 <div className="flex rounded-lg border border-[#d9d9d9] bg-[#f7f8fb] p-1 shadow-sm">
                   <button
@@ -460,89 +374,145 @@ export default function ReportsPage() {
                 </div>
               </div>
             ) : (
-              <div className="flex flex-col gap-2 sm:flex-row">
-                <label className="text-xs font-bold text-[#767285]">
-                  ຈາກວັນທີ
-                  <input
-                    type="date"
-                    value={dateFrom}
-                    onChange={(event) => setDateFrom(event.target.value)}
-                    className="mt-1 h-10 rounded-lg border border-[#d9d9d9] px-3 text-sm text-[#120d34] shadow-sm"
-                  />
-                </label>
-                <label className="text-xs font-bold text-[#767285]">
-                  ຫາວັນທີ
-                  <input
-                    type="date"
-                    value={dateTo}
-                    onChange={(event) => setDateTo(event.target.value)}
-                    className="mt-1 h-10 rounded-lg border border-[#d9d9d9] px-3 text-sm text-[#120d34] shadow-sm"
-                  />
-                </label>
+              <div>
+                <div className="flex flex-col gap-2 sm:flex-row">
+                  <label className="text-xs font-bold text-[#767285]">
+                    ຈາກວັນທີ
+                    <input
+                      type="date"
+                      value={dateFrom}
+                      onChange={(event) => setDateFrom(event.target.value)}
+                      className={`mt-1 h-10 rounded-lg border px-3 text-sm text-[#120d34] shadow-sm ${
+                        resultDateRangeInvalid ? "border-red-500 bg-red-50" : "border-[#d9d9d9]"
+                      }`}
+                    />
+                  </label>
+                  <label className="text-xs font-bold text-[#767285]">
+                    ຫາວັນທີ
+                    <input
+                      type="date"
+                      value={dateTo}
+                      onChange={(event) => setDateTo(event.target.value)}
+                      className={`mt-1 h-10 rounded-lg border px-3 text-sm text-[#120d34] shadow-sm ${
+                        resultDateRangeInvalid ? "border-red-500 bg-red-50" : "border-[#d9d9d9]"
+                      }`}
+                    />
+                  </label>
+                </div>
+                {resultDateRangeInvalid && (
+                  <p className="mt-2 text-sm font-bold text-red-600">
+                    ວັນທີເລີ່ມຕ້ອງບໍ່ຫຼາຍກວ່າວັນທີສິ້ນສຸດ
+                  </p>
+                )}
               </div>
             )}
             <div className="flex gap-3">
-            <ActionButton tone="blue" onClick={handlePrint}>ພິມເອກະສານ</ActionButton>
-            <ActionButton tone="orange" onClick={handleExport}>ສົ່ງອອກ</ActionButton>
+              <ActionButton
+                tone="blue"
+                onClick={handlePrint}
+                disabled={activeTab === "results" && resultDateRangeInvalid}
+              >
+                ພິມເອກະສານ
+              </ActionButton>
+              <ActionButton
+                tone="orange"
+                onClick={handleExport}
+                disabled={activeTab === "results" && resultDateRangeInvalid}
+              >
+                ສົ່ງອອກ
+              </ActionButton>
             </div>
           </div>
 
-          <div className="flex items-end gap-2 overflow-x-auto sm:gap-5">
-            <button
-              type="button"
-              onClick={() => setTab("patients")}
-              className={`shrink-0 rounded-t-xl border px-4 py-2 text-base font-bold sm:px-5 ${tab === "patients" ? "bg-[#dedede]" : "bg-white"}`}
-            >
-              ຂໍ້ມູນຄົນເຈັບ
-            </button>
-            <button
-              type="button"
-              onClick={() => setTab("staff")}
-              className={`shrink-0 rounded-t-xl border px-4 py-2 text-base font-bold sm:px-5 ${tab === "staff" ? "bg-[#dedede]" : "bg-white"}`}
-            >
-              ຂໍ້ມູນພະນັກງານ
-            </button>
-            <button
-              type="button"
-              onClick={() => setTab("payments")}
-              className={`shrink-0 rounded-t-xl border px-4 py-2 text-base font-bold sm:px-5 ${tab === "payments" ? "bg-[#dedede]" : "bg-white"}`}
-            >
-              ລາຍງານການຊຳລະ
-            </button>
-            <button
-              type="button"
-              onClick={() => setTab("results")}
-              className={`shrink-0 rounded-t-xl border px-4 py-2 text-base font-bold sm:px-5 ${tab === "results" ? "bg-[#dedede]" : "bg-white"}`}
-            >
-              ລາຍງານຜົນກວດ
-            </button>
-          </div>
-
           <div className="overflow-x-auto rounded-xl border border-[#d9d9d9] bg-white p-0 shadow-sm">
-            {tab === "patients" && <PatientsReport patients={patients} />}
-            {tab === "staff" && (
-              <StaffReport
-                staff={filteredStaff}
-                canEdit={isAdmin}
-                currentStaffId={currentStaffId}
-                onDelete={setDeleteStaffTarget}
-              />
-            )}
-            {tab === "payments" && (
+            {activeTab === "payments" && paymentsQuery.isLoading ? (
+              <div className="p-4"><DataState type="loading" /></div>
+            ) : activeTab === "payments" && paymentsQuery.isError ? (
+              <div className="p-4"><DataState type="error" message="ບໍ່ສາມາດໂຫຼດລາຍງານການຊຳລະໄດ້" onRetry={() => paymentsQuery.refetch()} /></div>
+            ) : activeTab === "results" && resultsQuery.isLoading ? (
+              <div className="p-4"><DataState type="loading" /></div>
+            ) : activeTab === "results" && resultsQuery.isError ? (
+              <div className="p-4"><DataState type="error" message="ບໍ່ສາມາດໂຫຼດລາຍງານຜົນກວດໄດ້" onRetry={() => resultsQuery.refetch()} /></div>
+            ) : activeTab === "payments" ? (
               <PaymentsReport
-                payments={filteredPayments}
+                payments={pagedPayments}
                 groupedPayments={groupedPayments}
                 incomeByMethod={incomeByMethod}
                 groupMode={incomePeriod === "month" ? "month" : "day"}
               />
+            ) : (
+              <ResultsReport
+                results={pagedResults}
+                onViewDetail={setSelectedResultDetail}
+                onViewImage={openResultImage}
+              />
             )}
-            {tab === "results" && <ResultsReport results={filteredResults} onViewImage={openResultImage} />}
+            {activeTab === "payments" ? (
+              <Pagination page={currentPaymentPage} totalItems={filteredPayments.length} pageSize={pageSize} onPageChange={setPaymentPage} />
+            ) : (
+              <Pagination page={currentResultPage} totalItems={filteredResults.length} pageSize={pageSize} onPageChange={setResultPage} />
+            )}
           </div>
         </section>
       </div>
 
+      {selectedResultDetail && (
+        <div className="fixed inset-0 z-[55] flex items-center justify-center bg-black/45 p-4">
+          <div ref={detailModalRef} role="dialog" aria-modal="true" className="max-h-[90vh] w-full max-w-[760px] overflow-y-auto rounded-2xl bg-white shadow-xl">
+            <div className="flex items-start justify-between gap-4 border-b border-[#d9d9d9] px-5 py-4">
+              <div>
+                <h3 className="text-xl font-bold text-[#123879]">ລາຍລະອຽດຜົນກວດ</h3>
+                <p className="mt-1 text-sm font-semibold text-[#767285]">
+                  {selectedResultDetail.report_no || `R${String(selectedResultDetail.result_id).padStart(5, "0")}`}
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setSelectedResultDetail(null)}
+                className="shrink-0 rounded-lg bg-[#f4e3b0] px-4 py-2 text-sm font-bold text-black shadow-sm"
+              >
+                ປິດ
+              </button>
+            </div>
+
+            <div className="p-5">
+              <div className="grid gap-3 sm:grid-cols-2">
+                <ResultDetailItem label="ເລກຜົນກວດ" value={selectedResultDetail.report_no || `R${String(selectedResultDetail.result_id).padStart(5, "0")}`} />
+                <ResultDetailItem label="ໃບສັ່ງກວດ" value={`#${String(selectedResultDetail.order_id).padStart(4, "0")}`} />
+                <ResultDetailItem
+                  label="ລະຫັດຄົນເຈັບ"
+                  value={selectedResultDetail.patient_id ? `HN-${String(selectedResultDetail.patient_id).padStart(6, "0")}` : "-"}
+                />
+                <ResultDetailItem label="ຊື່ຄົນເຈັບ" value={patientName(selectedResultDetail)} />
+                <ResultDetailItem label="ປະເພດການກວດ" value={selectedResultDetail.exam_name || "-"} />
+                <ResultDetailItem label="ວັນທີບັນທຶກ" value={formatDateTime(selectedResultDetail.result_date)} />
+                <ResultDetailItem label="ຜູ້ບັນທຶກ" value={selectedResultDetail.staff_name || "-"} />
+                <ResultDetailItem label="ເບີໂທຄົນເຈັບ" value={selectedResultDetail.patient_phone || "-"} />
+              </div>
+
+              <div className="mt-4">
+                <div className="text-xs font-bold text-[#767285]">ລາຍລະອຽດຜົນກວດ</div>
+                <div className="mt-2 whitespace-pre-wrap rounded-xl bg-[#f7f8fb] p-4 text-sm font-semibold leading-7 text-[#120d34]">
+                  {selectedResultDetail.result_detail || "-"}
+                </div>
+              </div>
+
+              {selectedResultDetail.result_image_url && (
+                <button
+                  type="button"
+                  onClick={() => openResultImage(selectedResultDetail)}
+                  className="mt-4 inline-flex min-h-10 w-full items-center justify-center rounded-lg bg-[#addbf4] px-5 text-sm font-bold text-[#123879] shadow-sm sm:w-auto"
+                >
+                  ເບິ່ງຮູບຜົນກວດ
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
       {previewImageUrl && (
-        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/80 p-4">
+        <div ref={imageModalRef} role="dialog" aria-modal="true" className="fixed inset-0 z-[60] flex items-center justify-center bg-black/80 p-4">
           <button
             type="button"
             onClick={closePreviewImage}
@@ -559,38 +529,6 @@ export default function ReportsPage() {
         </div>
       )}
 
-      {deleteStaffTarget && (
-        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/45 p-4">
-          <div className="w-full max-w-[520px] rounded-2xl bg-white p-6 shadow-xl">
-            <h3 className="text-2xl font-bold text-[#120d34]">ຢືນຢັນການລົບອອກຈາກລາຍຊື່</h3>
-            <div className="mt-4 rounded-xl bg-[#f7f8fb] p-4 text-sm font-bold leading-7 text-[#120d34]">
-              <div>ລະຫັດ: {String(deleteStaffTarget.staff_id).padStart(2, "0")}</div>
-              <div>ຊື່: {deleteStaffTarget.staff_name}</div>
-              <div>ຊື່ເຂົ້າລະບົບ: {deleteStaffTarget.username}</div>
-            </div>
-            <p className="mt-4 text-sm font-semibold leading-7 text-[#767285]">
-              ລະບົບຈະຊ່ອນພະນັກງານຄົນນີ້ອອກຈາກລາຍງານພະນັກງານ ແລະ ລາຍຊື່ໃຫ້ເລືອກ, ແຕ່ປະຫວັດໃບສັ່ງກວດ ການຊຳລະເງິນ ແລະ ຜົນກວດຈະຍັງຢູ່ຄືເກົ່າ.
-            </p>
-            <div className="mt-6 flex flex-wrap justify-end gap-3">
-              <button
-                type="button"
-                onClick={() => setDeleteStaffTarget(null)}
-                className="rounded-xl bg-[#f5dc97] px-6 py-3 text-sm font-bold text-black shadow-sm"
-              >
-                ຍົກເລີກ
-              </button>
-              <button
-                type="button"
-                onClick={() => deleteStaffMutation.mutate(deleteStaffTarget.staff_id)}
-                disabled={deleteStaffMutation.isPending}
-                className="rounded-xl bg-[#ef4444] px-6 py-3 text-sm font-bold text-white shadow-sm hover:bg-[#dc2626] disabled:cursor-not-allowed disabled:opacity-60"
-              >
-                {deleteStaffMutation.isPending ? "ກຳລັງລົບ..." : "ລົບ"}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </AppShell>
   );
 }
@@ -740,129 +678,6 @@ function Summary({ label, value, color, suffix }: { label: string; value: string
   );
 }
 
-function PatientsReport({ patients }: { patients: Patient[] }) {
-  return (
-    <table className="w-full min-w-[1100px] border-collapse text-left">
-      <thead className="bg-[#f2f2f2] text-xs font-bold">
-        <tr>
-          <th className="px-5 py-3">ລະຫັດ</th>
-          <th className="px-5 py-3">ຊື່</th>
-          <th className="px-5 py-3">ນາມສະກຸນ</th>
-          <th className="px-5 py-3">ອາຍຸ</th>
-          <th className="px-5 py-3">ເພດ</th>
-          <th className="px-5 py-3">ວັນເກີດ</th>
-          <th className="px-5 py-3">ເບີໂທ</th>
-          <th className="px-5 py-3">ເບີສຸກເສີນ</th>
-          <th className="px-5 py-3">ທີ່ຢູ່</th>
-          <th className="px-5 py-3">ວັນທີລົງທະບຽນ</th>
-        </tr>
-      </thead>
-      <tbody className="text-xs text-[#767285]">
-        {patients.length === 0 ? (
-          <tr>
-            <td className="px-5 py-6 text-center" colSpan={10}>
-              ບໍ່ມີຂໍ້ມູນ
-            </td>
-          </tr>
-        ) : (
-          patients.map((patient) => (
-            <tr key={patient.patient_id} className="border-t border-[#d7d7d7]">
-              <td className="px-5 py-3">HN-{String(patient.patient_id).padStart(6, "0")}</td>
-              <td className="px-5 py-3">{patient.first_name || "-"}</td>
-              <td className="px-5 py-3">{patient.last_name || "-"}</td>
-              <td className="px-5 py-3">{patient.age ?? "-"}</td>
-              <td className="px-5 py-3">{patient.gender === "F" ? "ຍິງ" : patient.gender === "M" ? "ຊາຍ" : "ອື່ນໆ"}</td>
-              <td className="px-5 py-3">{patient.date_of_birth || "-"}</td>
-              <td className="px-5 py-3">{patient.phone || "-"}</td>
-              <td className="px-5 py-3">{patient.emergency_phone || "-"}</td>
-              <td className="max-w-[240px] px-5 py-3">{patient.address || "-"}</td>
-              <td className="px-5 py-3">{patient.created_at ? formatDateTime(patient.created_at) : "-"}</td>
-            </tr>
-          ))
-        )}
-      </tbody>
-    </table>
-  );
-}
-
-function StaffReport({
-  staff,
-  canEdit,
-  currentStaffId,
-  onDelete,
-}: {
-  staff: Staff[];
-  canEdit: boolean;
-  currentStaffId: number;
-  onDelete: (staff: Staff) => void;
-}) {
-  return (
-    <table className="w-full min-w-[900px] border-collapse text-left">
-      <thead className="bg-[#f2f2f2] text-xs font-bold">
-        <tr>
-          <th className="px-5 py-3">ລະຫັດ</th>
-          <th className="px-5 py-3">ຊື່</th>
-          <th className="px-5 py-3">ຊື່ເຂົ້າລະບົບ</th>
-          <th className="px-5 py-3">ຕຳແໜ່ງ</th>
-          <th className="px-5 py-3">ພະແນກ</th>
-          <th className="px-5 py-3">ເບີໂທ</th>
-          <th className="px-5 py-3">ສິດນຳໃຊ້</th>
-          <th className="px-5 py-3">ຈັດການ</th>
-        </tr>
-      </thead>
-      <tbody className="text-xs text-[#767285]">
-        {staff.length === 0 ? (
-          <tr>
-            <td className="px-5 py-6 text-center" colSpan={8}>
-              ບໍ່ມີຂໍ້ມູນພະນັກງານ
-            </td>
-          </tr>
-        ) : (
-          staff.map((item) => (
-            <tr key={item.staff_id} className="border-t border-[#d7d7d7]">
-              <td className="px-5 py-3">{String(item.staff_id).padStart(2, "0")}</td>
-              <td className="px-5 py-3">{item.staff_name}</td>
-              <td className="px-5 py-3">{item.username}</td>
-              <td className="px-5 py-3">{item.position || "-"}</td>
-              <td className="px-5 py-3">{item.department || "-"}</td>
-              <td className="px-5 py-3">{item.phone || "-"}</td>
-              <td className="px-5 py-3">
-                <StatusPill status={item.role} />
-              </td>
-              <td className="px-5 py-3">
-                {canEdit ? (
-                  <div className="flex flex-wrap gap-2">
-                    <Link
-                      href={`/reports/staff/${item.staff_id}/edit`}
-                      className="inline-flex min-w-[72px] justify-center rounded-full bg-[#bafbd2] px-3 py-1 text-[11px] font-bold text-[#137547]"
-                    >
-                      ແກ້ໄຂ
-                    </Link>
-                    <button
-                      type="button"
-                      onClick={() => onDelete(item)}
-                      disabled={item.staff_id === currentStaffId}
-                      className={`inline-flex min-w-[72px] justify-center rounded-full px-3 py-1 text-[11px] font-bold shadow-sm ${
-                        item.staff_id === currentStaffId
-                          ? "cursor-not-allowed bg-[#eeeeee] text-[#9d98aa]"
-                          : "bg-[#ef4444] text-white hover:bg-[#dc2626]"
-                      }`}
-                    >
-                      ລົບ
-                    </button>
-                  </div>
-                ) : (
-                  <span className="text-[#9d98aa]">ສະເພາະຜູ້ດູແລ</span>
-                )}
-              </td>
-            </tr>
-          ))
-        )}
-      </tbody>
-    </table>
-  );
-}
-
 function PaymentsReport({
   payments,
   groupedPayments,
@@ -897,6 +712,17 @@ function PaymentsReport({
         <h3 className="mb-3 text-lg font-bold text-[#120d34]">
           {groupMode === "month" ? "ລາຍງານລາຍເດືອນແບບຈັດກຸ່ມ" : "ລາຍງານລາຍວັນແບບຈັດກຸ່ມ"}
         </h3>
+        <div className="space-y-3 md:hidden">
+          {groupedPayments.length === 0 ? <div className="rounded-xl bg-[#f7f8fb] p-4 text-center font-bold text-[#767285]">ຍັງບໍ່ມີລາຍການຊຳລະ</div> : groupedPayments.map((group) => (
+            <article key={group.period} className="rounded-xl border border-[#d9d9d9] p-4 shadow-sm">
+              <div className="font-bold text-[#123879]">{group.period}</div>
+              <div className="mt-2 text-2xl font-bold text-[#137547]">{group.total.toLocaleString("lo-LA")} ກີບ</div>
+              <div className="mt-1 text-xs font-semibold text-[#767285]">{group.count.toLocaleString("lo-LA")} ລາຍການ</div>
+              <div className="mt-3 text-xs font-semibold">{group.methods.map((item) => `${item.payment_type}: ${item.total.toLocaleString("lo-LA")} ກີບ`).join(" / ")}</div>
+            </article>
+          ))}
+        </div>
+        <div className="hidden overflow-x-auto md:block">
         <table className="w-full min-w-[760px] border-collapse text-left">
           <thead className="bg-[#f2f2f2] text-xs font-bold">
             <tr>
@@ -925,10 +751,21 @@ function PaymentsReport({
             )}
           </tbody>
         </table>
+        </div>
       </section>
 
       <section>
         <h3 className="mb-3 text-lg font-bold text-[#120d34]">ລາຍການຊຳລະລະອຽດ</h3>
+        <div className="space-y-3 md:hidden">
+          {payments.length === 0 ? <div className="rounded-xl bg-[#f7f8fb] p-4 text-center font-bold text-[#767285]">ຍັງບໍ່ມີລາຍການຊຳລະ</div> : payments.map((payment) => (
+            <article key={payment.payment_id} className="rounded-xl border border-[#d9d9d9] p-4 shadow-sm">
+              <div className="flex justify-between gap-3"><div><div className="text-xs font-bold text-[#1e66ff]">{receiptNumber(payment)}</div><div className="mt-1 font-bold">{patientName(payment)}</div></div><StatusPill status="ຈ່າຍແລ້ວ" /></div>
+              <div className="mt-3 space-y-1 text-xs font-semibold text-[#767285]"><div>{payment.exam_name || "-"}</div><div>{formatDateTime(payment.payment_date)}</div><div>{payment.payment_type || "-"} · {payment.staff_name || "-"}</div></div>
+              <div className="mt-3 text-xl font-bold text-[#137547]">{Number(payment.amount || 0).toLocaleString("lo-LA")} ກີບ</div>
+            </article>
+          ))}
+        </div>
+        <div className="hidden overflow-x-auto md:block">
         <table className="w-full min-w-[1040px] border-collapse text-left">
           <thead className="bg-[#f2f2f2] text-xs font-bold">
             <tr>
@@ -969,14 +806,38 @@ function PaymentsReport({
             )}
           </tbody>
         </table>
+        </div>
       </section>
     </div>
   );
 }
 
-function ResultsReport({ results, onViewImage }: { results: Result[]; onViewImage: (result: Result) => void }) {
+function ResultsReport({
+  results,
+  onViewDetail,
+  onViewImage,
+}: {
+  results: Result[];
+  onViewDetail: (result: Result) => void;
+  onViewImage: (result: Result) => void;
+}) {
   return (
-    <table className="w-full min-w-[1100px] border-collapse text-left">
+    <>
+    <div className="space-y-3 p-3 md:hidden">
+      {results.length === 0 ? <div className="rounded-xl bg-[#f7f8fb] p-4 text-center font-bold text-[#767285]">ບໍ່ມີຜົນກວດ</div> : results.map((result) => (
+        <article key={result.result_id} className="rounded-xl border border-[#d9d9d9] p-4 shadow-sm">
+          <div className="text-xs font-bold text-[#1e66ff]">R{String(result.result_id).padStart(5, "0")} · HN-{String(result.patient_id || 0).padStart(6, "0")}</div>
+          <h4 className="mt-1 font-bold">{patientName(result)}</h4>
+          <div className="mt-3 space-y-1 text-xs font-semibold text-[#767285]"><div>{result.exam_name || "-"}</div><div>{formatDateTime(result.result_date)}</div><div>ຜູ້ບັນທຶກ: {result.staff_name || "-"}</div><div className="line-clamp-2 text-[#120d34]">{result.result_detail || "-"}</div></div>
+          <div className="mt-4 flex flex-wrap gap-2">
+            {result.result_image_url && <button type="button" onClick={() => onViewImage(result)} className="rounded-lg bg-[#addbf4] px-3 py-2 text-xs font-bold text-[#123879]">ເບິ່ງຮູບ</button>}
+            <button type="button" onClick={() => onViewDetail(result)} className="rounded-lg bg-[#bafbd2] px-3 py-2 text-xs font-bold text-[#137547]">ເບິ່ງລາຍລະອຽດ</button>
+          </div>
+        </article>
+      ))}
+    </div>
+    <div className="hidden overflow-x-auto md:block">
+    <table className="w-full min-w-[1220px] border-collapse text-left">
       <thead className="bg-[#f2f2f2] text-xs font-bold">
         <tr>
           <th className="px-5 py-3">ເລກຜົນກວດ</th>
@@ -988,12 +849,13 @@ function ResultsReport({ results, onViewImage }: { results: Result[]; onViewImag
           <th className="px-5 py-3">ຜູ້ບັນທຶກ</th>
           <th className="px-5 py-3">ລາຍລະອຽດ</th>
           <th className="px-5 py-3">ຮູບ</th>
+          <th className="px-5 py-3">ຈັດການ</th>
         </tr>
       </thead>
       <tbody className="text-xs text-[#767285]">
         {results.length === 0 ? (
           <tr>
-            <td className="px-5 py-6 text-center" colSpan={9}>
+            <td className="px-5 py-6 text-center" colSpan={10}>
               ບໍ່ມີຜົນກວດ
             </td>
           </tr>
@@ -1021,11 +883,31 @@ function ResultsReport({ results, onViewImage }: { results: Result[]; onViewImag
                   "-"
                 )}
               </td>
+              <td className="px-5 py-3">
+                <button
+                  type="button"
+                  onClick={() => onViewDetail(result)}
+                  className="whitespace-nowrap rounded-full bg-[#bafbd2] px-4 py-1 text-[11px] font-bold text-[#137547] shadow-sm"
+                >
+                  ເບິ່ງລາຍລະອຽດ
+                </button>
+              </td>
             </tr>
           ))
         )}
       </tbody>
     </table>
+    </div>
+    </>
+  );
+}
+
+function ResultDetailItem({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-xl border border-[#d9d9d9] bg-white p-3">
+      <div className="text-xs font-bold text-[#767285]">{label}</div>
+      <div className="mt-1 break-words text-sm font-bold text-[#120d34]">{value}</div>
+    </div>
   );
 }
 

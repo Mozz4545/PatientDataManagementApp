@@ -5,10 +5,11 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useForm, type FieldPath } from "react-hook-form";
 import { z } from "zod";
 import AppShell, { useCurrentUser } from "@/components/AppShell";
-import { ActionButton, PageHero, Panel } from "@/components/dashboard-ui";
+import { DataState, PageHero, Panel } from "@/components/dashboard-ui";
 import api from "@/lib/api";
 import { showToast } from "@/lib/toast";
 import type { ApiResponse, ExamType } from "@/lib/types";
+import { useModalAccessibility } from "@/lib/useModalAccessibility";
 
 const examTypeSchema = z.object({
   exam_name: z.string().min(1, "ກະລຸນາປ້ອນຊື່ປະເພດການກວດ"),
@@ -24,6 +25,7 @@ export default function ExamTypesPage() {
   const isAdmin = userQuery.data?.role === "ADMIN";
   const [editing, setEditing] = useState<ExamType | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<ExamType | null>(null);
+  const modalRef = useModalAccessibility(Boolean(deleteTarget), () => setDeleteTarget(null));
   const [formError, setFormError] = useState<string | null>(null);
 
   const examTypesQuery = useQuery({
@@ -96,9 +98,7 @@ export default function ExamTypesPage() {
 
   return (
     <AppShell>
-      <PageHero title="ປະເພດການກວດ" subtitle="ຈັດການລາຄາ ແລະ ຂໍ້ມູນປະເພດການກວດ">
-        <ActionButton href="/dashboard">ກັບຄືນ</ActionButton>
-      </PageHero>
+      <PageHero title="ປະເພດການກວດ" subtitle="ຈັດການລາຄາ ແລະ ຂໍ້ມູນປະເພດການກວດ" />
 
       <div className="grid gap-5 px-4 py-4 sm:px-6 md:px-8 lg:grid-cols-[360px_1fr] lg:px-10">
         <Panel title={editing ? "ແກ້ໄຂປະເພດການກວດ" : "ເພີ່ມປະເພດການກວດ"}>
@@ -146,7 +146,20 @@ export default function ExamTypesPage() {
         </Panel>
 
         <Panel title="ລາຍການປະເພດການກວດ">
-          <div className="overflow-x-auto rounded-xl border border-[#d9d9d9]">
+          <div className="space-y-3 md:hidden">
+            {examTypesQuery.isLoading ? <DataState type="loading" compact /> : examTypesQuery.isError ? (
+              <DataState type="error" message="ບໍ່ສາມາດໂຫຼດລາຍການໄດ້" onRetry={() => examTypesQuery.refetch()} compact />
+            ) : (examTypesQuery.data ?? []).length === 0 ? <DataState type="empty" message="ບໍ່ມີປະເພດການກວດ" compact /> : (examTypesQuery.data ?? []).map((exam) => (
+              <article key={exam.exam_type_id} className="rounded-xl border border-[#d9d9d9] bg-white p-4 shadow-sm">
+                <div className="text-xs font-bold text-[#1e66ff]">ID {exam.exam_type_id}</div>
+                <h4 className="mt-1 font-bold">{exam.exam_name}</h4>
+                <p className="mt-2 text-xs font-semibold text-[#767285]">{exam.description || "-"}</p>
+                <div className="mt-3 text-lg font-bold text-[#137547]">{Number(exam.price || 0).toLocaleString("lo-LA")} ກີບ</div>
+                {isAdmin && <div className="mt-4 grid grid-cols-2 gap-2"><button type="button" onClick={() => setEditing(exam)} className="rounded-lg bg-[#bafbd2] px-3 py-2 text-xs font-bold text-[#137547]">ແກ້ໄຂ</button><button type="button" onClick={() => setDeleteTarget(exam)} className="rounded-lg bg-[#ef4444] px-3 py-2 text-xs font-bold text-white">ລົບ</button></div>}
+              </article>
+            ))}
+          </div>
+          <div className="hidden overflow-x-auto rounded-xl border border-[#d9d9d9] md:block">
             <table className="w-full min-w-[720px] border-collapse text-left">
               <thead className="bg-[#f2f2f2] text-xs font-bold">
                 <tr>
@@ -161,19 +174,19 @@ export default function ExamTypesPage() {
                 {examTypesQuery.isLoading ? (
                   <tr>
                     <td className="px-5 py-6 text-center" colSpan={5}>
-                      ກຳລັງໂຫຼດ...
+                      <DataState type="loading" compact />
                     </td>
                   </tr>
                 ) : examTypesQuery.isError ? (
                   <tr>
-                    <td className="px-5 py-6 text-center text-red-600" colSpan={5}>
-                      ບໍ່ສາມາດໂຫຼດລາຍການໄດ້ ກະລຸນາເຂົ້າລະບົບໃໝ່ ຫຼື ກົດໂຫຼດໜ້າອີກຄັ້ງ
+                    <td className="px-5 py-6" colSpan={5}>
+                      <DataState type="error" message="ບໍ່ສາມາດໂຫຼດລາຍການໄດ້" onRetry={() => examTypesQuery.refetch()} compact />
                     </td>
                   </tr>
                 ) : (examTypesQuery.data ?? []).length === 0 ? (
                   <tr>
-                    <td className="px-5 py-6 text-center" colSpan={5}>
-                      ບໍ່ມີປະເພດການກວດ
+                    <td className="px-5 py-6" colSpan={5}>
+                      <DataState type="empty" message="ບໍ່ມີປະເພດການກວດ" compact />
                     </td>
                   </tr>
                 ) : (
@@ -216,7 +229,7 @@ export default function ExamTypesPage() {
 
       {deleteTarget && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4">
-          <div className="w-full max-w-[520px] rounded-2xl bg-white p-6 shadow-xl">
+          <div ref={modalRef} role="dialog" aria-modal="true" className="w-full max-w-[520px] rounded-2xl bg-white p-6 shadow-xl">
             <h3 className="text-2xl font-bold text-[#120d34]">ຢືນຢັນການລົບປະເພດການກວດ</h3>
             <div className="mt-4 rounded-xl bg-[#f7f8fb] p-4 text-sm font-bold leading-7 text-[#120d34]">
               <div>ID: {deleteTarget.exam_type_id}</div>

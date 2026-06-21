@@ -37,6 +37,8 @@ export type Patient = {
   date_of_birth?: string | null;
   address?: string | null;
   emergency_phone?: string | null;
+  is_active?: number | boolean;
+  deleted_at?: string | null;
   created_at?: string;
 };
 

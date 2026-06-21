@@ -1,0 +1,5 @@
+2026/06/21-08:09:32.033 8888 Creating DB C:\Users\ASUS\Documents\GitHub\PatientDataManagementApp\UserManual_Lao\.edge-profile-1782004165727\Default\EdgeCoupons/coupons_data.db since it was missing.
+2026/06/21-08:09:32.061 8888 Reusing MANIFEST C:\Users\ASUS\Documents\GitHub\PatientDataManagementApp\UserManual_Lao\.edge-profile-1782004165727\Default\EdgeCoupons/coupons_data.db/MANIFEST-000001
+2026/06/21-08:09:36.679 8254 Level-0 table #5: started
+2026/06/21-08:09:36.697 8254 Level-0 table #5: 682681 bytes OK
+2026/06/21-08:09:36.703 8254 Delete type=0 #3

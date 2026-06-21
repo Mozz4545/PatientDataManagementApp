@@ -1,6 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 const pool = require('../db/connection');
+const { isPositiveInt, requiredString, sendServerError } = require('../utils/http');
 
 const resultSelect = `
   SELECT r.*, s.staff_name, o.patient_id, o.order_date, o.status AS order_status,
@@ -14,30 +15,27 @@ const resultSelect = `
 
 const getResults = async (_req, res) => {
   try {
-    await ensureResultSchema();
     const [rows] = await pool.execute(`${resultSelect} ORDER BY r.result_date DESC`);
     res.json({ success: true, data: rows });
   } catch (err) {
-    res.status(500).json({ success: false, message: err.message });
+    sendServerError(res, err);
   }
 };
 
 const getResultByOrder = async (req, res) => {
   try {
-    await ensureResultSchema();
     const [rows] = await pool.execute(
       `${resultSelect} WHERE r.order_id = ? LIMIT 1`,
       [req.params.orderId]
     );
     res.json({ success: true, data: rows[0] || null });
   } catch (err) {
-    res.status(500).json({ success: false, message: err.message });
+    sendServerError(res, err);
   }
 };
 
 const getResultImage = async (req, res) => {
   try {
-    await ensureResultSchema();
     const [rows] = await pool.execute(
       'SELECT result_image_url FROM result WHERE result_id = ? LIMIT 1',
       [req.params.id]
@@ -54,18 +52,17 @@ const getResultImage = async (req, res) => {
 
     res.sendFile(filePath);
   } catch (err) {
-    res.status(500).json({ success: false, message: err.message });
+    sendServerError(res, err);
   }
 };
 
 const createResult = async (req, res) => {
   try {
-    await ensureResultSchema();
     const { order_id, result_detail } = req.body;
     const staffId = req.user?.id;
     const resultImageUrl = req.file ? `/uploads/results/${req.file.filename}` : null;
 
-    if (!order_id || !staffId || !result_detail) {
+    if (!isPositiveInt(order_id) || !staffId || !requiredString(result_detail)) {
       cleanupRequestFile(req.file);
       return res.status(400).json({ success: false, message: 'ກະລຸນາລະບຸໃບສັ່ງກວດ ແລະ ລາຍລະອຽດຜົນກວດ' });
     }
@@ -88,27 +85,36 @@ const createResult = async (req, res) => {
 
     const [result] = await pool.execute(
       'INSERT INTO result (order_id, staff_id, result_detail, result_image_url, result_date) VALUES (?, ?, ?, ?, NOW())',
-      [order_id, staffId, result_detail, resultImageUrl]
+      [order_id, staffId, result_detail.trim(), resultImageUrl]
     );
     const [resultRows] = await pool.execute('SELECT result_date FROM result WHERE result_id = ? LIMIT 1', [result.insertId]);
     const reportNo = buildReportNo(result.insertId, resultRows[0]?.result_date || new Date());
     await pool.execute('UPDATE result SET report_no=? WHERE result_id=?', [reportNo, result.insertId]);
     await pool.execute('UPDATE `order` SET status=? WHERE order_id=? AND status <> ?', ['COMPLETED', order_id, 'DONE']);
+    await pool.execute(
+      `UPDATE queue
+       SET status=?
+       WHERE order_id=? AND status NOT IN (?, ?)`,
+      ['ສຳເລັດ', order_id, 'ຍົກເລີກແລ້ວ', 'CANCELLED']
+    );
     res.status(201).json({
       success: true,
       data: { result_id: result.insertId, report_no: reportNo, result_image_url: resultImageUrl },
     });
   } catch (err) {
     cleanupRequestFile(req.file);
-    res.status(500).json({ success: false, message: err.message });
+    sendServerError(res, err);
   }
 };
 
 const updateResult = async (req, res) => {
   try {
-    await ensureResultSchema();
     const { result_detail, remove_result_image } = req.body;
     const resultImageUrl = req.file ? `/uploads/results/${req.file.filename}` : undefined;
+    if (!requiredString(result_detail)) {
+      cleanupRequestFile(req.file);
+      return res.status(400).json({ success: false, message: 'ກະລຸນາປ້ອນລາຍລະອຽດຜົນກວດ' });
+    }
 
     const [rows] = await pool.execute(
       `SELECT r.*, pay.payment_id, COALESCE(pay.status, 'PAID') AS payment_status
@@ -134,7 +140,7 @@ const updateResult = async (req, res) => {
 
     const [result] = await pool.execute(
       'UPDATE result SET result_detail=?, result_image_url=? WHERE result_id=?',
-      [result_detail, nextImageUrl, req.params.id]
+      [result_detail.trim(), nextImageUrl, req.params.id]
     );
     if (result.affectedRows === 0) {
       cleanupRequestFile(req.file);
@@ -152,38 +158,11 @@ const updateResult = async (req, res) => {
     });
   } catch (err) {
     cleanupRequestFile(req.file);
-    res.status(500).json({ success: false, message: err.message });
+    sendServerError(res, err);
   }
 };
 
 module.exports = { getResults, getResultByOrder, getResultImage, createResult, updateResult };
-
-async function ensureResultSchema() {
-  await addColumnIfMissing('result', 'report_no', 'VARCHAR(40) NULL');
-  await addColumnIfMissing('result', 'result_image_url', 'VARCHAR(255) NULL');
-  await pool.execute(`
-    UPDATE result
-    SET report_no = CONCAT('XR-', DATE_FORMAT(result_date, '%Y%m%d'), '-', LPAD(result_id, 5, '0'))
-    WHERE report_no IS NULL OR report_no = ''
-  `);
-}
-
-async function addColumnIfMissing(tableName, columnName, definition) {
-  const [rows] = await pool.execute(
-    `SELECT COLUMN_NAME
-     FROM INFORMATION_SCHEMA.COLUMNS
-     WHERE TABLE_SCHEMA = DATABASE()
-       AND TABLE_NAME = ?
-       AND COLUMN_NAME = ?
-     LIMIT 1`,
-    [tableName, columnName]
-  );
-  if (!rows.length) {
-    const safeTable = tableName.replaceAll('`', '``');
-    const safeColumn = columnName.replaceAll('`', '``');
-    await pool.execute(`ALTER TABLE \`${safeTable}\` ADD COLUMN \`${safeColumn}\` ${definition}`);
-  }
-}
 
 function deleteUploadedResultImage(imageUrl) {
   if (!imageUrl || !imageUrl.startsWith('/uploads/results/')) return;

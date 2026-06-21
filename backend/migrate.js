@@ -72,9 +72,13 @@ async function migrate() {
         date_of_birth DATE,
         address TEXT,
         emergency_phone VARCHAR(20),
+        is_active TINYINT(1) NOT NULL DEFAULT 1,
+        deleted_at DATETIME NULL,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       )
     `);
+    await addColumnIfMissing(connection, 'patients', 'is_active', 'TINYINT(1) NOT NULL DEFAULT 1');
+    await addColumnIfMissing(connection, 'patients', 'deleted_at', 'DATETIME NULL');
 
     await connection.execute(`
       CREATE TABLE IF NOT EXISTS exam_types (

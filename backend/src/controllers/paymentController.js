@@ -1,4 +1,5 @@
 const pool = require('../db/connection');
+const { isPositiveInt, sendServerError } = require('../utils/http');
 
 const getPayments = async (req, res) => {
   try {
@@ -14,7 +15,7 @@ const getPayments = async (req, res) => {
     );
     res.json({ success: true, data: rows });
   } catch (err) {
-    res.status(500).json({ success: false, message: err.message });
+    sendServerError(res, err);
   }
 };
 
@@ -24,7 +25,7 @@ const createPayment = async (req, res) => {
     await connection.beginTransaction();
     const { order_id, staff_id, payment_type } = req.body;
     const staffId = Number(staff_id || req.user?.id);
-    if (!order_id || !staffId || !payment_type) {
+    if (!isPositiveInt(order_id) || !isPositiveInt(staffId) || !payment_type) {
       await connection.rollback();
       return res.status(400).json({ success: false, message: 'ກະລຸນາລະບຸໃບສັ່ງກວດ, ຜູ້ຮັບເງິນ ແລະ ຊ່ອງທາງຊຳລະ' });
     }
@@ -115,7 +116,7 @@ const createPayment = async (req, res) => {
     if (err.code === 'ER_DUP_ENTRY') {
       return res.status(409).json({ success: false, message: 'ໃບສັ່ງກວດນີ້ຊຳລະເງິນແລ້ວ' });
     }
-    res.status(500).json({ success: false, message: err.message });
+    sendServerError(res, err);
   } finally {
     connection.release();
   }
@@ -158,7 +159,7 @@ const adjustPayment = (status) => async (req, res) => {
     res.json({ success: true, message: status === 'VOID' ? 'Void ສຳເລັດ' : 'Refund ສຳເລັດ' });
   } catch (err) {
     await connection.rollback();
-    res.status(500).json({ success: false, message: err.message });
+    sendServerError(res, err);
   } finally {
     connection.release();
   }
@@ -175,7 +176,7 @@ const getSummary = async (req, res) => {
     );
     res.json({ success: true, data: rows });
   } catch (err) {
-    res.status(500).json({ success: false, message: err.message });
+    sendServerError(res, err);
   }
 };
 
