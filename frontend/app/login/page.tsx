@@ -8,6 +8,7 @@ import { z } from "zod";
 import { useMutation } from "@tanstack/react-query";
 import type { AxiosError } from "axios";
 import api from "@/lib/api";
+import { clearClientSession, markSessionActivity } from "@/lib/session";
 
 const loginSchema = z.object({
   username: z.string().min(1, "ກະລຸນາປ້ອນລະຫັດຜູ້ໃຊ້"),
@@ -28,7 +29,7 @@ export default function LoginPage() {
   });
 
   useEffect(() => {
-    localStorage.removeItem("radiology_user");
+    clearClientSession();
   }, []);
 
   const loginMutation = useMutation({
@@ -39,6 +40,7 @@ export default function LoginPage() {
     onSuccess: (response) => {
       const user = response.data?.data?.user;
       if (user) localStorage.setItem("radiology_user", JSON.stringify(user));
+      markSessionActivity();
       router.replace("/dashboard");
       router.refresh();
     },

@@ -4,8 +4,8 @@ import { useQuery } from "@tanstack/react-query";
 import AppShell from "@/components/AppShell";
 import { ActionButton, DataState, MetricCard, OrdersTable, PageHero, Panel } from "@/components/dashboard-ui";
 import api from "@/lib/api";
-import { displayOrderStatus, isOpenStatus, isReadyToPayStatus, isWaitingQueueStatus } from "@/lib/status";
-import type { ApiResponse, Order, Payment, Queue, Result } from "@/lib/types";
+import { displayOrderStatus, isOpenStatus, isReadyToPayStatus, isWaitingQueueStatus, statusKey } from "@/lib/status";
+import type { ApiResponse, Order, Payment, Queue } from "@/lib/types";
 
 export default function DashboardPage() {
   const ordersQuery = useQuery({
@@ -26,31 +26,28 @@ export default function DashboardPage() {
     retry: false,
   });
 
-  const resultsQuery = useQuery({
-    queryKey: ["results", "dashboard"],
-    queryFn: async () => (await api.get<ApiResponse<Result[]>>("/results")).data.data,
-    retry: false,
-  });
-
   const orders = ordersQuery.data ?? [];
   const queues = queuesQuery.data ?? [];
   const payments = paymentsQuery.data ?? [];
-  const results = resultsQuery.data ?? [];
   const today = new Date().toISOString().slice(0, 10);
 
-  const paidOrderIds = new Set(payments.map((payment) => payment.order_id));
-  const resultOrderIds = new Set(results.map((result) => result.order_id));
+  const paidOrderIds = new Set(
+    payments
+      .filter((payment) => String(payment.status || "PAID").toUpperCase() === "PAID")
+      .map((payment) => payment.order_id)
+  );
   const openOrders = orders.filter((order) => isOpenStatus(order.status));
   const todayOrders = openOrders.filter((order) => order.order_date?.slice(0, 10) === today).length;
   const waitingQueues = queues.filter((queue) => isWaitingQueueStatus(queue.status)).length;
-  const pendingResults = openOrders.filter((order) => !resultOrderIds.has(order.order_id)).length;
+  const pendingResults = openOrders.filter(
+    (order) => statusKey(displayOrderStatus(order)) === "PENDING_RESULT"
+  ).length;
   const unpaid = openOrders.filter((order) => !paidOrderIds.has(order.order_id) && isReadyToPayStatus(displayOrderStatus(order))).length;
 
   const handleRefresh = () => {
     ordersQuery.refetch();
     queuesQuery.refetch();
     paymentsQuery.refetch();
-    resultsQuery.refetch();
   };
 
   return (
@@ -71,7 +68,7 @@ export default function DashboardPage() {
         </div>
 
         <div className="mt-5 lg:mt-8">
-          <Panel title="ໃບສັ່ງກວດຫຼ້າສຸດ">
+          <Panel title="ໃບສັ່ງກວດລ່າສຸດ">
             {ordersQuery.isLoading ? (
               <DataState type="loading" />
             ) : ordersQuery.isError ? (

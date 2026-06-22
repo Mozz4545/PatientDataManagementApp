@@ -125,3 +125,31 @@ export type Result = {
   order_date?: string;
   order_status?: string;
 };
+
+export type AuditLog = {
+  audit_log_id: number;
+  staff_id?: number | null;
+  actor_name?: string | null;
+  actor_role?: string | null;
+  action: string;
+  entity_type: string;
+  entity_id?: string | null;
+  description: string;
+  metadata?: Record<string, unknown> | string | null;
+  ip_address?: string | null;
+  user_agent?: string | null;
+  created_at: string;
+};
+
+export type AuditLogResponse = {
+  items: AuditLog[];
+  total: number;
+  page: number;
+  limit: number;
+  summary: {
+    total: number;
+    today: number;
+    last_7_days: number;
+    actors: number;
+  };
+};

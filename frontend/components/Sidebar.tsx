@@ -4,7 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
-type IconName = "dashboard" | "patients" | "queue" | "orders" | "payments" | "results" | "examTypes" | "staff" | "reports";
+type IconName = "dashboard" | "patients" | "queue" | "orders" | "payments" | "results" | "examTypes" | "staff" | "reports" | "audit";
 
 const mainLinks: Array<{ href: string; label: string; icon: IconName; adminOnly?: boolean }> = [
   { href: "/dashboard", label: "ໜ້າຫຼັກ", icon: "dashboard" },
@@ -16,6 +16,7 @@ const mainLinks: Array<{ href: string; label: string; icon: IconName; adminOnly?
   { href: "/exam-types", label: "ປະເພດການກວດ", icon: "examTypes" },
   { href: "/staff", label: "ຂໍ້ມູນພະນັກງານ", icon: "staff", adminOnly: true },
   { href: "/reports", label: "ລາຍງານ", icon: "reports" },
+  { href: "/audit-logs", label: "ປະຫວັດການໃຊ້ງານ", icon: "audit", adminOnly: true },
 ];
 
 function Icon({ name }: { name: IconName }) {
@@ -117,6 +118,15 @@ function Icon({ name }: { name: IconName }) {
         <path d="M18.5 5.5v5" />
         <path d="M16 15.5h5" />
         <path d="M16 19h5" />
+      </svg>
+    );
+  }
+
+  if (name === "audit") {
+    return (
+      <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+        <path d="M12 3.5 19 6v5.5c0 4.2-2.8 7.6-7 9-4.2-1.4-7-4.8-7-9V6l7-2.5Z" />
+        <path d="M9 11.5 11 13.5 15.5 9" />
       </svg>
     );
   }

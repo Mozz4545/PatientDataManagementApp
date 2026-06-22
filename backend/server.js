@@ -3,6 +3,7 @@ const cors = require('cors');
 const helmet = require('helmet');
 require('dotenv').config();
 const { loadSecurityConfig } = require('./src/config/security');
+const auditLogger = require('./src/middleware/auditLogger');
 
 const security = loadSecurityConfig();
 const app = express();
@@ -27,6 +28,7 @@ app.use(cors({
   },
 }));
 app.use(express.json({ limit: '1mb' }));
+app.use(auditLogger);
 app.use('/api/auth',     require('./src/routes/auth'));
 app.use('/api/patients', require('./src/routes/patients'));
 app.use('/api/staff',    require('./src/routes/staff'));
@@ -36,6 +38,7 @@ app.use('/api/results',  require('./src/routes/results'));
 app.use('/api/payments', require('./src/routes/payments'));
 app.use('/api/exam-types', require('./src/routes/examTypes'));
 app.use('/api/reports', require('./src/routes/reports'));
+app.use('/api/audit-logs', require('./src/routes/auditLogs'));
 
 
 app.get('/health', (req, res) => {

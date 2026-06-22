@@ -12,6 +12,7 @@ const TABLES = [
   { name: 'queue', orderBy: 'queue_id' },
   { name: 'payment', orderBy: 'payment_id' },
   { name: 'result', orderBy: 'result_id' },
+  { name: 'audit_logs', orderBy: 'audit_log_id' },
 ];
 
 const backendDir = path.resolve(__dirname, '..');

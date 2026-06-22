@@ -7,7 +7,7 @@ const orderSelect = `
          r.result_id, pay.payment_id,
          CASE
            WHEN o.status IN ('CANCELLED', 'ຍົກເລີກແລ້ວ') THEN 'CANCELLED'
-           WHEN pay.payment_id IS NOT NULL OR o.status = 'DONE' THEN 'DONE'
+           WHEN r.result_id IS NOT NULL AND pay.payment_id IS NOT NULL THEN 'DONE'
            WHEN r.result_id IS NOT NULL OR o.status = 'COMPLETED' THEN 'WAITING_PAYMENT'
            WHEN o.status IN ('IN_PROGRESS', 'ກຳລັງກວດ') THEN 'IN_PROGRESS'
            ELSE 'PENDING'

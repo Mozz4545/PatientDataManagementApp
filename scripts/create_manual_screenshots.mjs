@@ -218,6 +218,7 @@ const auditRoutes = [
   "/staff",
   "/staff/new",
   "/reports",
+  "/audit-logs",
 ];
 const viewports = [
   ["desktop", 1440, 900],
@@ -262,6 +263,7 @@ try {
     ["11-staff.png", "/staff"],
     ["12-staff-new.png", "/staff/new"],
     ["13-reports-payments.png", "/reports"],
+    ["19-audit-logs.png", "/audit-logs"],
   ];
 
   for (const [filename, route] of desktopPages) {

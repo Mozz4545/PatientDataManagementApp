@@ -3,6 +3,9 @@ const STATUS_KEYS: Record<string, string> = {
   WAITING: "PENDING",
   PENDING_RESULT: "PENDING_RESULT",
   CALLING: "CALLING",
+  QUEUE_WAITING: "QUEUE_WAITING",
+  QUEUE_CALLING: "QUEUE_CALLING",
+  QUEUE_IN_PROGRESS: "QUEUE_IN_PROGRESS",
   IN_PROGRESS: "PENDING_RESULT",
   COMPLETED: "WAITING_PAYMENT",
   WAITING_PAYMENT: "WAITING_PAYMENT",
@@ -37,6 +40,9 @@ const STATUS_LABELS: Record<string, string> = {
   PENDING: "ລໍຖ້າກວດ",
   PENDING_RESULT: "ລໍຖ້າບັນທຶກຜົນກວດ",
   CALLING: "ເອີ້ນຄິວ",
+  QUEUE_WAITING: "ລໍຖ້າກວດ",
+  QUEUE_CALLING: "ກຳລັງເອີ້ນ",
+  QUEUE_IN_PROGRESS: "ກຳລັງກວດ",
   WAITING_PAYMENT: "ຄ້າງຊຳລະ",
   DONE: "ສຳເລັດ",
   PAID: "ຈ່າຍແລ້ວ",
@@ -88,6 +94,29 @@ export function displayOrderStatus(order: { status?: string; workflow_status?: s
   return order.workflow_status || order.status;
 }
 
+export function displayQueueStatus(status?: string) {
+  const raw = String(status || "").trim();
+  const upper = raw.toUpperCase();
+
+  if (upper === "WAITING" || raw === "ກຳລັງລໍຖ້າ" || raw === "ລໍຖ້າກວດ") {
+    return "QUEUE_WAITING";
+  }
+  if (upper === "CALLING" || raw === "ກຳລັງເອີ້ນ" || raw === "ເອີ້ນຄິວ") {
+    return "QUEUE_CALLING";
+  }
+  if (upper === "IN_PROGRESS" || raw === "ກຳລັງກວດ") {
+    return "QUEUE_IN_PROGRESS";
+  }
+  if (upper === "COMPLETED" || upper === "DONE" || raw === "ສຳເລັດ") {
+    return "DONE";
+  }
+  if (upper === "CANCELLED" || raw === "ຍົກເລີກແລ້ວ") {
+    return "CANCELLED";
+  }
+  return status;
+}
+
 export function isReadyToPayStatus(status?: string) {
-  return statusKey(status) === "WAITING_PAYMENT";
+  const key = statusKey(status);
+  return key === "PENDING" || key === "PENDING_RESULT" || key === "WAITING_PAYMENT";
 }

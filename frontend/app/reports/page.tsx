@@ -57,7 +57,9 @@ export default function ReportsPage() {
 
   const payments = useMemo(() => (paymentsQuery.data ?? []).filter((payment) => paymentStatus(payment) === "PAID"), [paymentsQuery.data]);
   const results = useMemo(() => resultsQuery.data ?? [], [resultsQuery.data]);
-  const unpaidOrders = (ordersQuery.data ?? []).filter((order) => isReadyToPayStatus(displayOrderStatus(order))).length;
+  const unpaidOrders = (ordersQuery.data ?? []).filter(
+    (order) => !order.payment_id && isReadyToPayStatus(displayOrderStatus(order))
+  ).length;
 
   const filteredPayments = useMemo(() => {
     const text = search.trim().toLowerCase();

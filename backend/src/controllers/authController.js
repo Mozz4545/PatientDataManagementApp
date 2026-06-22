@@ -2,6 +2,7 @@ const pool = require('../db/connection');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const { requiredString } = require('../utils/http');
+const SESSION_IDLE_TIMEOUT_SECONDS = 60 * 60;
 
 const login = async (req, res) => {
   const { username, password } = req.body;
@@ -35,7 +36,7 @@ const login = async (req, res) => {
     const token = jwt.sign(
       { id: user.staff_id, username: user.username, role: user.role },
       process.env.JWT_SECRET,
-      { expiresIn: process.env.JWT_EXPIRES_IN }
+      { expiresIn: SESSION_IDLE_TIMEOUT_SECONDS }
     );
 
     setSessionCookie(res, token);
@@ -76,23 +77,23 @@ const logout = async (_req, res) => {
   res.json({ success: true, message: 'ອອກຈາກລະບົບສຳເລັດ' });
 };
 
-module.exports = { login, me, logout };
+const activity = async (req, res) => {
+  const token = jwt.sign(
+    { id: req.user.id, username: req.user.username, role: req.user.role },
+    process.env.JWT_SECRET,
+    { expiresIn: SESSION_IDLE_TIMEOUT_SECONDS }
+  );
+  setSessionCookie(res, token);
+  res.json({ success: true });
+};
+
+module.exports = { login, me, logout, activity };
 
 function setSessionCookie(res, token) {
-  const maxAge = parseExpiryToSeconds(process.env.JWT_EXPIRES_IN || '8h');
-  res.setHeader('Set-Cookie', serializeSessionCookie(token, maxAge));
+  res.setHeader('Set-Cookie', serializeSessionCookie(token, SESSION_IDLE_TIMEOUT_SECONDS));
 }
 
 function serializeSessionCookie(value, maxAge) {
   const secure = process.env.NODE_ENV === 'production' ? '; Secure' : '';
   return `radiology_session=${encodeURIComponent(value)}; Path=/; HttpOnly; SameSite=Strict; Max-Age=${maxAge}${secure}`;
-}
-
-function parseExpiryToSeconds(value) {
-  const match = String(value).trim().match(/^(\d+)([smhd])?$/i);
-  if (!match) return 8 * 60 * 60;
-  const amount = Number(match[1]);
-  const unit = (match[2] || 's').toLowerCase();
-  const multiplier = unit === 'd' ? 86400 : unit === 'h' ? 3600 : unit === 'm' ? 60 : 1;
-  return amount * multiplier;
 }

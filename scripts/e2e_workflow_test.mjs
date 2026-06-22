@@ -8,6 +8,7 @@ const webBase = "http://localhost:3000";
 const suffix = Date.now();
 const created = {};
 const results = [];
+let auditBaselineId = 0;
 
 function check(name, condition, detail = "") {
   results.push({ name, pass: Boolean(condition), detail });
@@ -52,6 +53,9 @@ const connection = await mysql.createConnection({
 });
 
 try {
+  const [auditBaselineRows] = await connection.execute("SELECT COALESCE(MAX(audit_log_id), 0) AS max_id FROM audit_logs");
+  auditBaselineId = Number(auditBaselineRows[0]?.max_id || 0);
+
   const admin = await login("admin", "admin123");
   check("ADMIN login", admin.status === 200 && Boolean(admin.cookie), `status=${admin.status}`);
   const adminCookie = admin.cookie;
@@ -114,20 +118,26 @@ try {
   response = await request("/queues/call-next?date=2099-12-31", { cookie: adminCookie, method: "POST" });
   check("Call next queue", response.response.status === 200 && response.payload?.data?.queue_id === created.queueId);
 
-  const resultForm = new FormData();
-  resultForm.append("order_id", String(created.orderId));
-  resultForm.append("result_detail", "E2E result completed successfully");
-  response = await request("/results", { cookie: adminCookie, method: "POST", form: resultForm });
-  created.resultId = response.payload?.data?.result_id;
-  check("Save examination result", response.response.status === 201 && Boolean(created.resultId));
-
   response = await request("/payments", {
     cookie: adminCookie,
     method: "POST",
     body: { order_id: created.orderId, staff_id: adminId, payment_type: "ເງິນສົດ" },
   });
   created.paymentId = response.payload?.data?.payment_id;
-  check("Create payment", response.response.status === 201 && Boolean(created.paymentId));
+  check("Create payment before result", response.response.status === 201 && Boolean(created.paymentId));
+
+  response = await request(`/orders/${created.orderId}`, { cookie: adminCookie });
+  check(
+    "Early payment keeps examination flow active",
+    response.response.status === 200 && response.payload?.data?.workflow_status === "IN_PROGRESS"
+  );
+
+  const resultForm = new FormData();
+  resultForm.append("order_id", String(created.orderId));
+  resultForm.append("result_detail", "E2E result completed successfully");
+  response = await request("/results", { cookie: adminCookie, method: "POST", form: resultForm });
+  created.resultId = response.payload?.data?.result_id;
+  check("Save examination result after payment", response.response.status === 201 && Boolean(created.resultId));
 
   response = await request(`/orders/${created.orderId}`, { cookie: adminCookie });
   check("Workflow reaches DONE", response.response.status === 200 && response.payload?.data?.workflow_status === "DONE");
@@ -144,11 +154,22 @@ try {
   response = await request("/staff", { cookie: staff.cookie });
   check("STAFF cannot access staff management API", response.response.status === 403);
 
+  response = await request("/audit-logs", { cookie: staff.cookie });
+  check("STAFF cannot access audit log API", response.response.status === 403);
+
+  response = await request("/audit-logs?limit=100", { cookie: adminCookie });
+  const newAuditLogs = response.payload?.data?.items?.filter((item) => Number(item.audit_log_id) > auditBaselineId) || [];
+  check("ADMIN can access audit log API", response.response.status === 200);
+  check("Successful workflow writes audit logs", newAuditLogs.length >= 6, `logs=${newAuditLogs.length}`);
+
   let pageResponse = await fetch(`${webBase}/reports`, { headers: { Cookie: staff.cookie }, redirect: "manual" });
   check("STAFF can open reports page", pageResponse.status === 200, `status=${pageResponse.status}`);
 
   pageResponse = await fetch(`${webBase}/staff`, { headers: { Cookie: staff.cookie }, redirect: "manual" });
   check("STAFF staff-page redirect", pageResponse.status === 307 && pageResponse.headers.get("location") === "/dashboard");
+
+  pageResponse = await fetch(`${webBase}/audit-logs`, { headers: { Cookie: staff.cookie }, redirect: "manual" });
+  check("STAFF audit-page redirect", pageResponse.status === 307 && pageResponse.headers.get("location") === "/dashboard");
 } finally {
   await connection.beginTransaction();
   try {
@@ -157,6 +178,7 @@ try {
     if (created.queueId) await connection.execute("DELETE FROM queue WHERE queue_id = ?", [created.queueId]);
     if (created.orderId) await connection.execute("DELETE FROM `order` WHERE order_id = ?", [created.orderId]);
     if (created.patientId) await connection.execute("DELETE FROM patients WHERE patient_id = ?", [created.patientId]);
+    await connection.execute("DELETE FROM audit_logs WHERE audit_log_id > ?", [auditBaselineId]);
     if (created.staffId) await connection.execute("DELETE FROM staff WHERE staff_id = ?", [created.staffId]);
     await connection.commit();
   } catch (error) {

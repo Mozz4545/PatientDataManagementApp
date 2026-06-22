@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 
 const PUBLIC_PATHS = new Set(["/login", "/queues/display"]);
-const ADMIN_PATH_PREFIXES = ["/staff"];
+const ADMIN_PATH_PREFIXES = ["/staff", "/audit-logs"];
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api";
 
 export async function proxy(request: NextRequest) {

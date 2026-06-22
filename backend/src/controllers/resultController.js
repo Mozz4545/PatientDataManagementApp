@@ -90,7 +90,20 @@ const createResult = async (req, res) => {
     const [resultRows] = await pool.execute('SELECT result_date FROM result WHERE result_id = ? LIMIT 1', [result.insertId]);
     const reportNo = buildReportNo(result.insertId, resultRows[0]?.result_date || new Date());
     await pool.execute('UPDATE result SET report_no=? WHERE result_id=?', [reportNo, result.insertId]);
-    await pool.execute('UPDATE `order` SET status=? WHERE order_id=? AND status <> ?', ['COMPLETED', order_id, 'DONE']);
+    await pool.execute(
+      `UPDATE \`order\` AS o
+       SET status = CASE
+         WHEN EXISTS (
+           SELECT 1
+           FROM payment
+           WHERE payment.order_id = o.order_id
+             AND COALESCE(payment.status, 'PAID') = 'PAID'
+         ) THEN 'DONE'
+         ELSE 'COMPLETED'
+       END
+       WHERE o.order_id = ?`,
+      [order_id]
+    );
     await pool.execute(
       `UPDATE queue
        SET status=?

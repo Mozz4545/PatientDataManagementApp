@@ -2,7 +2,7 @@ const mysql = require('mysql2/promise');
 const bcrypt = require('bcryptjs');
 require('dotenv').config();
 
-const REQUIRED_TABLES = ['staff', 'patients', 'exam_types', 'order', 'queue', 'payment', 'result'];
+const REQUIRED_TABLES = ['staff', 'patients', 'exam_types', 'order', 'queue', 'payment', 'result', 'audit_logs'];
 
 const DEFAULT_EXAM_TYPES = [
   ['X-Ray Chest', 'Chest radiography', 150000],

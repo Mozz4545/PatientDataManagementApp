@@ -195,6 +195,28 @@ async function migrate() {
     `);
     await addIndexIfMissing(connection, 'result', 'uq_result_report_no', 'UNIQUE KEY uq_result_report_no (report_no)');
 
+    await connection.execute(`
+      CREATE TABLE IF NOT EXISTS audit_logs (
+        audit_log_id BIGINT PRIMARY KEY AUTO_INCREMENT,
+        staff_id INT NULL,
+        actor_name VARCHAR(255) NULL,
+        actor_role VARCHAR(20) NULL,
+        action VARCHAR(50) NOT NULL,
+        entity_type VARCHAR(50) NOT NULL,
+        entity_id VARCHAR(100) NULL,
+        description VARCHAR(500) NOT NULL,
+        metadata JSON NULL,
+        ip_address VARCHAR(64) NULL,
+        user_agent VARCHAR(500) NULL,
+        created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (staff_id) REFERENCES staff(staff_id) ON DELETE SET NULL
+      )
+    `);
+    await addIndexIfMissing(connection, 'audit_logs', 'idx_audit_created_at', 'INDEX idx_audit_created_at (created_at)');
+    await addIndexIfMissing(connection, 'audit_logs', 'idx_audit_staff', 'INDEX idx_audit_staff (staff_id)');
+    await addIndexIfMissing(connection, 'audit_logs', 'idx_audit_action', 'INDEX idx_audit_action (action)');
+    await addIndexIfMissing(connection, 'audit_logs', 'idx_audit_entity', 'INDEX idx_audit_entity (entity_type, entity_id)');
+
     const [resultImagesTable] = await connection.query("SHOW TABLES LIKE 'result_images'");
     if (resultImagesTable.length) {
       await connection.execute(`
@@ -211,7 +233,6 @@ async function migrate() {
       await connection.execute('DROP TABLE result_images');
     }
 
-    await connection.execute('DROP TABLE IF EXISTS audit_logs');
     await connection.execute('DROP TABLE IF EXISTS password_reset_otps');
     await connection.execute('DROP TABLE IF EXISTS schema_migrations');
     console.log('Database migration completed successfully.');

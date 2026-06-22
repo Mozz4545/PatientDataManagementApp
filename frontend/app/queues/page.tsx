@@ -6,6 +6,7 @@ import AppShell from "@/components/AppShell";
 import { ActionButton, DataState, PageHero, Panel, QueuesTable, SmallStat, StatusPill } from "@/components/dashboard-ui";
 import api from "@/lib/api";
 import {
+  displayQueueStatus,
   isCallingQueueStatus,
   isInProgressStatus,
   isWaitingQueueStatus,
@@ -119,7 +120,7 @@ export default function QueuesPage() {
                     <article key={queue.queue_id} className="rounded-xl border border-[#d9d9d9] bg-white p-4 shadow-sm">
                       <div className="flex items-start justify-between gap-3">
                         <div><div className="text-xs font-bold text-[#1e66ff]">ຄິວ {String(queue.queue_no).padStart(2, "0")}</div><div className="mt-1 font-bold">{[queue.first_name, queue.last_name].filter(Boolean).join(" ") || "-"}</div></div>
-                        <span className="shrink-0"><StatusPill status={queue.status} /></span>
+                        <span className="shrink-0"><StatusPill status={displayQueueStatus(queue.status)} /></span>
                       </div>
                       <div className="mt-3 space-y-1 text-xs font-semibold text-[#767285]"><div>{queue.exam_name || "-"}</div><div>{dateOnly(queue.queue_date)}</div></div>
                     </article>

@@ -4,7 +4,7 @@ const crypto = require('crypto');
 const mysql = require('mysql2/promise');
 require('dotenv').config();
 
-const TABLES = ['staff', 'patients', 'exam_types', 'order', 'queue', 'payment', 'result'];
+const TABLES = ['staff', 'patients', 'exam_types', 'order', 'queue', 'payment', 'result', 'audit_logs'];
 
 async function main() {
   const backupDir = path.resolve(process.argv[2] || '');
@@ -44,6 +44,7 @@ async function main() {
       payment_staff: 'SELECT COUNT(*) count FROM payment p LEFT JOIN staff s ON s.staff_id=p.staff_id WHERE s.staff_id IS NULL',
       result_order: 'SELECT COUNT(*) count FROM result r LEFT JOIN `order` o ON o.order_id=r.order_id WHERE o.order_id IS NULL',
       result_staff: 'SELECT COUNT(*) count FROM result r LEFT JOIN staff s ON s.staff_id=r.staff_id WHERE s.staff_id IS NULL',
+      audit_staff: 'SELECT COUNT(*) count FROM audit_logs a LEFT JOIN staff s ON s.staff_id=a.staff_id WHERE a.staff_id IS NOT NULL AND s.staff_id IS NULL',
     };
     for (const [name, query] of Object.entries(orphanQueries)) {
       const [rows] = await connection.query(query);

@@ -1,11 +1,18 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useRouter } from "next/navigation";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import api from "@/lib/api";
+import {
+  clearClientSession,
+  getLastSessionActivity,
+  markSessionActivity,
+  SESSION_ACTIVITY_KEY,
+  SESSION_IDLE_TIMEOUT_MS,
+} from "@/lib/session";
 import { statusLabel } from "@/lib/status";
 import type { ApiResponse, User } from "@/lib/types";
 import Sidebar from "./Sidebar";
@@ -37,22 +44,97 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
   const userQuery = useCurrentUser();
   const user = userQuery.data;
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const logoutInProgress = useRef(false);
+  const lastRecordedActivity = useRef(0);
+  const lastActivityPing = useRef(0);
 
-  const logout = async () => {
+  const logout = useCallback(async () => {
+    if (logoutInProgress.current) return;
+    logoutInProgress.current = true;
+
     try {
       await api.post("/auth/logout");
     } catch {
       // Clear the client state even if the server session already expired.
+    } finally {
+      clearClientSession();
+      queryClient.clear();
+      setMobileMenuOpen(false);
+      router.replace("/login");
     }
-    localStorage.removeItem("radiology_user");
-    queryClient.clear();
-    setMobileMenuOpen(false);
-    router.replace("/login");
-  };
+  }, [queryClient, router]);
+
+  useEffect(() => {
+    if (!user) return;
+
+    if (!getLastSessionActivity()) markSessionActivity();
+
+    let timeoutId: number | undefined;
+
+    const scheduleIdleCheck = () => {
+      window.clearTimeout(timeoutId);
+      const lastActivity = getLastSessionActivity();
+      const remaining = SESSION_IDLE_TIMEOUT_MS - (Date.now() - lastActivity);
+
+      if (!lastActivity || remaining <= 0) {
+        void logout();
+        return;
+      }
+
+      timeoutId = window.setTimeout(scheduleIdleCheck, Math.min(remaining, 60_000));
+    };
+
+    const recordActivity = () => {
+      const now = Date.now();
+      if (now - lastRecordedActivity.current < 5_000) return;
+      lastRecordedActivity.current = now;
+      markSessionActivity(now);
+      scheduleIdleCheck();
+
+      if (now - lastActivityPing.current >= 60_000) {
+        lastActivityPing.current = now;
+        void api.post("/auth/activity").catch(() => {
+          // An expired server session is handled by the current-user query.
+        });
+      }
+    };
+
+    const handleStorage = (event: StorageEvent) => {
+      if (event.key !== SESSION_ACTIVITY_KEY) return;
+      if (!event.newValue) {
+        void logout();
+        return;
+      }
+      scheduleIdleCheck();
+    };
+
+    const activityEvents: Array<keyof WindowEventMap> = [
+      "pointerdown",
+      "keydown",
+      "wheel",
+      "touchstart",
+    ];
+
+    activityEvents.forEach((eventName) =>
+      window.addEventListener(eventName, recordActivity, { passive: true })
+    );
+    window.addEventListener("storage", handleStorage);
+    window.addEventListener("focus", scheduleIdleCheck);
+    document.addEventListener("visibilitychange", scheduleIdleCheck);
+    scheduleIdleCheck();
+
+    return () => {
+      window.clearTimeout(timeoutId);
+      activityEvents.forEach((eventName) => window.removeEventListener(eventName, recordActivity));
+      window.removeEventListener("storage", handleStorage);
+      window.removeEventListener("focus", scheduleIdleCheck);
+      document.removeEventListener("visibilitychange", scheduleIdleCheck);
+    };
+  }, [logout, user]);
 
   useEffect(() => {
     if (userQuery.isError) {
-      localStorage.removeItem("radiology_user");
+      clearClientSession();
       queryClient.clear();
       router.replace("/login");
     }
@@ -129,6 +211,7 @@ const mobileLinks = [
   { href: "/exam-types", label: "ປະເພດການກວດ", shortLabel: "ປະເພດ", icon: "order" },
   { href: "/staff", label: "ຂໍ້ມູນພະນັກງານ", shortLabel: "ພະນັກງານ", icon: "patient", adminOnly: true },
   { href: "/reports", label: "ລາຍງານ", shortLabel: "ລາຍງານ", icon: "result" },
+  { href: "/audit-logs", label: "ປະຫວັດການໃຊ້ງານ", shortLabel: "ປະຫວັດ", icon: "audit", adminOnly: true },
 ];
 
 const mobileNavHrefs = new Set(["/dashboard", "/queues", "/orders", "/payments", "/results"]);
@@ -283,5 +366,6 @@ function MobileNavIcon({ name }: { name: string }) {
   if (name === "queue") return <span aria-hidden="true" className="text-lg leading-none">☷</span>;
   if (name === "payment") return <span aria-hidden="true" className="text-lg leading-none">₭</span>;
   if (name === "result") return <span aria-hidden="true" className="text-lg leading-none">✓</span>;
+  if (name === "audit") return <span aria-hidden="true" className="text-lg leading-none">◷</span>;
   return <span aria-hidden="true" className="text-lg leading-none">▤</span>;
 }

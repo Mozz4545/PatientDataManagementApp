@@ -63,11 +63,6 @@ const createPayment = async (req, res) => {
       await connection.rollback();
       return res.status(400).json({ success: false, message: 'ໃບສັ່ງກວດທີ່ຍົກເລີກແລ້ວບໍ່ສາມາດຊຳລະໄດ້' });
     }
-    if (!order.result_id && order.status !== 'COMPLETED') {
-      await connection.rollback();
-      return res.status(400).json({ success: false, message: 'ຕ້ອງບັນທຶກຜົນກວດກ່ອນຈຶ່ງຊຳລະເງິນໄດ້' });
-    }
-
     const [existing] = await connection.execute(
       'SELECT * FROM payment WHERE order_id = ? LIMIT 1',
       [order_id]
@@ -108,7 +103,9 @@ const createPayment = async (req, res) => {
       );
     }
 
-    await connection.execute('UPDATE `order` SET status=? WHERE order_id=?', ['DONE', order_id]);
+    if (order.result_id) {
+      await connection.execute('UPDATE `order` SET status=? WHERE order_id=?', ['DONE', order_id]);
+    }
     await connection.commit();
     res.status(201).json({ success: true, data: { payment_id: paymentId, amount } });
   } catch (err) {
@@ -132,9 +129,10 @@ const adjustPayment = (status) => async (req, res) => {
 
     await connection.beginTransaction();
     const [rows] = await connection.execute(
-      `SELECT pay.*, o.order_id
+      `SELECT pay.*, o.order_id, r.result_id
        FROM payment pay
        JOIN \`order\` o ON pay.order_id = o.order_id
+       LEFT JOIN result r ON r.order_id = o.order_id
        WHERE pay.payment_id = ?
        LIMIT 1`,
       [req.params.id]
@@ -154,7 +152,9 @@ const adjustPayment = (status) => async (req, res) => {
       'UPDATE payment SET status=?, adjustment_reason=?, adjusted_by=?, adjusted_at=? WHERE payment_id=?',
       [status, String(reason).trim(), req.user?.id || null, new Date(), req.params.id]
     );
-    await connection.execute('UPDATE `order` SET status=? WHERE order_id=?', ['COMPLETED', payment.order_id]);
+    if (payment.result_id) {
+      await connection.execute('UPDATE `order` SET status=? WHERE order_id=?', ['COMPLETED', payment.order_id]);
+    }
     await connection.commit();
     res.json({ success: true, message: status === 'VOID' ? 'Void ສຳເລັດ' : 'Refund ສຳເລັດ' });
   } catch (err) {

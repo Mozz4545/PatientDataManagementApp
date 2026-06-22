@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { displayOrderStatus, isCancelledStatus, statusKey, statusLabel } from "@/lib/status";
+import { displayOrderStatus, displayQueueStatus, isCancelledStatus, statusKey, statusLabel } from "@/lib/status";
 import type { Order, Queue } from "@/lib/types";
 
 export const examOptions = [
@@ -41,6 +41,9 @@ export function statusTone(status?: string) {
   if (normalized === "WAITING_PAYMENT") return "bg-[#fff7a5] text-[#a77b00]";
   if (normalized === "PENDING") return "bg-[#fff7a5] text-[#a77b00]";
   if (normalized === "PENDING_RESULT") return "bg-[#c7a0ff] text-[#0345aa]";
+  if (normalized === "QUEUE_WAITING") return "bg-[#fff7a5] text-[#a77b00]";
+  if (normalized === "QUEUE_CALLING") return "bg-[#addbf4] text-[#123879]";
+  if (normalized === "QUEUE_IN_PROGRESS") return "bg-[#ffd9c7] text-[#b63e00]";
   if (normalized === "UNPAID") return "bg-[#fff7a5] text-[#a77b00]";
   if (normalized === "CALLING") return "bg-[#addbf4] text-[#123879]";
   if (normalized === "CANCELLED") return "bg-[#ff9fa6] text-[#b00000]";
@@ -350,7 +353,7 @@ export function QueuesTable({
         <article key={queue.queue_id} className="rounded-xl border border-[#d9d9d9] bg-white p-4 shadow-sm">
           <div className="flex items-start justify-between gap-3">
             <div><div className="text-xs font-bold text-[#1e66ff]">ຄິວ {String(queue.queue_no).padStart(2, "0")}</div><div className="mt-1 font-bold">{patientName(queue)}</div></div>
-            <StatusPill status={queue.status} />
+            <StatusPill status={displayQueueStatus(queue.status)} />
           </div>
           <div className="mt-3 space-y-1 text-xs font-semibold text-[#767285]"><div>{queue.exam_name || "-"}</div><div>{formatDateTime(queue.queue_date)}</div></div>
           {onCall && <button type="button" onClick={() => onCall(queue)} className="mt-3 w-full rounded-lg bg-[#addbf4] px-4 py-2 text-sm font-bold text-[#123879]">ເອີ້ນ</button>}
@@ -384,7 +387,7 @@ export function QueuesTable({
                 <td className="px-5 py-3">{queue.exam_name || "-"}</td>
                 <td className="px-5 py-3">{formatDateTime(queue.queue_date)}</td>
                 <td className="px-5 py-3">
-                  <StatusPill status={queue.status} />
+                  <StatusPill status={displayQueueStatus(queue.status)} />
                 </td>
                 {onCall && (
                   <td className="px-5 py-3">

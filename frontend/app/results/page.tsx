@@ -254,7 +254,7 @@ export default function ResultsPage() {
                         <div className="text-xs font-bold text-[#1e66ff]">HN-{String(order.patient_id).padStart(6, "0")}</div>
                         <h4 className="mt-1 font-bold">{patientName(order)}</h4>
                       </div>
-                      <StatusPill status={result ? "ກວດສຳເລັດ" : "ລໍຖ້າບັນທຶກ"} />
+                      <StatusPill status={result ? "DONE" : "PENDING_RESULT"} />
                     </div>
                     <div className="mt-3 space-y-1 text-xs font-semibold text-[#767285]">
                       <div>ປະເພດກວດ: <span className="text-[#120d34]">{order.exam_name || "-"}</span></div>
@@ -329,7 +329,7 @@ export default function ResultsPage() {
                           )}
                         </td>
                         <td className="px-5 py-3">
-                          <StatusPill status={result ? "ກວດສຳເລັດ" : "ລໍຖ້າບັນທຶກ"} />
+                          <StatusPill status={result ? "DONE" : "PENDING_RESULT"} />
                         </td>
                         <td className="px-5 py-3">
                           <div className="flex flex-wrap gap-2">
@@ -518,7 +518,7 @@ async function printResultDocument(order: Order, result: Result) {
       <h1 class="title">ລາຍງານຜົນກວດ</h1>
       <section class="doc-meta">
         <span class="doc-no">ເລກລາຍງານ: ${escapeHtml(resultNo)}</span>
-        <span>ສະຖານະ: ກວດສຳເລັດ</span>
+        <span>ສະຖານະ: ສຳເລັດ</span>
       </section>
 
       <section class="grid">

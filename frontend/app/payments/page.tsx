@@ -453,7 +453,7 @@ function UnpaidOrdersTable({
         <article key={order.order_id} className="rounded-xl border border-[#d9d9d9] p-4 shadow-sm">
           <div className="flex justify-between gap-3">
             <div><div className="text-xs font-bold text-[#1e66ff]">#{String(order.order_id).padStart(4, "0")}</div><div className="mt-1 font-bold">{patientName(order)}</div></div>
-            <StatusPill status="UNPAID" />
+            <StatusPill status={paymentQueueStatus(order)} />
           </div>
           <div className="mt-3 space-y-1 text-xs font-semibold text-[#767285]">
             <div>{order.exam_name || "-"}</div>
@@ -463,7 +463,7 @@ function UnpaidOrdersTable({
           <div className="mt-4 grid grid-cols-2 gap-2">
             <button type="button" onClick={() => onNotice(order)} className="rounded-lg bg-[#addbf4] px-3 py-2 text-xs font-bold text-[#123879]">ໃບແຈ້ງຊຳລະ</button>
             <button type="button" onClick={() => onPay(order)} disabled={!isReadyToPayStatus(displayOrderStatus(order))} className="rounded-lg bg-[#99fba6] px-3 py-2 text-xs font-bold text-[#123879] disabled:bg-[#eee] disabled:text-[#9d98aa]">
-              {isReadyToPayStatus(displayOrderStatus(order)) ? "ຈ່າຍເງິນ" : "ລໍຖ້າຜົນກວດ"}
+              {paymentActionLabel(order)}
             </button>
           </div>
         </article>
@@ -499,7 +499,7 @@ function UnpaidOrdersTable({
               <td className="px-5 py-3">{formatDateTime(order.order_date)}</td>
               <td className="px-5 py-3">{Number(order.exam_price || 0).toLocaleString("lo-LA")} ກີບ</td>
               <td className="px-5 py-3">
-                <StatusPill status="UNPAID" />
+                <StatusPill status={paymentQueueStatus(order)} />
               </td>
               <td className="px-5 py-3">
                 <button
@@ -521,7 +521,7 @@ function UnpaidOrdersTable({
                       : "bg-[#eeeeee] text-[#9d98aa]"
                   }`}
                 >
-                  {isReadyToPayStatus(displayOrderStatus(order)) ? "ຈ່າຍເງິນ" : "ລໍຖ້າຜົນກວດ"}
+                  {paymentActionLabel(order)}
                 </button>
               </td>
             </tr>
@@ -817,6 +817,14 @@ function getErrorMessage(error: unknown) {
     return response?.data?.message;
   }
   return undefined;
+}
+
+function paymentQueueStatus(order: Order) {
+  return isReadyToPayStatus(displayOrderStatus(order)) ? "UNPAID" : displayOrderStatus(order);
+}
+
+function paymentActionLabel(order: Order) {
+  return isReadyToPayStatus(displayOrderStatus(order)) ? "ຈ່າຍເງິນ" : "ບໍ່ສາມາດຊຳລະ";
 }
 
 function receiptNumber(payment: Payment) {

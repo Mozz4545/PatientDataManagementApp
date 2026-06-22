@@ -10,7 +10,7 @@ const queueSelect = `
   SELECT q.queue_id, q.order_id, q.queue_no, q.queue_date, q.called_at,
          CASE
            WHEN o.status IN ('CANCELLED', 'ຍົກເລີກແລ້ວ') THEN 'ຍົກເລີກແລ້ວ'
-           WHEN r.result_id IS NOT NULL OR o.status IN ('COMPLETED', 'DONE') THEN 'ສຳເລັດ'
+           WHEN r.result_id IS NOT NULL OR o.status = 'COMPLETED' THEN 'ສຳເລັດ'
            WHEN q.status IN ('ກຳລັງເອີ້ນ', 'CALLING') THEN 'ກຳລັງເອີ້ນ'
            WHEN o.status IN ('IN_PROGRESS', 'ກຳລັງກວດ')
              OR q.status IN ('ກຳລັງກວດ', 'IN_PROGRESS') THEN 'ກຳລັງກວດ'

@@ -4,7 +4,7 @@ const crypto = require('crypto');
 const mysql = require('mysql2/promise');
 require('dotenv').config();
 
-const TABLES = ['staff', 'patients', 'exam_types', 'order', 'queue', 'payment', 'result'];
+const TABLES = ['staff', 'patients', 'exam_types', 'order', 'queue', 'payment', 'result', 'audit_logs'];
 
 const backendDir = path.resolve(__dirname, '..');
 const backupsDir = path.join(backendDir, 'backups');
@@ -99,7 +99,8 @@ function validateBackup(manifest, databaseJson, backupDir) {
     throw new Error(`Backup manifest does not contain table counts: ${backupDir}`);
   }
   for (const table of TABLES) {
-    if (!Number.isInteger(manifest.tables[table]) || manifest.tables[table] < 0) {
+    const count = manifest.tables[table] ?? (table === 'audit_logs' ? 0 : undefined);
+    if (!Number.isInteger(count) || count < 0) {
       throw new Error(`Backup manifest has an invalid count for table "${table}"`);
     }
   }
